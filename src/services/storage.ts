@@ -1,0 +1,560 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import { 
+  collection, 
+  query, 
+  where, 
+  onSnapshot, 
+  doc, 
+  setDoc, 
+  deleteDoc, 
+  orderBy,
+  getDocs
+} from 'firebase/firestore';
+import { db, handleFirestoreError, OperationType } from '../firebase';
+import { Workout, ExerciseLibraryEntry, Split, SavedSplit } from '../types';
+import { INITIAL_EXERCISES, DEFAULT_SPLIT } from '../constants';
+
+const sanitizeWorkoutRecord = (raw: unknown): Workout | null => {
+  if (!raw || typeof raw !== 'object') return null;
+  const w = raw as Partial<Workout>;
+  return {
+    ...w,
+    id: typeof w.id === 'string' ? w.id : crypto.randomUUID(),
+    date: typeof w.date === 'string' ? w.date : new Date().toISOString(),
+    workoutName: typeof w.workoutName === 'string' ? w.workoutName : '',
+    runningStats: typeof w.runningStats === 'string' ? w.runningStats : '',
+    exercises: Array.isArray(w.exercises) ? w.exercises : [],
+    inclineTreadmill: w.inclineTreadmill,
+    postWorkoutEnergy: typeof w.postWorkoutEnergy === 'number' ? w.postWorkoutEnergy : 5,
+    notes: typeof w.notes === 'string' ? w.notes : '',
+    timestamp: typeof w.timestamp === 'number' ? w.timestamp : Date.now(),
+    uid: w.uid,
+    conditioning: w.conditioning,
+    workoutSummary: w.workoutSummary,
+    isHistorical: typeof w.isHistorical === 'boolean' ? w.isHistorical : false,
+  } as Workout;
+};
+
+const sanitizeWorkoutList = (raw: unknown): Workout[] => {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map(sanitizeWorkoutRecord)
+    .filter((w): w is Workout => !!w);
+};
+
+export const sanitizeDraftRecord = (raw: unknown): Partial<Workout> | null => {
+  if (!raw || typeof raw !== 'object') return null;
+  const d = raw as Partial<Workout>;
+  return {
+    ...d,
+    exercises: Array.isArray(d.exercises) ? d.exercises : [],
+  };
+};
+
+export const sanitizeSplitRecord = (raw: unknown): Split | null => {
+  if (!raw || typeof raw !== 'object') return null;
+  const s = raw as Partial<Split>;
+  if (typeof s.day !== 'string' || typeof s.name !== 'string' || typeof s.running !== 'string') return null;
+  return {
+    ...s,
+    id: typeof s.id === 'string' ? s.id : crypto.randomUUID(),
+    day: s.day,
+    name: s.name,
+    running: s.running,
+    exercises: Array.isArray(s.exercises) ? s.exercises : [],
+    uid: typeof s.uid === 'string' ? s.uid : '',
+  } as Split;
+};
+
+const sanitizeSplitList = (raw: unknown): Split[] => {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map(sanitizeSplitRecord)
+    .filter((s): s is Split => !!s);
+};
+
+export const storage = {
+  // Workouts
+  subscribeToWorkouts: (uid: string, callback: (workouts: Workout[]) => void) => {
+    if (uid.startsWith('guest_')) {
+      const saved = sessionStorage.getItem('guest_workouts');
+      let parsed: unknown = [];
+      try {
+        parsed = saved ? JSON.parse(saved) : [];
+      } catch {
+        parsed = [];
+      }
+      const normalizedWorkouts = sanitizeWorkoutList(parsed);
+      // Self-heal: if the data was malformed, overwrite it
+      if (JSON.stringify(normalizedWorkouts) !== saved) {
+        sessionStorage.setItem('guest_workouts', JSON.stringify(normalizedWorkouts));
+      }
+      callback(normalizedWorkouts);
+      // Mock unsubscribe
+      return () => {};
+    }
+
+    const q = query(
+      collection(db, 'workouts'), 
+      where('uid', '==', uid),
+      orderBy('timestamp', 'desc')
+    );
+    
+    return onSnapshot(q, (snapshot) => {
+      const rawData = snapshot.docs
+        .filter(doc => doc.exists())
+        .map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      callback(sanitizeWorkoutList(rawData));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'workouts');
+    });
+  },
+
+  saveWorkout: async (workout: Workout, uid: string) => {
+    if (uid.startsWith('guest_')) {
+      const saved = sessionStorage.getItem('guest_workouts');
+      let parsed: unknown = [];
+      try {
+        parsed = saved ? JSON.parse(saved) : [];
+      } catch {
+        parsed = [];
+      }
+      const workouts: Workout[] = sanitizeWorkoutList(parsed);
+      const index = workouts.findIndex(w => w.id === workout.id);
+      if (index >= 0) {
+        workouts[index] = { ...workout, uid };
+      } else {
+        workouts.unshift({ ...workout, uid });
+      }
+      sessionStorage.setItem('guest_workouts', JSON.stringify(workouts));
+      return;
+    }
+
+    try {
+      const workoutToSave = { ...workout, uid };
+      const docRef = doc(db, 'workouts', workout.id);
+      await setDoc(docRef, workoutToSave);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `workouts/${workout.id}`);
+    }
+  },
+
+  deleteWorkout: async (id: string, uid?: string) => {
+    if (uid?.startsWith('guest_')) {
+      const saved = sessionStorage.getItem('guest_workouts');
+      let parsed: unknown = [];
+      try {
+        parsed = saved ? JSON.parse(saved) : [];
+      } catch {
+        parsed = [];
+      }
+      const workouts: Workout[] = sanitizeWorkoutList(parsed);
+      const filtered = workouts.filter(w => w.id !== id);
+      sessionStorage.setItem('guest_workouts', JSON.stringify(filtered));
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, 'workouts', id));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `workouts/${id}`);
+    }
+  },
+
+  // Library
+  subscribeToLibrary: (uid: string, callback: (library: ExerciseLibraryEntry[]) => void) => {
+    if (uid.startsWith('guest_')) {
+      const saved = sessionStorage.getItem('guest_exercises');
+      let library = saved ? JSON.parse(saved) : [...INITIAL_EXERCISES];
+      let changed = false;
+      
+      // Check for missing default exercises in guest mode
+      const existingNames = new Set(library.map((ex: any) => ex.name.toLowerCase()));
+      const missingDefaults = INITIAL_EXERCISES.filter(
+        def => !existingNames.has(def.name.toLowerCase())
+      );
+
+      if (missingDefaults.length > 0) {
+        library = [...library, ...missingDefaults];
+        changed = true;
+      }
+
+      // Backfill missing distributions/fields for built-in exercises
+      library = library.map((ex: any) => {
+        const def = INITIAL_EXERCISES.find(d => 
+          d.id === ex.id || d.name.toLowerCase() === ex.name.toLowerCase()
+        );
+        if (def) {
+          if (
+            !ex.muscleDistribution || ex.muscleDistribution.length === 0 ||
+            ex.muscleGroup !== def.muscleGroup ||
+            ex.trackingMode !== def.trackingMode
+          ) {
+            changed = true;
+            return { 
+              ...ex, 
+              muscleDistribution: def.muscleDistribution,
+              muscleGroup: def.muscleGroup,
+              trackingMode: def.trackingMode
+            };
+          }
+        }
+        return ex;
+      });
+
+      if (changed) {
+        sessionStorage.setItem('guest_exercises', JSON.stringify(library));
+      }
+
+      callback(library);
+      return () => {};
+    }
+
+    const q = query(collection(db, 'exercises'), where('uid', '==', uid));
+    
+    return onSnapshot(q, async (snapshot) => {
+      if (snapshot.empty) {
+        // Auto-seed for new users
+        await storage.seedLibrary(uid);
+      } else {
+        const library = snapshot.docs.map(doc => doc.data() as ExerciseLibraryEntry);
+        
+        // 1. Check for missing default exercises
+        const existingNames = new Set(library.map(ex => ex.name.toLowerCase()));
+        const missingDefaults = INITIAL_EXERCISES.filter(
+          def => !existingNames.has(def.name.toLowerCase())
+        );
+
+        // 2. Check for existing exercises needing backfill
+        const exercisesToBackfill = library.filter(ex => {
+          const def = INITIAL_EXERCISES.find(d => 
+            d.id === ex.id || d.name.toLowerCase() === ex.name.toLowerCase()
+          );
+          if (!def) return false;
+          
+          // Check if any of the fields differ
+          return (
+            !ex.muscleDistribution || ex.muscleDistribution.length === 0 ||
+            ex.muscleGroup !== def.muscleGroup ||
+            ex.trackingMode !== def.trackingMode
+          );
+        });
+
+        if (missingDefaults.length > 0 || exercisesToBackfill.length > 0) {
+          // Add missing defaults
+          for (const ex of missingDefaults) {
+            const docRef = doc(db, 'exercises', ex.id);
+            await setDoc(docRef, { ...ex, uid });
+          }
+          // Backfill existing
+          for (const ex of exercisesToBackfill) {
+            const def = INITIAL_EXERCISES.find(d => 
+              d.id === ex.id || d.name.toLowerCase() === ex.name.toLowerCase()
+            );
+            if (def) {
+              const docRef = doc(db, 'exercises', ex.id);
+              await setDoc(docRef, { 
+                ...ex, 
+                muscleDistribution: def.muscleDistribution,
+                muscleGroup: def.muscleGroup,
+                trackingMode: def.trackingMode,
+                uid 
+              });
+            }
+          }
+          // The snapshot will trigger again after these writes
+        } else {
+          callback(library);
+        }
+      }
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'exercises');
+    });
+  },
+
+  saveLibraryItem: async (item: ExerciseLibraryEntry, uid: string) => {
+    if (uid.startsWith('guest_')) {
+      const saved = sessionStorage.getItem('guest_exercises');
+      const library: ExerciseLibraryEntry[] = saved ? JSON.parse(saved) : [...INITIAL_EXERCISES];
+      const index = library.findIndex(i => i.id === item.id);
+      if (index >= 0) {
+        library[index] = { ...item, uid };
+      } else {
+        library.push({ ...item, uid });
+      }
+      sessionStorage.setItem('guest_exercises', JSON.stringify(library));
+      return;
+    }
+
+    try {
+      const itemToSave = { ...item, uid };
+      const docRef = doc(db, 'exercises', item.id);
+      await setDoc(docRef, itemToSave);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `exercises/${item.id}`);
+    }
+  },
+
+  deleteLibraryItem: async (id: string, uid?: string) => {
+    if (uid?.startsWith('guest_')) {
+      const saved = sessionStorage.getItem('guest_exercises');
+      if (saved) {
+        const library: ExerciseLibraryEntry[] = JSON.parse(saved);
+        const filtered = library.filter(i => i.id !== id);
+        sessionStorage.setItem('guest_exercises', JSON.stringify(filtered));
+      }
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, 'exercises', id));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `exercises/${id}`);
+    }
+  },
+
+  // One-time fetch for seeding or initial load
+  getLibraryOnce: async (uid: string): Promise<ExerciseLibraryEntry[]> => {
+    if (uid.startsWith('guest_')) {
+      const saved = sessionStorage.getItem('guest_exercises');
+      return saved ? JSON.parse(saved) : INITIAL_EXERCISES;
+    }
+
+    try {
+      const q = query(collection(db, 'exercises'), where('uid', '==', uid));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => doc.data() as ExerciseLibraryEntry);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, 'exercises');
+      return [];
+    }
+  },
+
+  seedLibrary: async (uid: string) => {
+    if (uid.startsWith('guest_')) {
+      sessionStorage.setItem('guest_exercises', JSON.stringify(INITIAL_EXERCISES));
+      return;
+    }
+
+    try {
+      for (const ex of INITIAL_EXERCISES) {
+        const docRef = doc(db, 'exercises', ex.id);
+        await setDoc(docRef, { ...ex, uid });
+      }
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, 'exercises/seed');
+    }
+  },
+
+  // Splits
+  subscribeToSplits: (uid: string, callback: (splits: Split[]) => void) => {
+    if (uid.startsWith('guest_')) {
+      const saved = sessionStorage.getItem('guest_splits');
+      let parsed: unknown = [];
+      try {
+        parsed = saved ? JSON.parse(saved) : [];
+      } catch {
+        parsed = [];
+      }
+      const sanitized = sanitizeSplitList(parsed);
+      if (JSON.stringify(sanitized) !== saved) {
+        sessionStorage.setItem('guest_splits', JSON.stringify(sanitized));
+      }
+      callback(sanitized);
+      return () => {};
+    }
+
+    const q = query(collection(db, 'splits'), where('uid', '==', uid));
+    
+    return onSnapshot(q, (snapshot) => {
+      const splits = sanitizeSplitList(snapshot.docs.map(doc => doc.data()));
+      callback(splits);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'splits');
+    });
+  },
+
+  saveSplit: async (split: Split, uid: string) => {
+    if (uid.startsWith('guest_')) {
+      const saved = sessionStorage.getItem('guest_splits');
+      let parsed: unknown = [];
+      try {
+        parsed = saved ? JSON.parse(saved) : [];
+      } catch {
+        parsed = [];
+      }
+      const splits: Split[] = sanitizeSplitList(parsed);
+      const index = splits.findIndex(s => s.day === split.day);
+      if (index >= 0) {
+        splits[index] = { ...split, uid };
+      } else {
+        splits.push({ ...split, uid });
+      }
+      sessionStorage.setItem('guest_splits', JSON.stringify(splits));
+      return;
+    }
+
+    try {
+      const splitToSave = { ...split, uid };
+      // Use a deterministic ID: uid_day
+      const docId = `${uid}_${split.day}`;
+      const docRef = doc(db, 'splits', docId);
+      await setDoc(docRef, { ...splitToSave, id: docId });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `splits/${split.day}`);
+    }
+  },
+
+  seedSplits: async (uid: string, templateDays?: any) => {
+    const daysToUse = templateDays || DEFAULT_SPLIT;
+    const splitsToSeed: Split[] = Object.entries(daysToUse).map(([day, data]: [string, any]) => ({
+      id: `${uid}_${day}`,
+      day,
+      name: data.name,
+      running: data.running,
+      exercises: data.exercises,
+      summary: data.summary || '',
+      uid
+    }));
+
+    if (uid.startsWith('guest_')) {
+      sessionStorage.setItem('guest_splits', JSON.stringify(sanitizeSplitList(splitsToSeed)));
+      return;
+    }
+
+    try {
+      for (const split of splitsToSeed) {
+        await setDoc(doc(db, 'splits', split.id), split);
+      }
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, 'splits/seed');
+    }
+  },
+
+  // Saved Splits
+  subscribeToSavedSplits: (uid: string, callback: (savedSplits: SavedSplit[]) => void) => {
+    if (uid.startsWith('guest_')) {
+      const saved = sessionStorage.getItem('guest_saved_splits');
+      const savedSplits = saved ? JSON.parse(saved) : [];
+      callback(savedSplits);
+      return () => {};
+    }
+
+    const q = query(
+      collection(db, 'saved_splits'), 
+      where('uid', '==', uid),
+      orderBy('timestamp', 'desc')
+    );
+    
+    return onSnapshot(q, (snapshot) => {
+      const savedSplits = snapshot.docs.map(doc => doc.data() as SavedSplit);
+      callback(savedSplits);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'saved_splits');
+    });
+  },
+
+  saveSavedSplit: async (savedSplit: SavedSplit, uid: string) => {
+    if (uid.startsWith('guest_')) {
+      const saved = sessionStorage.getItem('guest_saved_splits');
+      const savedSplits: SavedSplit[] = saved ? JSON.parse(saved) : [];
+      const index = savedSplits.findIndex(s => s.id === savedSplit.id);
+      if (index >= 0) {
+        savedSplits[index] = { ...savedSplit, uid };
+      } else {
+        savedSplits.unshift({ ...savedSplit, uid });
+      }
+      sessionStorage.setItem('guest_saved_splits', JSON.stringify(savedSplits));
+      return;
+    }
+
+    try {
+      const splitToSave = { ...savedSplit, uid };
+      const docRef = doc(db, 'saved_splits', savedSplit.id);
+      await setDoc(docRef, splitToSave);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `saved_splits/${savedSplit.id}`);
+    }
+  },
+
+  deleteSavedSplit: async (id: string, uid?: string) => {
+    if (uid?.startsWith('guest_')) {
+      const saved = sessionStorage.getItem('guest_saved_splits');
+      if (saved) {
+        const savedSplits: SavedSplit[] = JSON.parse(saved);
+        const filtered = savedSplits.filter(s => s.id !== id);
+        sessionStorage.setItem('guest_saved_splits', JSON.stringify(filtered));
+      }
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, 'saved_splits', id));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `saved_splits/${id}`);
+    }
+  },
+
+  // Drafts
+  subscribeToDraft: (uid: string, callback: (draft: Partial<Workout> | null) => void) => {
+    if (uid.startsWith('guest_')) {
+      const saved = sessionStorage.getItem('guest_workout_draft');
+      let parsed: unknown = null;
+      try {
+        parsed = saved ? JSON.parse(saved) : null;
+      } catch {
+        parsed = null;
+      }
+      const sanitized = sanitizeDraftRecord(parsed);
+      if (saved && !sanitized) {
+        sessionStorage.removeItem('guest_workout_draft');
+      }
+      callback(sanitized);
+      return () => {};
+    }
+
+    const docRef = doc(db, 'drafts', uid);
+    return onSnapshot(docRef, (doc) => {
+      if (doc.exists()) {
+        callback(sanitizeDraftRecord(doc.data()));
+      } else {
+        callback(null);
+      }
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, `drafts/${uid}`);
+    });
+  },
+
+  saveDraft: async (draft: Partial<Workout>, uid: string) => {
+    if (uid.startsWith('guest_')) {
+      const sanitized = sanitizeDraftRecord(draft);
+      sessionStorage.setItem('guest_workout_draft', JSON.stringify(sanitized));
+      return;
+    }
+
+    try {
+      const docRef = doc(db, 'drafts', uid);
+      await setDoc(docRef, { ...draft, uid, timestamp: Date.now() });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `drafts/${uid}`);
+    }
+  },
+
+  clearDraft: async (uid: string) => {
+    if (uid.startsWith('guest_')) {
+      sessionStorage.removeItem('guest_workout_draft');
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, 'drafts', uid));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `drafts/${uid}`);
+    }
+  }
+};

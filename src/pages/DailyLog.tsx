@@ -1,0 +1,1334 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState, useEffect, useMemo, useRef, Dispatch, SetStateAction } from 'react';
+import { 
+  Plus, 
+  Trash2, 
+  Save, 
+  ChevronDown, 
+  ChevronUp, 
+  Info, 
+  ChevronLeft, 
+  ChevronRight,
+  GripVertical,
+  Scale,
+  Check,
+  LayoutGrid
+} from 'lucide-react';
+import { format, addDays, subDays } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Slider } from '@/components/ui/slider';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  DndContext, 
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  useDroppable
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { ExerciseSelector } from '@/src/components/ExerciseSelector';
+import { useFirebase } from '@/src/components/FirebaseProvider';
+import { storage, sanitizeDraftRecord, sanitizeSplitRecord } from '@/src/services/storage';
+import { 
+  Workout, 
+  ExerciseEntry, 
+  ExerciseLibraryEntry, 
+  MuscleGroup,
+  Split,
+  CardioType,
+  LiftBlock,
+  CardioBlock,
+  HiitBlock,
+  Block
+} from '@/src/types';
+import { INITIAL_EXERCISES, DEFAULT_SPLIT } from '@/src/constants';
+import { generateWorkoutSnapshot, cleanSummary, sanitizeData, deriveBlocksFromLegacy, projectBlocksToLegacy } from '@/src/lib/workoutUtils';
+
+const NO_SPLIT_SENTINEL = '__none__';
+
+const normalizeDistance = (value: string, unit: string): number => {
+  const num = parseFloat(value);
+  if (isNaN(num)) return 0;
+  
+  switch (unit.toLowerCase()) {
+    case 'miles':
+    case 'mi':
+      return num * 1609.34;
+    case 'km':
+      return num * 1000;
+    case 'yards':
+    case 'yd':
+      return num * 0.9144;
+    case 'm':
+    case 'meters':
+      return num;
+    default:
+      return 0;
+  }
+};
+
+const generateConditioningSummary = (cond: any): string => {
+  if (!cond || !cond.type) return '';
+  let summary = `${cond.type}: ${cond.name || 'Unnamed'}`;
+  if (cond.reps) summary += ` | ${cond.reps} reps`;
+  if (cond.workDistance || cond.workDuration) summary += ` @ ${cond.workDistance || cond.workDuration}${cond.workUnits ? ' ' + cond.workUnits : ''}`;
+  if (cond.restType && cond.restType !== 'none') summary += ` (Rest: ${cond.restValue})`;
+  return summary;
+};
+
+export interface SortableExerciseCardProps {
+  key?: string;
+  ex: ExerciseEntry;
+  library: ExerciseLibraryEntry[];
+  updateExercise: (id: string, updates: Partial<ExerciseEntry>) => void;
+  removeExercise: (id: string) => void;
+  toggleNotes: (id: string) => void;
+  isExpanded: boolean;
+  updateSuperset: (id: string, updates: Partial<ExerciseEntry> | null) => void;
+  expandedSupersets: Record<string, boolean>;
+  setExpandedSupersets: Dispatch<SetStateAction<Record<string, boolean>>>;
+}
+
+const SortableExerciseCard = ({ 
+  ex, 
+  library, 
+  updateExercise, 
+  removeExercise, 
+  toggleNotes, 
+  isExpanded,
+  updateSuperset,
+  expandedSupersets,
+  setExpandedSupersets
+}: SortableExerciseCardProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: ex.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : 1,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  const { isOver, setNodeRef: setDropRef } = useDroppable({
+    id: `superset-drop-${ex.id}`,
+    disabled: !expandedSupersets[ex.id]
+  });
+
+  return (
+    <Card 
+      ref={setNodeRef} 
+      style={style} 
+      className={cn(
+        "border-border shadow-sm relative group transition-shadow",
+        isDragging && "shadow-lg border-maroon/30"
+      )}
+    >
+      <CardContent className="p-4">
+        <div className="flex flex-col md:flex-row gap-4 items-start">
+          {/* Drag Handle & Exercise Selector */}
+          <div className="w-full md:w-[40%] flex gap-3">
+            <div 
+              {...attributes} 
+              {...listeners} 
+              className="mt-7 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+            >
+              <GripVertical size={20} />
+            </div>
+            <div className="flex-1 min-w-0" onPointerDown={e => e.stopPropagation()}>
+              <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Exercise</Label>
+              <ExerciseSelector 
+                exercises={library}
+                value={ex.name}
+                onSelect={(libEx) => updateExercise(ex.id, { 
+                  name: libEx.name, 
+                  muscleGroup: libEx.muscleGroup,
+                  muscleDistribution: libEx.muscleDistribution,
+                  trackingMode: libEx.trackingMode,
+                  timeUnit: 'min'
+                })}
+              />
+            </div>
+          </div>
+          
+          {/* Input Fields Grid */}
+          <div className="w-full md:flex-1 grid grid-cols-3 md:grid-cols-5 gap-2 md:gap-3">
+            <div className="min-w-0">
+              <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block truncate">Sets</Label>
+              <Input 
+                type="number" 
+                value={ex.sets !== undefined && ex.sets !== null ? ex.sets : ''} 
+                onChange={e => {
+                  const newSets = parseInt(e.target.value) || 0;
+                  const updates: Partial<ExerciseEntry> = { sets: newSets };
+                  if (ex.usePerSetWeights) {
+                    const newWeights = [...(ex.perSetWeights || [])];
+                    if (newWeights.length < newSets) {
+                      for (let i = newWeights.length; i < newSets; i++) newWeights.push(ex.weight || 0);
+                    } else if (newWeights.length > newSets) {
+                      newWeights.length = newSets;
+                    }
+                    updates.perSetWeights = newWeights;
+                  }
+                  updateExercise(ex.id, updates);
+                }}
+                onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
+                className="h-9 w-full"
+              />
+            </div>
+            {ex.trackingMode === 'distance' ? (
+              <>
+                <div className="min-w-0">
+                  <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block truncate">Dist</Label>
+                  <Input 
+                    type="number" 
+                    value={ex.distance !== undefined && ex.distance !== null ? ex.distance : ''} 
+                    onChange={e => updateExercise(ex.id, { distance: parseFloat(e.target.value) || 0 })}
+                    onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
+                    className="h-9 w-full"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block truncate">Unit</Label>
+                  <Select
+                    value={ex.distanceUnit || 'm'}
+                    onValueChange={(val: any) => updateExercise(ex.id, { distanceUnit: val })}
+                  >
+                    <SelectTrigger className="h-9 w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="m">m</SelectItem>
+                      <SelectItem value="yd">yd</SelectItem>
+                      <SelectItem value="ft">ft</SelectItem>
+                      <SelectItem value="mi">mi</SelectItem>
+                      <SelectItem value="km">km</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            ) : ex.trackingMode === 'time' ? (
+              <div className="min-w-0">
+                <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block truncate">
+                  TIME ({ex.timeUnit === 'sec' ? 'SEC' : 'MIN'})
+                </Label>
+                <Input 
+                  type="number" 
+                  value={ex.time !== undefined && ex.time !== null ? ex.time : ''} 
+                  onChange={e => updateExercise(ex.id, { time: parseFloat(e.target.value) || 0 })}
+                  onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
+                  className="h-9 w-full"
+                />
+              </div>
+            ) : (
+              <div className="min-w-0">
+                <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block truncate">Reps</Label>
+                <Input 
+                  type="number" 
+                  value={ex.reps !== undefined && ex.reps !== null ? ex.reps : ''} 
+                  onChange={e => updateExercise(ex.id, { reps: parseInt(e.target.value) || 0 })}
+                  onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
+                  className="h-9 w-full"
+                />
+              </div>
+            )}
+            <div className="min-w-0">
+              <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block truncate">Weight (lbs)</Label>
+              {ex.usePerSetWeights ? (
+                <div className="flex items-center h-9 text-[10px] text-muted-foreground font-medium italic">
+                  Per-set active
+                </div>
+              ) : (
+                <Input 
+                  type="number" 
+                  value={ex.weight !== undefined && ex.weight !== null ? ex.weight : ''} 
+                  onChange={e => updateExercise(ex.id, { weight: parseFloat(e.target.value) || 0 })}
+                  onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
+                  className="h-9 w-full"
+                />
+              )}
+            </div>
+            <div className="min-w-0">
+              <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block truncate">RPE</Label>
+              <Input 
+                type="number" 
+                step="0.5"
+                value={ex.rpe !== undefined && ex.rpe !== null ? ex.rpe : ''} 
+                onChange={e => updateExercise(ex.id, { rpe: parseFloat(e.target.value) || null })}
+                onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
+                className="h-9 w-full"
+              />
+            </div>
+            <div className="min-w-0">
+              <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block truncate">RIR</Label>
+              <Input 
+                type="number" 
+                value={ex.rir !== undefined && ex.rir !== null ? ex.rir : ''} 
+                onChange={e => updateExercise(ex.id, { rir: parseInt(e.target.value) || null })}
+                onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
+                className="h-9 w-full"
+              />
+            </div>
+          </div>
+        </div>
+
+        {ex.usePerSetWeights && ex.sets > 0 && (
+          <div className="mt-4 p-3 bg-muted rounded-lg border border-border">
+            <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-2 block">Individual Set Weights (lbs)</Label>
+            <div className="flex flex-wrap gap-2">
+              {Array.from({ length: ex.sets }).map((_, i) => (
+                <div key={i} className="flex flex-col gap-1">
+                  <span className="text-[9px] text-muted-foreground font-bold text-center">S{i+1}</span>
+                  <Input 
+                    type="number"
+                    value={ex.perSetWeights?.[i] ?? ex.weight ?? ''}
+                    onChange={e => {
+                      const newWeights = [...(ex.perSetWeights || Array(ex.sets).fill(ex.weight || 0))];
+                      newWeights[i] = parseFloat(e.target.value) || 0;
+                      updateExercise(ex.id, { perSetWeights: newWeights });
+                    }}
+                    className="h-8 w-16 text-xs text-center"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="mt-3 flex items-center justify-between">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => toggleNotes(ex.id)}
+              className="text-muted-foreground h-8 px-2"
+            >
+              {isExpanded ? <ChevronUp size={14} className="mr-1" /> : <ChevronDown size={14} className="mr-1" />}
+              {isExpanded ? 'Hide Notes' : 'Add Notes'}
+            </Button>
+            
+            <Select
+              value={ex.trackingMode || 'reps'}
+              onValueChange={(val: any) => updateExercise(ex.id, { trackingMode: val })}
+            >
+              <SelectTrigger className="h-8 w-24 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="reps">Reps</SelectItem>
+                <SelectItem value="distance">Dist</SelectItem>
+                <SelectItem value="time">Time</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => {
+                const usePerSet = !ex.usePerSetWeights;
+                const updates: Partial<ExerciseEntry> = { usePerSetWeights: usePerSet };
+                if (usePerSet && !ex.perSetWeights) {
+                  updates.perSetWeights = Array(ex.sets || 0).fill(ex.weight || 0);
+                }
+                updateExercise(ex.id, updates);
+              }}
+              className={cn(
+                "h-8 px-2 text-xs",
+                ex.usePerSetWeights ? "text-maroon bg-maroon/5" : "text-muted-foreground"
+              )}
+            >
+              <Scale size={14} className="mr-1" />
+              {ex.usePerSetWeights ? 'Using Per-Set' : 'Use Per-Set Weights'}
+            </Button>
+
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => {
+                if (ex.superset) {
+                  setExpandedSupersets(prev => ({ ...prev, [ex.id]: !prev[ex.id] }));
+                } else {
+                  updateSuperset(ex.id, {
+                    id: Math.random().toString(36).substr(2, 9),
+                    name: '',
+                    muscleGroup: 'Other',
+                    sets: ex.sets,
+                    reps: ex.reps,
+                    weight: ex.weight,
+                    rpe: ex.rpe,
+                    rir: ex.rir,
+                    notes: '',
+                  });
+                  setExpandedSupersets(prev => ({ ...prev, [ex.id]: true }));
+                }
+              }}
+              className={cn(
+                "h-8 px-2 text-xs",
+                ex.superset ? "text-maroon bg-maroon/5" : "text-muted-foreground"
+              )}
+            >
+              <Plus size={14} className="mr-1" />
+              {ex.superset ? (expandedSupersets[ex.id] ? 'Hide Superset' : 'Show Superset') : 'Superset'}
+            </Button>
+          </div>
+          
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => {
+              removeExercise(ex.id);
+              setExpandedSupersets(prev => {
+                const next = { ...prev };
+                delete next[ex.id];
+                return next;
+              });
+            }}
+            className="text-muted-foreground hover:text-destructive h-8 px-2"
+          >
+            <Trash2 size={14} />
+          </Button>
+        </div>
+
+        {isExpanded && (
+          <div className="mt-2">
+            <Textarea 
+              value={ex.notes}
+              onChange={e => updateExercise(ex.id, { notes: e.target.value })}
+              placeholder="Set details, form cues, etc..."
+              className="text-sm min-h-[60px]"
+            />
+          </div>
+        )}
+
+        {ex.superset && expandedSupersets[ex.id] && (
+          <div 
+            ref={setDropRef}
+            className={cn(
+              "mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4 transition-all duration-200",
+              isOver && "bg-slate-100 border-slate-300 ring-2 ring-slate-200 scale-[1.01]"
+            )}
+          >
+            <div className="flex items-center justify-between">
+              <Label className={cn(
+                "text-[10px] uppercase font-bold transition-colors",
+                isOver ? "text-slate-600" : "text-slate-400"
+              )}>
+                {isOver ? "Drop to Superset" : "Superset Exercise"}
+              </Label>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => updateSuperset(ex.id, null)}
+                className="h-6 w-6 text-slate-300 hover:text-red-500"
+              >
+                <Trash2 size={12} />
+              </Button>
+            </div>
+            
+            <div className={cn(
+              "flex flex-col md:flex-row gap-4 items-start transition-opacity",
+              isOver && "opacity-50"
+            )}>
+              <div className="w-full md:w-[40%]" onPointerDown={e => e.stopPropagation()}>
+                <ExerciseSelector 
+                  exercises={library}
+                  value={ex.superset.name}
+                  onSelect={(libEx) => updateSuperset(ex.id, { 
+                    ...ex.superset, 
+                    name: libEx.name, 
+                    muscleGroup: libEx.muscleGroup,
+                    muscleDistribution: libEx.muscleDistribution 
+                  })}
+                />
+              </div>
+              
+              <div className="w-full md:flex-1 grid grid-cols-3 md:grid-cols-5 gap-2">
+                <div>
+                  <Label className="text-[9px] uppercase font-bold text-slate-400 mb-1 block">Sets</Label>
+                  <Input 
+                    type="number" 
+                    value={ex.superset.sets || ''} 
+                    onChange={e => updateSuperset(ex.id, { ...ex.superset, sets: parseInt(e.target.value) || 0 })}
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <div>
+                  <Label className="text-[9px] uppercase font-bold text-slate-400 mb-1 block">Reps</Label>
+                  <Input 
+                    type="number" 
+                    value={ex.superset.reps || ''} 
+                    onChange={e => updateSuperset(ex.id, { ...ex.superset, reps: parseInt(e.target.value) || 0 })}
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <div>
+                  <Label className="text-[9px] uppercase font-bold text-slate-400 mb-1 block">Weight</Label>
+                  <Input 
+                    type="number" 
+                    value={ex.superset.weight || ''} 
+                    onChange={e => updateSuperset(ex.id, { ...ex.superset, weight: parseFloat(e.target.value) || 0 })}
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <div>
+                  <Label className="text-[9px] uppercase font-bold text-slate-400 mb-1 block">RPE</Label>
+                  <Input 
+                    type="number" 
+                    step="0.5"
+                    value={ex.superset.rpe || ''} 
+                    onChange={e => updateSuperset(ex.id, { ...ex.superset, rpe: parseFloat(e.target.value) || null })}
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <div>
+                  <Label className="text-[9px] uppercase font-bold text-slate-400 mb-1 block">RIR</Label>
+                  <Input 
+                    type="number" 
+                    value={ex.superset.rir || ''} 
+                    onChange={e => updateSuperset(ex.id, { ...ex.superset, rir: parseInt(e.target.value) || null })}
+                    className="h-8 text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+            <Textarea 
+              value={ex.superset.notes}
+              onChange={e => updateSuperset(ex.id, { ...ex.superset, notes: e.target.value })}
+              placeholder="Superset notes..."
+              className={cn(
+                "text-xs min-h-[40px] bg-white/50 transition-opacity",
+                isOver && "opacity-50"
+              )}
+            />
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+interface ConditioningBlockProps {
+  block: CardioBlock | HiitBlock;
+  onChange: (updates: Partial<CardioBlock | HiitBlock>) => void;
+  onDelete: () => void;
+}
+
+const ConditioningBlock: React.FC<ConditioningBlockProps> = ({
+  block,
+  onChange,
+  onDelete,
+}) => (
+  <div className="space-y-3 bg-slate-50/50 p-3 rounded-lg border border-slate-100 mt-4">
+    <div className="flex items-center justify-between">
+      <Label className="text-xs uppercase tracking-wider text-slate-500">
+        {block.kind === 'hiit' ? 'HIIT Block' : 'Cardio Block'} {block.subtype ? `(${block.subtype})` : ''}
+      </Label>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onDelete}
+        className="h-6 text-[10px] text-slate-400 hover:text-red-500"
+      >
+        Remove
+      </Button>
+    </div>
+
+    <Select
+      value={block.subtype ?? ''}
+      onValueChange={(val) => onChange({ subtype: val })}
+    >
+      <SelectTrigger className="h-8 text-xs">
+        <SelectValue placeholder={block.kind === 'hiit' ? 'Select HIIT type...' : 'Select cardio type...'} />
+      </SelectTrigger>
+      <SelectContent>
+        {block.kind === 'cardio' ? (
+          <>
+            <SelectItem value="Zone 2">Zone 2</SelectItem>
+            <SelectItem value="Incline Treadmill">Incline Treadmill</SelectItem>
+            <SelectItem value="Bike">Bike</SelectItem>
+            <SelectItem value="Ruck">Ruck</SelectItem>
+            <SelectItem value="Tempo">Tempo</SelectItem>
+            <SelectItem value="Other">Other</SelectItem>
+          </>
+        ) : (
+          <>
+            <SelectItem value="400m Repeats">400m Repeats</SelectItem>
+            <SelectItem value="800m Repeats">800m Repeats</SelectItem>
+            <SelectItem value="Mile Repeats">Mile Repeats</SelectItem>
+            <SelectItem value="Ladders">Ladders</SelectItem>
+            <SelectItem value="Assault Bike Intervals">Assault Bike Intervals</SelectItem>
+            <SelectItem value="Other">Other</SelectItem>
+          </>
+        )}
+      </SelectContent>
+    </Select>
+
+    <Input
+      value={block.programmedName ?? ''}
+      onChange={(e) => onChange({ programmedName: e.target.value })}
+      placeholder={block.kind === 'hiit' ? 'e.g. 400m Repeats' : 'e.g. Zone 2 Run'}
+      className="h-8 text-xs"
+    />
+
+    <div className="grid grid-cols-2 gap-2">
+      <Input
+        value={
+          block.kind === 'hiit'
+            ? block.programmedWorkDistance ?? ''
+            : block.programmedDistance ?? ''
+        }
+        onChange={(e) =>
+          onChange(
+            block.kind === 'hiit'
+              ? { programmedWorkDistance: e.target.value }
+              : { programmedDistance: e.target.value }
+          )
+        }
+        placeholder="Distance"
+        className="h-8 text-xs"
+      />
+      <Input
+        value={
+          block.kind === 'hiit'
+            ? block.programmedWorkDuration ?? ''
+            : block.programmedDuration ?? ''
+        }
+        onChange={(e) =>
+          onChange(
+            block.kind === 'hiit'
+              ? { programmedWorkDuration: e.target.value }
+              : { programmedDuration: e.target.value }
+          )
+        }
+        placeholder="Duration"
+        className="h-8 text-xs"
+      />
+    </div>
+  </div>
+);
+
+export default function DailyLog() {
+  const { user } = useFirebase();
+  const [date, setDate] = useState(new Date());
+  const [workoutMeta, setWorkoutMeta] = useState<Partial<Workout>>({
+    workoutName: '',
+    workoutSummary: '',
+    runningStats: '',
+    postWorkoutEnergy: 5,
+    notes: '',
+    id: '',
+    isHistorical: false,
+  });
+  const [blocks, setBlocks] = useState<Block[]>([]);
+  const [library, setLibrary] = useState<ExerciseLibraryEntry[]>([]);
+  const [splits, setSplits] = useState<Split[]>([]);
+  const [expandedNotes, setExpandedNotes] = useState<Record<string, boolean>>({});
+  const [expandedSupersets, setExpandedSupersets] = useState<Record<string, boolean>>({});
+  const [manualSplit, setManualSplit] = useState<string | null>(null);
+  const [isDraftLoaded, setIsDraftLoaded] = useState(false);
+
+  const liftBlock = blocks.find((b): b is LiftBlock => b.kind === 'lift');
+  const liftExercises = liftBlock?.exercises ?? [];
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Load draft on mount
+  useEffect(() => {
+    if (!user || isDraftLoaded) return;
+    const unsubscribe = storage.subscribeToDraft(user.uid, (draft: any) => {
+      if (!isDraftLoaded) {
+        if (draft) {
+          const sanitizedDraft = sanitizeDraftRecord(draft);
+          if (sanitizedDraft) {
+            setWorkoutMeta(prev => ({ ...prev, ...sanitizedDraft }));
+            if (sanitizedDraft.blocks) {
+              setBlocks(sanitizedDraft.blocks);
+            } else {
+              setBlocks(deriveBlocksFromLegacy(sanitizedDraft.exercises || [], sanitizedDraft.conditioning));
+            }
+            
+            if (sanitizedDraft.isHistorical) {
+              setWorkoutMeta(prev => ({ ...prev, isHistorical: true }));
+            }
+            
+            if (draft.expandedSupersets) {
+              setExpandedSupersets(draft.expandedSupersets);
+            }
+
+            if (sanitizedDraft.date) {
+              const d = new Date(sanitizedDraft.date);
+              setDate(d);
+              // Update ref to prevent split reload overwriting draft
+              lastLoadedRef.current.date = format(d, 'yyyy-MM-dd');
+            }
+          }
+        }
+        setIsDraftLoaded(true);
+      }
+    });
+    return () => unsubscribe();
+  }, [user, isDraftLoaded]);
+
+  // Auto-save draft
+  useEffect(() => {
+    if (!user || !isDraftLoaded) return;
+    const timer = setTimeout(() => {
+      // Sanitize data to remove undefined values which can break Firestore
+      const draftToSave = sanitizeData({ 
+        ...workoutMeta, 
+        date: date.toISOString(),
+        expandedSupersets 
+      });
+      storage.saveDraft(draftToSave, user.uid);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [workoutMeta, date, user, isDraftLoaded, expandedSupersets]);
+
+  // Subscribe to library
+  useEffect(() => {
+    if (!user) return;
+    const unsubscribe = storage.subscribeToLibrary(user.uid, (data) => {
+      if (data.length === 0) {
+        // Seed if empty
+        storage.seedLibrary(user.uid);
+      } else {
+        setLibrary(data);
+      }
+    });
+    return () => unsubscribe();
+  }, [user]);
+
+  // Subscribe to splits
+  useEffect(() => {
+    if (!user) return;
+    const isGuest = 'isGuest' in user;
+    const unsubscribe = storage.subscribeToSplits(user.uid, (data) => {
+      if (data.length === 0 && isGuest) {
+        // Only auto-seed for guests
+        storage.seedSplits(user.uid);
+      } else {
+        const dayMap: Record<string, Split> = {};
+        data.forEach(s => {
+          // Rename labels if they match the old pattern
+          let name = s.name;
+          if (name === 'DPE-B (Quad Focus)') name = 'Quad Biased Leg Day (DPE-B)';
+          if (name === 'DPE-D (Posterior)') name = 'Posterior Biased Leg Day (DPE-D)';
+          
+          const updatedSplit = { ...s, name };
+          const isDeterministic = s.id === `${user.uid}_${s.day}`;
+          if (!dayMap[s.day] || isDeterministic) {
+            dayMap[s.day] = updatedSplit;
+          }
+        });
+        setSplits(Object.values(dayMap));
+      }
+    });
+    return () => unsubscribe();
+  }, [user]);
+
+  const lastLoadedRef = useRef<{ date: string; split: string | null; splitDataHash: string | null }>({ 
+    date: format(date, 'yyyy-MM-dd'), 
+    split: manualSplit,
+    splitDataHash: null
+  });
+
+  // Load default split based on date or manual selection
+  useEffect(() => {
+    if (manualSplit === NO_SPLIT_SENTINEL) {
+      // User explicitly chose no split — do not auto-populate anything.
+      // Update the lastLoadedRef so subsequent runs don't re-trigger auto-population.
+      lastLoadedRef.current = {
+        date: format(date, 'yyyy-MM-dd'),
+        split: NO_SPLIT_SENTINEL,
+        splitDataHash: '',
+      };
+      return;
+    }
+
+    if (library.length === 0 || splits.length === 0 || !isDraftLoaded) return;
+    
+    const dateStr = format(date, 'yyyy-MM-dd');
+    
+    let currentSplit;
+    if (manualSplit) {
+      currentSplit = splits.find(s => s.name === manualSplit);
+    } else {
+      const dayName = format(date, 'EEEE');
+      currentSplit = splits.find(s => s.day === dayName);
+    }
+
+    if (!currentSplit) return;
+
+    const sanitizedSplit = sanitizeSplitRecord(currentSplit);
+    if (!sanitizedSplit) return;
+
+    // Create a simple hash of the split data to detect changes
+    const splitDataHash = JSON.stringify({
+      name: sanitizedSplit.name,
+      running: sanitizedSplit.running,
+      exercises: sanitizedSplit.exercises
+    });
+
+    const isDateChanged = dateStr !== lastLoadedRef.current.date;
+    const isSplitSelectionChanged = manualSplit !== lastLoadedRef.current.split;
+    const isSplitDataChanged = splitDataHash !== lastLoadedRef.current.splitDataHash;
+    const isWorkoutEmpty = !workoutMeta.workoutName && liftExercises.length === 0;
+
+    // Only auto-load if:
+    // 1. Date or split selection changed
+    // 2. The workout is currently empty
+    // 3. The split data itself changed AND the workout is still "clean" (matches the old split data)
+    if (isDateChanged || isSplitSelectionChanged || isWorkoutEmpty || (isSplitDataChanged && isWorkoutEmpty)) {
+      const defaultExercises: ExerciseEntry[] = sanitizedSplit.exercises.map(ex => {
+        const name = typeof ex === 'string' ? ex : ex.name;
+        const libEx = library.find(e => e.name === name);
+        return {
+          id: Math.random().toString(36).substr(2, 9),
+          name: name,
+          muscleGroup: libEx?.muscleGroup || 'Other',
+          muscleDistribution: libEx?.muscleDistribution,
+          trackingMode: libEx?.trackingMode || 'reps',
+          sets: 0,
+          reps: 0,
+          distance: 0,
+          time: 0,
+          timeUnit: 'min',
+          weight: 0,
+          rpe: null,
+          rir: null,
+          notes: '',
+        };
+      });
+
+      setWorkoutMeta(prev => ({
+        ...prev,
+        workoutName: currentSplit.name,
+        workoutSummary: currentSplit.summary || '',
+        runningStats: currentSplit.running,
+      }));
+      setBlocks(deriveBlocksFromLegacy(defaultExercises, { name: '' }));
+
+      lastLoadedRef.current = { 
+        date: dateStr, 
+        split: manualSplit,
+        splitDataHash: splitDataHash
+      };
+    }
+  }, [date, library, splits, manualSplit, workoutMeta.workoutName, liftExercises.length]);
+
+  const addExercise = () => {
+    const newEx: ExerciseEntry = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: '',
+      muscleGroup: 'Other',
+      trackingMode: 'reps',
+      sets: 0,
+      reps: 0,
+      distance: 0,
+      time: 0,
+      timeUnit: 'min',
+      weight: 0,
+      rpe: null,
+      rir: null,
+      notes: '',
+    };
+    setBlocks(prev => {
+      const liftIdx = prev.findIndex(b => b.kind === 'lift');
+      if (liftIdx === -1) {
+        const newLiftBlock: LiftBlock = {
+          id: `lift_${Math.random().toString(36).substr(2, 9)}`,
+          kind: 'lift',
+          exercises: [newEx],
+        };
+        return [newLiftBlock, ...prev];
+      }
+      return prev.map((b, i) =>
+        i === liftIdx
+          ? { ...(b as LiftBlock), exercises: [...(b as LiftBlock).exercises, newEx] }
+          : b
+      );
+    });
+  };
+
+  const addLiftBlock = () => addExercise();
+
+  const addCardioBlock = () => {
+    const newBlock: CardioBlock = {
+      id: `cardio_${Math.random().toString(36).substr(2, 9)}`,
+      kind: 'cardio',
+      placement: 'after',
+      programmedName: '',
+    };
+    setBlocks(prev => [...prev, newBlock]);
+  };
+
+  const addHiitBlock = () => {
+    const newBlock: HiitBlock = {
+      id: `hiit_${Math.random().toString(36).substr(2, 9)}`,
+      kind: 'hiit',
+      placement: 'after',
+      programmedName: '',
+    };
+    setBlocks(prev => [...prev, newBlock]);
+  };
+
+  const updateExercise = (id: string, updates: Partial<ExerciseEntry>) => {
+    setBlocks(prev => prev.map(b =>
+      b.kind === 'lift'
+        ? { ...b, exercises: b.exercises.map(ex => ex.id === id ? { ...ex, ...updates } : ex) }
+        : b
+    ));
+  };
+
+  const updateSuperset = (id: string, superset: Partial<ExerciseEntry> | null) => {
+    setBlocks(prev =>
+      prev.map(block =>
+        block.kind === 'lift'
+          ? {
+              ...block,
+              exercises: block.exercises.map(ex =>
+                ex.id === id ? { ...ex, superset: (superset as ExerciseEntry | null) || null } : ex
+              ),
+            }
+          : block
+      )
+    );
+  };
+
+  const removeExercise = (id: string) => {
+    setBlocks(prev => prev.map(b =>
+      b.kind === 'lift'
+        ? { ...b, exercises: b.exercises.filter(ex => ex.id !== id) }
+        : b
+    ));
+  };
+
+  const toggleNotes = (id: string) => {
+    setExpandedNotes(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success'>('idle');
+
+  const handleSave = async () => {
+    if (!user) return;
+    setSaveStatus('saving');
+    try {
+      // Sanitize and normalize workout data before saving
+      const { exercises, conditioning } = projectBlocksToLegacy(blocks);
+
+      const workoutToSave = sanitizeData({
+        ...workoutMeta,
+        exercises,
+        conditioning,
+        blocks: blocks.length > 0 ? blocks : undefined,
+        id: workoutMeta.id || Math.random().toString(36).substr(2, 9),
+        date: date.toISOString(),
+        timestamp: Date.now(),
+        uid: user.uid,
+      });
+      
+      await storage.saveWorkout(workoutToSave as Workout, user.uid);
+      await storage.clearDraft(user.uid);
+      setSaveStatus('success');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    } catch (error) {
+      console.error('Failed to save workout:', error);
+      // Don't immediately reset so user can see it failed or use recovery button
+      // But we should probably allow them to try again
+      setSaveStatus('idle');
+    }
+  };
+
+  const handleReset = () => {
+    if (!window.confirm("Are you sure you want to reset this workout? This will clear all current progress and restore the programmed structure for this split.")) {
+      return;
+    }
+
+    if (manualSplit === NO_SPLIT_SENTINEL) {
+      setWorkoutMeta(prev => ({
+        ...prev,
+        workoutName: '',
+        workoutSummary: '',
+        runningStats: '',
+        notes: '',
+      }));
+      setBlocks([]);
+      return;
+    }
+
+    let currentSplit;
+    if (manualSplit) {
+      currentSplit = splits.find(s => s.name === manualSplit);
+    } else {
+      const dayName = format(date, 'EEEE');
+      currentSplit = splits.find(s => s.day === dayName);
+    }
+
+    if (!currentSplit) return;
+
+    const defaultExercises: ExerciseEntry[] = currentSplit.exercises.map(ex => {
+      const name = typeof ex === 'string' ? ex : ex.name;
+      const libEx = library.find(e => e.name === name);
+      return {
+        id: Math.random().toString(36).substr(2, 9),
+        name: name,
+        muscleGroup: libEx?.muscleGroup || 'Other',
+        muscleDistribution: libEx?.muscleDistribution,
+        trackingMode: libEx?.trackingMode || 'reps',
+        sets: 0,
+        reps: 0,
+        distance: 0,
+        time: 0,
+        timeUnit: 'min',
+        weight: 0,
+        rpe: null,
+        rir: null,
+        notes: '',
+      };
+    });
+
+    setWorkoutMeta(prev => ({
+      ...prev,
+      workoutName: currentSplit.name,
+      workoutSummary: currentSplit.summary || '',
+      runningStats: currentSplit.running,
+      notes: '',
+      postWorkoutEnergy: 5,
+    }));
+    setBlocks(deriveBlocksFromLegacy(defaultExercises, currentSplit.conditioning));
+    setExpandedSupersets({});
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setBlocks(prev => prev.map(b => {
+      if (b.kind !== 'lift') return b;
+      const oldIndex = b.exercises.findIndex(ex => ex.id === active.id);
+      const newIndex = b.exercises.findIndex(ex => ex.id === over.id);
+      if (oldIndex === -1 || newIndex === -1) return b;
+      return { ...b, exercises: arrayMove(b.exercises, oldIndex, newIndex) };
+    }));
+  };
+
+  const changeDate = (days: number) => {
+    setDate(prev => addDays(prev, days));
+    setManualSplit(null); // Reset manual split when date changes
+  };
+
+  return (
+    <div className="space-y-6 pb-20">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-bold text-foreground tracking-tight">Daily Log</h2>
+          <p className="text-muted-foreground">{format(date, 'EEEE, MMMM do, yyyy')}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center bg-card border border-border rounded-md p-1">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8 text-muted-foreground"
+              onClick={() => changeDate(-1)}
+            >
+              <ChevronLeft size={18} />
+            </Button>
+            <Input 
+              type="date" 
+              value={format(date, 'yyyy-MM-dd')}
+              onChange={(e) => {
+                setDate(new Date(e.target.value));
+                setManualSplit(null);
+              }}
+              className="w-auto border-none focus-visible:ring-0 h-8 text-sm text-foreground"
+            />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8 text-muted-foreground"
+              onClick={() => changeDate(1)}
+            >
+              <ChevronRight size={18} />
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            {saveStatus === 'saving' && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setSaveStatus('idle')}
+                className="text-[10px] h-8 border-slate-200 text-slate-500 hover:bg-slate-50"
+              >
+                Reset Save
+              </Button>
+            )}
+            <Button 
+              onClick={handleSave} 
+              disabled={saveStatus === 'saving'}
+              className={cn(
+                "text-white transition-all",
+                saveStatus === 'success' ? "bg-green-600 hover:bg-green-700" : "bg-maroon hover:bg-maroon-light"
+              )}
+            >
+              {saveStatus === 'saving' ? (
+                <>Saving...</>
+              ) : saveStatus === 'success' ? (
+                <><Check size={18} className="mr-2" /> Saved!</>
+              ) : (
+                <><Save size={18} className="mr-2" /> Save Workout</>
+              )}
+            </Button>
+          </div>
+        </div>
+      </header>
+      {workoutMeta.isHistorical && (
+        <div className="bg-maroon/10 border border-maroon/20 text-maroon p-4 rounded-lg flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Info size={20} />
+            <span className="font-semibold">Editing Historical Log • {format(date, 'MMMM d, yyyy')}</span>
+          </div>
+          <Button variant="ghost" size="sm" onClick={() => {
+            setWorkoutMeta(prev => ({ ...prev, isHistorical: false }));
+            storage.clearDraft(user?.uid || '');
+          }}>Exit Edit</Button>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 gap-6">
+        <div className="space-y-6">
+          {/* Workout Header Card */}
+          <Card className="border-slate-200 shadow-sm overflow-hidden">
+            <div className="h-2 bg-maroon" />
+            <CardHeader>
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col md:flex-row md:items-end gap-4">
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs uppercase tracking-wider text-slate-500">Workout Name</Label>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={handleReset}
+                        className="h-6 text-[10px] uppercase font-bold text-slate-400 hover:text-maroon hover:bg-maroon/5 px-2"
+                      >
+                        Reset Workout
+                      </Button>
+                    </div>
+                    <Input 
+                      value={workoutMeta.workoutName} 
+                      onChange={e => setWorkoutMeta(prev => ({ ...prev, workoutName: e.target.value }))}
+                      className="text-xl font-bold border-none px-0 focus-visible:ring-0 h-auto"
+                      placeholder="Enter workout name..."
+                    />
+                  </div>
+                  <div className="w-full md:w-64 space-y-1">
+                    <Label className="text-xs uppercase tracking-wider text-slate-500">Change Split</Label>
+                    <Select 
+                      value={manualSplit ?? ""} 
+                      onValueChange={(val) => {
+                        setManualSplit(val);
+                        if (val === NO_SPLIT_SENTINEL) {
+                          setWorkoutMeta(prev => ({
+                            ...prev,
+                            workoutName: '',
+                            workoutSummary: '',
+                            runningStats: '',
+                            notes: '',
+                          }));
+                          setBlocks([]);
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="Select a split..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NO_SPLIT_SENTINEL}>No Split</SelectItem>
+                        {splits.map(s => (
+                          <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Workout Summary Snapshot (Read-Only) */}
+                {(() => {
+                  const currentSplit = splits.find(s => s.name === (manualSplit || workoutMeta.workoutName));
+                  if (!currentSplit) return null;
+                  
+                  return (
+                    <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-3">
+                      <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                        <LayoutGrid size={12} className="text-maroon" />
+                        Session Snapshot (Programmed)
+                      </div>
+                      
+                      <div className="whitespace-pre-wrap text-[11px] leading-relaxed text-slate-700 font-mono">
+                        {currentSplit?.summary?.trim() || (currentSplit ? generateWorkoutSnapshot(currentSplit) : '')}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                <div className="pt-2">
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+
+          {/* Exercises List */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-slate-800">Exercises</h3>
+            </div>
+
+            <DndContext 
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext 
+                items={liftExercises.map(ex => ex.id) || []}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-4">
+                  {(liftExercises || []).map((ex) => (
+                    <SortableExerciseCard 
+                      key={ex.id}
+                      ex={ex}
+                      library={library}
+                      updateExercise={updateExercise}
+                      removeExercise={removeExercise}
+                      toggleNotes={toggleNotes}
+                      isExpanded={!!expandedNotes[ex.id]}
+                      updateSuperset={updateSuperset}
+                      expandedSupersets={expandedSupersets}
+                      setExpandedSupersets={setExpandedSupersets}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+
+            {blocks
+              .filter((b): b is CardioBlock | HiitBlock => b.kind === 'cardio' || b.kind === 'hiit')
+              .map(condBlock => (
+                <ConditioningBlock
+                  key={condBlock.id}
+                  block={condBlock}
+                  onChange={(updates) => {
+                    setBlocks(prev => prev.map(b =>
+                      b.id === condBlock.id ? ({ ...b, ...updates } as Block) : b
+                    ));
+                  }}
+                  onDelete={() => {
+                    setBlocks(prev => prev.filter(b => b.id !== condBlock.id));
+                  }}
+                />
+              ))
+            }
+
+            <div className="grid grid-cols-3 gap-2 mt-4">
+              <Button variant="outline" onClick={addLiftBlock} className="border-dashed border-slate-300">
+                <Plus size={16} className="mr-1" /> Add Lift
+              </Button>
+              <Button variant="outline" onClick={addCardioBlock} className="border-dashed border-slate-300">
+                <Plus size={16} className="mr-1" /> Add Cardio
+              </Button>
+              <Button variant="outline" onClick={addHiitBlock} className="border-dashed border-slate-300">
+                <Plus size={16} className="mr-1" /> Add HIIT
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          {/* Post-Workout Energy */}
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Post-Workout Energy</CardTitle>
+              <CardDescription>How do you feel right now?</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex justify-between items-center">
+                <span className="text-2xl font-bold text-maroon">{workoutMeta.postWorkoutEnergy}</span>
+                <span className="text-xs text-slate-400 uppercase font-bold">Scale 1-10</span>
+              </div>
+              <Slider 
+                value={workoutMeta.postWorkoutEnergy ?? 5} 
+                min={1} 
+                max={10} 
+                step={1}
+                onValueChange={(val) => {
+                  const num = typeof val === 'number' ? val : (Array.isArray(val) ? val[0] : 5);
+                  setWorkoutMeta(prev => ({ ...prev, postWorkoutEnergy: num }));
+                }}
+              />
+              <div className="flex justify-between text-[10px] text-slate-400 uppercase font-bold">
+                <span>Drained</span>
+                <span>Average</span>
+                <span>Elite</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* General Notes */}
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">General Notes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Textarea 
+                value={workoutMeta.notes}
+                onChange={e => setWorkoutMeta(prev => ({ ...prev, notes: e.target.value }))}
+                placeholder="Overall feeling, sleep, nutrition, etc..."
+                className="min-h-[120px]"
+              />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}

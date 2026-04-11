@@ -1,0 +1,181 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: /users/{uid}
+    // Fields:
+    //   - uid: string (required)
+    //   - email: string (required)
+    //   - displayName: string (optional)
+    //
+    // Collection: /exercises/{exerciseId}
+    // Fields:
+    //   - id: string (required)
+    //   - name: string (required, size < 100)
+    //   - muscleGroup: string (required, enum)
+    //   - uid: string (required, owner)
+    //
+    // Collection: /workouts/{workoutId}
+    // Fields:
+    //   - id: string (required)
+    //   - date: string (required, ISO format)
+    //   - workoutName: string (required, size < 100)
+    //   - exercises: list (required, max 50 items)
+    //   - uid: string (required, owner)
+    //   - timestamp: number (required)
+    //
+    // Collection: /splits/{splitId}
+    // Fields:
+    //   - id: string (required)
+    //   - day: string (required)
+    //   - name: string (required, size < 100)
+    //   - running: string (required)
+    //   - exercises: list (required, max 20 items)
+    //   - uid: string (required, owner)
+    //
+    // Collection: /saved_splits/{splitId}
+    // Fields:
+    //   - id: string (required)
+    //   - name: string (required)
+    //   - days: map (required)
+    //   - uid: string (required, owner)
+    //   - timestamp: number (required)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.uid;
+    }
+
+    function uidUnchanged() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == request.auth.uid;
+    }
+
+    function uidNotModified() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid;
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function isValidString(field, maxLen) {
+      return request.resource.data[field] is string && request.resource.data[field].size() <= maxLen;
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return data.uid == request.auth.uid &&
+             isValidEmail(data.email) &&
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() < 100));
+    }
+
+    function isValidExercise(data) {
+      return data.id is string &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.muscleGroup is string &&
+             data.uid == request.auth.uid;
+    }
+
+    function isValidWorkout(data) {
+      return data.workoutName is string && data.workoutName.size() < 100 &&
+             (!('exercises' in data) || (data.exercises is list && data.exercises.size() <= 50)) &&
+             data.uid == request.auth.uid;
+    }
+
+    function isValidDraft(data) {
+      return data.uid == request.auth.uid &&
+             (!('workoutName' in data) || (data.workoutName is string && data.workoutName.size() < 100)) &&
+             (!('exercises' in data) || (data.exercises is list && data.exercises.size() <= 50));
+    }
+
+    function isValidSplit(data) {
+      return data.id is string &&
+             data.day is string &&
+             data.name is string && data.name.size() < 100 &&
+             data.running is string &&
+             data.exercises is list && data.exercises.size() <= 20 &&
+             data.uid == request.auth.uid;
+    }
+
+    function isValidSavedSplit(data) {
+      return data.id is string &&
+             data.name is string && data.name.size() < 100 &&
+             data.days is map &&
+             data.uid == request.auth.uid &&
+             data.timestamp is number;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && isValidUser(request.resource.data);
+    }
+
+    match /exercises/{exerciseId} {
+      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid && isValidExercise(request.resource.data);
+      allow update: if isAuthenticated() && isDocOwner() && uidNotModified() && isValidExercise(request.resource.data);
+      allow delete: if isAuthenticated() && isDocOwner();
+    }
+
+    match /workouts/{workoutId} {
+      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid && isValidWorkout(request.resource.data);
+      allow update: if isAuthenticated() && isDocOwner() && uidNotModified() && isValidWorkout(request.resource.data);
+      allow delete: if isAuthenticated() && isDocOwner();
+    }
+
+    match /splits/{splitId} {
+      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid && isValidSplit(request.resource.data);
+      allow update: if isAuthenticated() && isDocOwner() && uidNotModified() && isValidSplit(request.resource.data);
+      allow delete: if isAuthenticated() && isDocOwner();
+    }
+
+    match /drafts/{uid} {
+      allow read: if isOwner(uid);
+      allow create, update: if isOwner(uid) && isValidDraft(request.resource.data);
+      allow delete: if isOwner(uid);
+    }
+
+    match /saved_splits/{splitId} {
+      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid && isValidSavedSplit(request.resource.data);
+      allow update: if isAuthenticated() && isDocOwner() && uidNotModified() && isValidSavedSplit(request.resource.data);
+      allow delete: if isAuthenticated() && isDocOwner();
+    }
+    
+    // Default deny
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

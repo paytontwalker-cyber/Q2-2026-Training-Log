@@ -1,0 +1,107 @@
+{
+  "entities": {
+    "ExerciseLibraryEntry": {
+      "title": "ExerciseLibraryEntry",
+      "description": "A definition of an exercise in the user's library.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "muscleGroup": { "type": "string" },
+        "uid": { "type": "string", "description": "Owner of the exercise" }
+      },
+      "required": ["id", "name", "muscleGroup", "uid"]
+    },
+    "Workout": {
+      "title": "Workout",
+      "description": "A logged workout session.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "workoutName": { "type": "string" },
+        "workoutSummary": { "type": "string" },
+        "runningStats": { "type": "string" },
+        "exercises": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "muscleGroup": { "type": "string" },
+              "sets": { "type": "number" },
+              "reps": { "type": "number" },
+              "weight": { "type": "number" },
+              "rpe": { "type": "number" },
+              "rir": { "type": "number" },
+              "notes": { "type": "string" },
+              "superset": { "type": "object" }
+            }
+          }
+        },
+        "inclineTreadmill": {
+          "type": "object",
+          "properties": {
+            "duration": { "type": "number" },
+            "incline": { "type": "number" },
+            "speed": { "type": "number" },
+            "notes": { "type": "string" }
+          }
+        },
+        "postWorkoutEnergy": { "type": "number" },
+        "notes": { "type": "string" },
+        "timestamp": { "type": "number" },
+        "uid": { "type": "string", "description": "Owner of the workout" }
+      },
+      "required": ["id", "date", "workoutName", "exercises", "uid", "timestamp"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile information.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Split": {
+      "title": "Split",
+      "description": "A training split for a specific day.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "day": { "type": "string" },
+        "name": { "type": "string" },
+        "running": { "type": "string" },
+        "exercises": { "type": "array", "items": { "type": "string" } },
+        "uid": { "type": "string" }
+      },
+      "required": ["id", "day", "name", "running", "exercises", "uid"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "UserProfile",
+      "description": "Private user profile data."
+    },
+    "/exercises/{exerciseId}": {
+      "schema": "ExerciseLibraryEntry",
+      "description": "User-specific exercise library."
+    },
+    "/workouts/{workoutId}": {
+      "schema": "Workout",
+      "description": "User-specific workout logs."
+    },
+    "/splits/{splitId}": {
+      "schema": "Split",
+      "description": "User-specific training splits."
+    },
+    "/drafts/{uid}": {
+      "schema": "Workout",
+      "description": "In-progress workout draft."
+    }
+  }
+}
