@@ -64,7 +64,8 @@ import {
   LiftBlock,
   CardioBlock,
   HiitBlock,
-  Block
+  Block,
+  CardioSubtype
 } from '@/src/types';
 import { INITIAL_EXERCISES, DEFAULT_SPLIT } from '@/src/constants';
 import { generateWorkoutSnapshot, cleanSummary, sanitizeData, deriveBlocksFromLegacy, projectBlocksToLegacy } from '@/src/lib/workoutUtils';
@@ -538,105 +539,321 @@ const SortableExerciseCard = ({
   );
 };
 
-interface ConditioningBlockProps {
+interface SortableConditioningBlockProps {
   block: CardioBlock | HiitBlock;
   onChange: (updates: Partial<CardioBlock | HiitBlock>) => void;
   onDelete: () => void;
+  library: ExerciseLibraryEntry[];
+  updateHiitExercise: (blockId: string, exerciseId: string, updates: Partial<ExerciseEntry>) => void;
+  removeHiitExercise: (blockId: string, exerciseId: string) => void;
+  addHiitExercise: (blockId: string) => void;
 }
 
-const ConditioningBlock: React.FC<ConditioningBlockProps> = ({
+const SortableConditioningBlock: React.FC<SortableConditioningBlockProps> = ({
   block,
   onChange,
   onDelete,
-}) => (
-  <div className="space-y-3 bg-slate-50/50 p-3 rounded-lg border border-slate-100 mt-4">
-    <div className="flex items-center justify-between">
-      <Label className="text-xs uppercase tracking-wider text-slate-500">
-        {block.kind === 'hiit' ? 'HIIT Block' : 'Cardio Block'} {block.subtype ? `(${block.subtype})` : ''}
-      </Label>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={onDelete}
-        className="h-6 text-[10px] text-slate-400 hover:text-red-500"
-      >
-        Remove
-      </Button>
-    </div>
+  library,
+  updateHiitExercise,
+  removeHiitExercise,
+  addHiitExercise,
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: block.id });
 
-    <Select
-      value={block.subtype ?? ''}
-      onValueChange={(val) => onChange({ subtype: val })}
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : 1,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <Card 
+      ref={setNodeRef} 
+      style={style} 
+      className={cn(
+        "border-border shadow-sm relative group transition-shadow",
+        isDragging && "shadow-lg border-maroon/30"
+      )}
     >
-      <SelectTrigger className="h-8 text-xs">
-        <SelectValue placeholder={block.kind === 'hiit' ? 'Select HIIT type...' : 'Select cardio type...'} />
-      </SelectTrigger>
-      <SelectContent>
-        {block.kind === 'cardio' ? (
-          <>
-            <SelectItem value="Zone 2">Zone 2</SelectItem>
-            <SelectItem value="Incline Treadmill">Incline Treadmill</SelectItem>
-            <SelectItem value="Bike">Bike</SelectItem>
-            <SelectItem value="Ruck">Ruck</SelectItem>
-            <SelectItem value="Tempo">Tempo</SelectItem>
-            <SelectItem value="Other">Other</SelectItem>
-          </>
-        ) : (
-          <>
-            <SelectItem value="400m Repeats">400m Repeats</SelectItem>
-            <SelectItem value="800m Repeats">800m Repeats</SelectItem>
-            <SelectItem value="Mile Repeats">Mile Repeats</SelectItem>
-            <SelectItem value="Ladders">Ladders</SelectItem>
-            <SelectItem value="Assault Bike Intervals">Assault Bike Intervals</SelectItem>
-            <SelectItem value="Other">Other</SelectItem>
-          </>
-        )}
-      </SelectContent>
-    </Select>
+      <CardContent className="p-4">
+        <div className="flex flex-col md:flex-row gap-4 items-start">
+          <div 
+            {...attributes} 
+            {...listeners} 
+            className="mt-7 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+          >
+            <GripVertical size={20} />
+          </div>
+          <div className="flex-1 min-w-0 space-y-4" onPointerDown={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs uppercase tracking-wider text-slate-500">
+                {block.kind === 'hiit' ? 'HIIT Block' : 'Cardio Block'}
+              </Label>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onDelete}
+                className="h-6 text-[10px] text-slate-400 hover:text-red-500"
+              >
+                Remove
+              </Button>
+            </div>
 
-    <Input
-      value={block.programmedName ?? ''}
-      onChange={(e) => onChange({ programmedName: e.target.value })}
-      placeholder={block.kind === 'hiit' ? 'e.g. 400m Repeats' : 'e.g. Zone 2 Run'}
-      className="h-8 text-xs"
-    />
+            {block.kind === 'cardio' ? (
+              <div className="space-y-4">
+                <Select
+                  value={block.subtype ?? ''}
+                  onValueChange={(val) => onChange({ subtype: val as CardioSubtype })}
+                >
+                  <SelectTrigger className="h-9 w-full md:w-64">
+                    <SelectValue placeholder="Select cardio type..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Zone 2">Zone 2</SelectItem>
+                    <SelectItem value="Incline Treadmill">Incline Treadmill</SelectItem>
+                    <SelectItem value="Bike">Bike</SelectItem>
+                    <SelectItem value="Ruck">Ruck</SelectItem>
+                    <SelectItem value="Tempo">Tempo</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
 
-    <div className="grid grid-cols-2 gap-2">
-      <Input
-        value={
-          block.kind === 'hiit'
-            ? block.programmedWorkDistance ?? ''
-            : block.programmedDistance ?? ''
-        }
-        onChange={(e) =>
-          onChange(
-            block.kind === 'hiit'
-              ? { programmedWorkDistance: e.target.value }
-              : { programmedDistance: e.target.value }
-          )
-        }
-        placeholder="Distance"
-        className="h-8 text-xs"
-      />
-      <Input
-        value={
-          block.kind === 'hiit'
-            ? block.programmedWorkDuration ?? ''
-            : block.programmedDuration ?? ''
-        }
-        onChange={(e) =>
-          onChange(
-            block.kind === 'hiit'
-              ? { programmedWorkDuration: e.target.value }
-              : { programmedDuration: e.target.value }
-          )
-        }
-        placeholder="Duration"
-        className="h-8 text-xs"
-      />
+                {block.subtype && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Name</Label>
+                        <Input
+                          value={block.programmedName ?? ''}
+                          onChange={(e) => onChange({ programmedName: e.target.value })}
+                          placeholder="e.g. Zone 2 Run"
+                          className="h-9"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Duration</Label>
+                        <Input
+                          value={block.programmedDuration ?? ''}
+                          onChange={(e) => onChange({ programmedDuration: e.target.value })}
+                          placeholder="e.g. 45 min"
+                          className="h-9"
+                        />
+                      </div>
+                      {block.subtype !== 'Incline Treadmill' && (
+                        <div>
+                          <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Distance</Label>
+                          <Input
+                            value={block.programmedDistance ?? ''}
+                            onChange={(e) => onChange({ programmedDistance: e.target.value })}
+                            placeholder="e.g. 3 miles"
+                            className="h-9"
+                          />
+                        </div>
+                      )}
+                      {block.subtype === 'Incline Treadmill' && (
+                        <div>
+                          <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Incline / Target</Label>
+                          <Input
+                            value={block.programmedNotes ?? ''}
+                            onChange={(e) => onChange({ programmedNotes: e.target.value })}
+                            placeholder="e.g. 12% incline"
+                            className="h-9"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    {block.subtype !== 'Incline Treadmill' && (
+                      <div>
+                        <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Notes</Label>
+                        <Textarea
+                          value={block.programmedNotes ?? ''}
+                          onChange={(e) => onChange({ programmedNotes: e.target.value })}
+                          placeholder="Cardio notes..."
+                          className="min-h-[60px] text-xs"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <Select
+                  value={block.hiitType ?? ''}
+                  onValueChange={(val) => onChange({ hiitType: val as any })}
+                >
+                  <SelectTrigger className="h-9 w-full md:w-64">
+                    <SelectValue placeholder="Select HIIT type..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="METCON">METCON</SelectItem>
+                    <SelectItem value="AMRAP">AMRAP</SelectItem>
+                    <SelectItem value="EMOM">EMOM</SelectItem>
+                    <SelectItem value="Repeats">Repeats</SelectItem>
+                    <SelectItem value="Intervals">Intervals</SelectItem>
+                    <SelectItem value="Ladders">Ladders</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <div>
+                  <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Structure / Notes</Label>
+                  <Textarea
+                    value={block.structureNotes ?? ''}
+                    onChange={(e) => onChange({ structureNotes: e.target.value })}
+                    placeholder="e.g. 5 rounds for time..."
+                    className="min-h-[60px] text-xs"
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <Label className="text-[10px] uppercase font-bold text-muted-foreground">Exercises</Label>
+                  {(block.exercises || []).map((ex) => (
+                    <div key={ex.id} className="flex flex-col md:flex-row gap-3 items-start bg-slate-50 p-3 rounded-md border border-slate-100">
+                      <div className="w-full md:w-[40%]">
+                        <ExerciseSelector 
+                          exercises={library}
+                          value={ex.name}
+                          onSelect={(libEx) => updateHiitExercise(block.id, ex.id, { 
+                            name: libEx.name, 
+                            muscleGroup: libEx.muscleGroup,
+                            muscleDistribution: libEx.muscleDistribution,
+                            trackingMode: libEx.trackingMode,
+                            timeUnit: 'min'
+                          })}
+                        />
+                      </div>
+                      <div className="w-full md:flex-1 grid grid-cols-3 gap-2">
+                        <div>
+                          <Label className="text-[9px] uppercase font-bold text-slate-400 mb-1 block">Sets</Label>
+                          <Input 
+                            type="number" 
+                            value={ex.sets !== undefined && ex.sets !== null ? ex.sets : ''} 
+                            onChange={e => updateHiitExercise(block.id, ex.id, { sets: parseInt(e.target.value) || 0 })}
+                            className="h-8 text-xs"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-[9px] uppercase font-bold text-slate-400 mb-1 block">Reps</Label>
+                          <Input 
+                            type="number" 
+                            value={ex.reps !== undefined && ex.reps !== null ? ex.reps : ''} 
+                            onChange={e => updateHiitExercise(block.id, ex.id, { reps: parseInt(e.target.value) || 0 })}
+                            className="h-8 text-xs"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-[9px] uppercase font-bold text-slate-400 mb-1 block">Weight</Label>
+                          <Input 
+                            type="number" 
+                            value={ex.weight !== undefined && ex.weight !== null ? ex.weight : ''} 
+                            onChange={e => updateHiitExercise(block.id, ex.id, { weight: parseFloat(e.target.value) || 0 })}
+                            className="h-8 text-xs"
+                          />
+                        </div>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => removeHiitExercise(block.id, ex.id)}
+                        className="h-8 w-8 text-slate-300 hover:text-red-500 flex-shrink-0"
+                      >
+                        <Trash2 size={14} />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button variant="outline" size="sm" onClick={() => addHiitExercise(block.id)} className="border-dashed border-slate-300 text-xs">
+                    <Plus size={14} className="mr-1" /> Add HIIT Exercise
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+interface SortableLiftBlockProps {
+  block: LiftBlock;
+  library: ExerciseLibraryEntry[];
+  updateExercise: (id: string, updates: Partial<ExerciseEntry>) => void;
+  removeExercise: (id: string) => void;
+  toggleNotes: (id: string) => void;
+  expandedNotes: Record<string, boolean>;
+  updateSuperset: (id: string, updates: Partial<ExerciseEntry> | null) => void;
+  expandedSupersets: Record<string, boolean>;
+  setExpandedSupersets: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
+}
+
+const SortableLiftBlock: React.FC<SortableLiftBlockProps> = ({
+  block,
+  library,
+  updateExercise,
+  removeExercise,
+  toggleNotes,
+  expandedNotes,
+  updateSuperset,
+  expandedSupersets,
+  setExpandedSupersets
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: block.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : 1,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="space-y-4 relative">
+      <div 
+        {...attributes} 
+        {...listeners}
+        className="absolute -left-8 top-1/2 -translate-y-1/2 p-2 cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-500 hidden md:block"
+      >
+        <GripVertical size={20} />
+      </div>
+      <SortableContext 
+        items={block.exercises.map(ex => ex.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        <div className="space-y-4">
+          {block.exercises.map((ex) => (
+            <SortableExerciseCard 
+              key={ex.id}
+              ex={ex}
+              library={library}
+              updateExercise={updateExercise}
+              removeExercise={removeExercise}
+              toggleNotes={toggleNotes}
+              isExpanded={!!expandedNotes[ex.id]}
+              updateSuperset={updateSuperset}
+              expandedSupersets={expandedSupersets}
+              setExpandedSupersets={setExpandedSupersets}
+            />
+          ))}
+        </div>
+      </SortableContext>
     </div>
-  </div>
-);
+  );
+};
 
 export default function DailyLog() {
   const { user } = useFirebase();
@@ -943,6 +1160,51 @@ export default function DailyLog() {
     ));
   };
 
+  const updateHiitExercise = (blockId: string, exerciseId: string, updates: Partial<ExerciseEntry>) => {
+    setBlocks(prev => prev.map(b => {
+      if (b.id !== blockId || b.kind !== 'hiit') return b;
+      return {
+        ...b,
+        exercises: (b.exercises || []).map(ex => ex.id === exerciseId ? { ...ex, ...updates } : ex)
+      };
+    }));
+  };
+
+  const removeHiitExercise = (blockId: string, exerciseId: string) => {
+    setBlocks(prev => prev.map(b => {
+      if (b.id !== blockId || b.kind !== 'hiit') return b;
+      return {
+        ...b,
+        exercises: (b.exercises || []).filter(ex => ex.id !== exerciseId)
+      };
+    }));
+  };
+
+  const addHiitExercise = (blockId: string) => {
+    const newEx: ExerciseEntry = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: '',
+      muscleGroup: 'Other',
+      trackingMode: 'reps',
+      sets: 0,
+      reps: 0,
+      distance: 0,
+      time: 0,
+      timeUnit: 'min',
+      weight: 0,
+      rpe: null,
+      rir: null,
+      notes: '',
+    };
+    setBlocks(prev => prev.map(b => {
+      if (b.id !== blockId || b.kind !== 'hiit') return b;
+      return {
+        ...b,
+        exercises: [...(b.exercises || []), newEx]
+      };
+    }));
+  };
+
   const toggleNotes = (id: string) => {
     setExpandedNotes(prev => ({ ...prev, [id]: !prev[id] }));
   };
@@ -1042,13 +1304,26 @@ export default function DailyLog() {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    setBlocks(prev => prev.map(b => {
-      if (b.kind !== 'lift') return b;
-      const oldIndex = b.exercises.findIndex(ex => ex.id === active.id);
-      const newIndex = b.exercises.findIndex(ex => ex.id === over.id);
-      if (oldIndex === -1 || newIndex === -1) return b;
-      return { ...b, exercises: arrayMove(b.exercises, oldIndex, newIndex) };
-    }));
+
+    setBlocks(prev => {
+      // Check if we are dragging a block
+      const activeBlockIndex = prev.findIndex(b => b.id === active.id);
+      const overBlockIndex = prev.findIndex(b => b.id === over.id);
+
+      if (activeBlockIndex !== -1 && overBlockIndex !== -1) {
+        // Block-level reorder
+        return arrayMove(prev, activeBlockIndex, overBlockIndex);
+      }
+
+      // Otherwise, it might be an exercise-level reorder inside the lift block
+      return prev.map(b => {
+        if (b.kind !== 'lift') return b;
+        const oldIndex = b.exercises.findIndex(ex => ex.id === active.id);
+        const newIndex = b.exercises.findIndex(ex => ex.id === over.id);
+        if (oldIndex === -1 || newIndex === -1) return b;
+        return { ...b, exercises: arrayMove(b.exercises, oldIndex, newIndex) };
+      });
+    });
   };
 
   const changeDate = (days: number) => {
@@ -1229,45 +1504,50 @@ export default function DailyLog() {
               onDragEnd={handleDragEnd}
             >
               <SortableContext 
-                items={liftExercises.map(ex => ex.id) || []}
+                items={blocks.map(b => b.id)}
                 strategy={verticalListSortingStrategy}
               >
                 <div className="space-y-4">
-                  {(liftExercises || []).map((ex) => (
-                    <SortableExerciseCard 
-                      key={ex.id}
-                      ex={ex}
-                      library={library}
-                      updateExercise={updateExercise}
-                      removeExercise={removeExercise}
-                      toggleNotes={toggleNotes}
-                      isExpanded={!!expandedNotes[ex.id]}
-                      updateSuperset={updateSuperset}
-                      expandedSupersets={expandedSupersets}
-                      setExpandedSupersets={setExpandedSupersets}
-                    />
-                  ))}
+                  {blocks.map(block => {
+                    if (block.kind === 'lift') {
+                      return (
+                        <SortableLiftBlock 
+                          key={block.id}
+                          block={block}
+                          library={library}
+                          updateExercise={updateExercise}
+                          removeExercise={removeExercise}
+                          toggleNotes={toggleNotes}
+                          expandedNotes={expandedNotes}
+                          updateSuperset={updateSuperset}
+                          expandedSupersets={expandedSupersets}
+                          setExpandedSupersets={setExpandedSupersets}
+                        />
+                      );
+                    } else {
+                      return (
+                        <SortableConditioningBlock
+                          key={block.id}
+                          block={block}
+                          library={library}
+                          updateHiitExercise={updateHiitExercise}
+                          removeHiitExercise={removeHiitExercise}
+                          addHiitExercise={addHiitExercise}
+                          onChange={(updates) => {
+                            setBlocks(prev => prev.map(b =>
+                              b.id === block.id ? ({ ...b, ...updates } as Block) : b
+                            ));
+                          }}
+                          onDelete={() => {
+                            setBlocks(prev => prev.filter(b => b.id !== block.id));
+                          }}
+                        />
+                      );
+                    }
+                  })}
                 </div>
               </SortableContext>
             </DndContext>
-
-            {blocks
-              .filter((b): b is CardioBlock | HiitBlock => b.kind === 'cardio' || b.kind === 'hiit')
-              .map(condBlock => (
-                <ConditioningBlock
-                  key={condBlock.id}
-                  block={condBlock}
-                  onChange={(updates) => {
-                    setBlocks(prev => prev.map(b =>
-                      b.id === condBlock.id ? ({ ...b, ...updates } as Block) : b
-                    ));
-                  }}
-                  onDelete={() => {
-                    setBlocks(prev => prev.filter(b => b.id !== condBlock.id));
-                  }}
-                />
-              ))
-            }
 
             <div className="grid grid-cols-3 gap-2 mt-4">
               <Button variant="outline" onClick={addLiftBlock} className="border-dashed border-slate-300">
