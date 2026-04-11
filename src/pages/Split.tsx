@@ -473,6 +473,9 @@ export default function Split() {
     );
   }
 
+  const showAssignButton = !!stagedSplitDays;
+  const showUnassignButton = hasAssignedSplit;
+
   return (
     <div className="space-y-6">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -481,7 +484,7 @@ export default function Split() {
           <p className="text-slate-500">Customize your hybrid training structure</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {stagedSplitDays !== null && (
+          {showAssignButton && (
             <Button 
               onClick={assignStagedSplit}
               className="bg-maroon hover:bg-maroon-light text-white"
@@ -489,7 +492,7 @@ export default function Split() {
               Assign Split
             </Button>
           )}
-          {(hasAssignedSplit || stagedSplitDays !== null) && (
+          {showUnassignButton && (
             <Button 
               variant="outline" 
               onClick={unassignSplit}
