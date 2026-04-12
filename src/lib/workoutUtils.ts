@@ -1,4 +1,4 @@
-import { Split, ProgrammedExercise, Conditioning, Block, BlockTemplate, LiftBlock, CardioBlock, HiitBlock, ExerciseEntry, CardioType } from '../types';
+import { Split, ProgrammedExercise, Conditioning, Block, BlockTemplate, LiftBlock, CardioBlock, HiitBlock, ExerciseEntry, CardioType, CardioSubtype } from '../types';
 
 export const getDistanceInMeters = (c: Conditioning): number => {
   if (c.distanceInMeters !== undefined && c.distanceInMeters > 0) {
@@ -47,11 +47,11 @@ export const generateWorkoutSnapshot = (split: Split): string => {
     const c = split.conditioning;
     const parts = [];
     
-    if (c.type === 'Repeats' || c.type === 'Intervals') {
+    if (c.type === 'Repeats' || c.type === 'Intervals' || c.type === 'METCON' || c.type === 'AMRAP' || c.type === 'EMOM') {
       if (c.reps) parts.push(`${c.reps} reps`);
       if (c.workDistance) parts.push(c.workDistance);
       if (c.workDuration) parts.push(c.workDuration);
-    } else if (c.type === 'Zone 2' || c.type === 'Tempo') {
+    } else if (c.type === 'Zone 2' || c.type === 'Bike' || c.type === 'Ruck') {
       if (c.workDistance) parts.push(c.workDistance);
       if (c.workDuration) parts.push(c.workDuration);
     } else if (c.type === 'Ladders') {
@@ -123,10 +123,7 @@ export const projectBlocksToLegacy = (blocks: Block[]): {
       // the legacy field (downstream pages only support one conditioning entry).
       if (block.kind === 'cardio') {
         conditioning = {
-          type: block.subtype === 'Zone 2' ? 'Zone 2'
-              : block.subtype === 'Incline Treadmill' ? 'Incline Treadmill'
-              : block.subtype === 'Tempo' ? 'Tempo'
-              : 'Other',
+          type: block.subtype as CardioType,
           name: block.programmedName || '',
           workDistance: block.loggedDistance || block.programmedDistance,
           workDuration: block.loggedDuration || block.programmedDuration,
@@ -138,15 +135,8 @@ export const projectBlocksToLegacy = (blocks: Block[]): {
         };
       } else {
         // hiit
-        const typeMap: Record<string, CardioType> = {
-          '400m Repeats': 'Repeats',
-          '800m Repeats': 'Repeats',
-          'Mile Repeats': 'Repeats',
-          'Ladders': 'Ladders',
-          'Assault Bike Intervals': 'Intervals',
-        };
         conditioning = {
-          type: (block.subtype && typeMap[block.subtype]) || block.hiitType || 'Intervals',
+          type: (block.subtype as CardioType) || block.hiitType || 'Intervals',
           name: block.programmedName || '',
           reps: block.programmedReps,
           workDistance: block.programmedWorkDistance,
@@ -187,7 +177,7 @@ export const deriveBlocksFromLegacy = (
   }
 
   if (conditioning && (conditioning.type || conditioning.name)) {
-    const hiitTypes: CardioType[] = ['Repeats', 'Intervals', 'Ladders'];
+    const hiitTypes: CardioType[] = ['METCON', 'AMRAP', 'EMOM'];
     const isHiit = conditioning.type && hiitTypes.includes(conditioning.type);
 
     if (isHiit) {
@@ -195,6 +185,7 @@ export const deriveBlocksFromLegacy = (
         id: Math.random().toString(36).substr(2, 9),
         kind: 'hiit',
         placement: 'after',
+        hiitType: conditioning.type as 'METCON' | 'AMRAP' | 'EMOM',
         programmedName: conditioning.name,
         programmedReps: conditioning.reps,
         programmedWorkDistance: conditioning.workDistance,
@@ -213,6 +204,7 @@ export const deriveBlocksFromLegacy = (
         id: Math.random().toString(36).substr(2, 9),
         kind: 'cardio',
         placement: 'after',
+        subtype: conditioning.type as CardioSubtype,
         programmedName: conditioning.name,
         programmedDistance: conditioning.workDistance,
         programmedDuration: conditioning.workDuration,

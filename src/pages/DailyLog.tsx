@@ -617,12 +617,13 @@ const SortableConditioningBlock: React.FC<SortableConditioningBlockProps> = ({
                     <SelectValue placeholder="Select cardio type..." />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="Repeats">Repeats</SelectItem>
+                    <SelectItem value="Ladders">Ladders</SelectItem>
+                    <SelectItem value="Intervals">Intervals</SelectItem>
                     <SelectItem value="Zone 2">Zone 2</SelectItem>
                     <SelectItem value="Incline Treadmill">Incline Treadmill</SelectItem>
                     <SelectItem value="Bike">Bike</SelectItem>
                     <SelectItem value="Ruck">Ruck</SelectItem>
-                    <SelectItem value="Tempo">Tempo</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -697,9 +698,6 @@ const SortableConditioningBlock: React.FC<SortableConditioningBlockProps> = ({
                     <SelectItem value="METCON">METCON</SelectItem>
                     <SelectItem value="AMRAP">AMRAP</SelectItem>
                     <SelectItem value="EMOM">EMOM</SelectItem>
-                    <SelectItem value="Repeats">Repeats</SelectItem>
-                    <SelectItem value="Intervals">Intervals</SelectItem>
-                    <SelectItem value="Ladders">Ladders</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -933,13 +931,14 @@ export default function DailyLog() {
       // Sanitize data to remove undefined values which can break Firestore
       const draftToSave = sanitizeData({ 
         ...workoutMeta, 
+        blocks,
         date: date.toISOString(),
         expandedSupersets 
       });
       storage.saveDraft(draftToSave, user.uid);
     }, 1000);
     return () => clearTimeout(timer);
-  }, [workoutMeta, date, user, isDraftLoaded, expandedSupersets]);
+  }, [workoutMeta, blocks, date, user, isDraftLoaded, expandedSupersets]);
 
   // Subscribe to library
   useEffect(() => {
@@ -1242,10 +1241,6 @@ export default function DailyLog() {
   };
 
   const handleReset = () => {
-    if (!window.confirm("Are you sure you want to reset this workout? This will clear all current progress and restore the programmed structure for this split.")) {
-      return;
-    }
-
     if (manualSplit === NO_SPLIT_SENTINEL) {
       setWorkoutMeta(prev => ({
         ...prev,

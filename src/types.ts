@@ -63,7 +63,7 @@ export interface ExerciseEntry {
   superset?: ExerciseEntry;
 }
 
-export type CardioType = 'Repeats' | 'Ladders' | 'Zone 2' | 'Tempo' | 'Intervals' | 'Incline Treadmill' | 'Other' | 'METCON' | 'AMRAP' | 'EMOM';
+export type CardioType = 'Repeats' | 'Ladders' | 'Intervals' | 'Zone 2' | 'Incline Treadmill' | 'Bike' | 'Ruck' | 'METCON' | 'AMRAP' | 'EMOM';
 
 export interface Conditioning {
   type?: CardioType;
@@ -94,8 +94,15 @@ export type BlockKind = 'lift' | 'cardio' | 'hiit';
 
 export type BlockPlacement = 'before' | 'after' | 'separate';
 
-export type CardioSubtype = 'Zone 2' | 'Incline Treadmill' | 'Bike' | 'Ruck' | 'Tempo' | 'Other';
-export type HiitSubtype = '400m Repeats' | '800m Repeats' | 'Mile Repeats' | 'Ladders' | 'Assault Bike Intervals' | 'Other';
+export type CardioSubtype =
+  | 'Repeats'
+  | 'Ladders'
+  | 'Intervals'
+  | 'Zone 2'
+  | 'Incline Treadmill'
+  | 'Bike'
+  | 'Ruck';
+export type HiitSubtype = 'METCON' | 'AMRAP' | 'EMOM';
 
 export interface BlockBase {
   id: string;
@@ -133,7 +140,7 @@ export interface CardioBlock extends BlockBase {
 export interface HiitBlock extends BlockBase {
   kind: 'hiit';
   subtype?: HiitSubtype;
-  hiitType?: 'METCON' | 'AMRAP' | 'EMOM' | 'Repeats' | 'Intervals' | 'Ladders';
+  hiitType?: 'METCON' | 'AMRAP' | 'EMOM';
   exercises?: ExerciseEntry[];
   structureNotes?: string;
   // Programmed

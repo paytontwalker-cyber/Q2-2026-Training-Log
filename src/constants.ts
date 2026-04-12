@@ -5,7 +5,7 @@
 
 import { ExerciseLibraryEntry, MuscleGroup } from './types';
 
-export const APP_VERSION = '2.6.7';
+export const APP_VERSION = '2.6.9';
 
 export const MUSCLE_GROUPS: MuscleGroup[] = [
   'Chest',

@@ -119,6 +119,7 @@ export default function Split() {
     const unsubscribeSplits = storage.subscribeToSplits(user.uid, (data) => {
       if (data.length === 0) {
         setSplits([]);
+        setHasAssignedSplit(false);
       } else {
         // Handle potential duplicates from previous buggy versions
         const dayMap: Record<string, SplitType> = {};
@@ -350,8 +351,8 @@ export default function Split() {
     }
 
     setSplits([]);
-    setStagedSplitDays(null);
     setHasAssignedSplit(false);
+    setStagedSplitDays(null);
     setIsSelecting(true);
   };
 
