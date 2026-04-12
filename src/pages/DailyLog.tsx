@@ -873,6 +873,32 @@ export default function DailyLog() {
   const [manualSplit, setManualSplit] = useState<string | null>(null);
   const [isDraftLoaded, setIsDraftLoaded] = useState(false);
 
+  interface WorkoutSnapshot {
+    workoutMeta: Partial<Workout>;
+    blocks: Block[];
+    manualSplit: string | null;
+    expandedSupersets: Record<string, boolean>;
+  }
+  const [previousSnapshot, setPreviousSnapshot] = useState<WorkoutSnapshot | null>(null);
+
+  const captureSnapshot = () => {
+    setPreviousSnapshot({
+      workoutMeta: { ...workoutMeta },
+      blocks: JSON.parse(JSON.stringify(blocks)),
+      manualSplit,
+      expandedSupersets: { ...expandedSupersets },
+    });
+  };
+
+  const handleUndo = () => {
+    if (!previousSnapshot) return;
+    setWorkoutMeta(previousSnapshot.workoutMeta);
+    setBlocks(previousSnapshot.blocks);
+    setManualSplit(previousSnapshot.manualSplit);
+    setExpandedSupersets(previousSnapshot.expandedSupersets);
+    setPreviousSnapshot(null);
+  };
+
   const liftBlock = blocks.find((b): b is LiftBlock => b.kind === 'lift');
   const liftExercises = liftBlock?.exercises ?? [];
 
@@ -1240,7 +1266,23 @@ export default function DailyLog() {
     }
   };
 
+  const handleClearSplit = () => {
+    captureSnapshot();
+    setWorkoutMeta(prev => ({
+      ...prev,
+      workoutName: '',
+      workoutSummary: '',
+      runningStats: '',
+      notes: '',
+      postWorkoutEnergy: 5,
+    }));
+    setBlocks([]);
+    setManualSplit(NO_SPLIT_SENTINEL);
+    setExpandedSupersets({});
+  };
+
   const handleReset = () => {
+    captureSnapshot();
     if (manualSplit === NO_SPLIT_SENTINEL) {
       setWorkoutMeta(prev => ({
         ...prev,
@@ -1411,28 +1453,21 @@ export default function DailyLog() {
             <div className="h-2 bg-maroon" />
             <CardHeader>
               <div className="flex flex-col gap-4">
-                <div className="flex flex-col md:flex-row md:items-end gap-4">
+                <div className="flex flex-col md:flex-row md:items-end gap-3">
+                  {/* Workout Name */}
                   <div className="flex-1 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs uppercase tracking-wider text-slate-500">Workout Name</Label>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={handleReset}
-                        className="h-6 text-[10px] uppercase font-bold text-slate-400 hover:text-maroon hover:bg-maroon/5 px-2"
-                      >
-                        Reset Workout
-                      </Button>
-                    </div>
+                    <Label className="text-xs uppercase tracking-wider text-slate-500">Workout Name</Label>
                     <Input 
                       value={workoutMeta.workoutName} 
                       onChange={e => setWorkoutMeta(prev => ({ ...prev, workoutName: e.target.value }))}
-                      className="text-xl font-bold border-none px-0 focus-visible:ring-0 h-auto"
+                      className="h-9 text-base font-semibold"
                       placeholder="Enter workout name..."
                     />
                   </div>
-                  <div className="w-full md:w-64 space-y-1">
-                    <Label className="text-xs uppercase tracking-wider text-slate-500">Change Split</Label>
+
+                  {/* Change Split */}
+                  <div className="w-full md:w-48 space-y-1">
+                    <Label className="text-xs uppercase tracking-wider text-slate-500">Split</Label>
                     <Select 
                       value={manualSplit ?? ""} 
                       onValueChange={(val) => {
@@ -1450,7 +1485,7 @@ export default function DailyLog() {
                       }}
                     >
                       <SelectTrigger className="h-9">
-                        <SelectValue placeholder="Select a split..." />
+                        <span className="text-sm">Change Split</span>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value={NO_SPLIT_SENTINEL}>No Split</SelectItem>
@@ -1460,6 +1495,36 @@ export default function DailyLog() {
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+
+                {/* Action row: Reset / Clear Split / Undo */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleReset}
+                    className="h-8 text-xs border-slate-200 text-slate-600 hover:text-maroon hover:border-maroon/50"
+                  >
+                    Reset Workout
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleClearSplit}
+                    className="h-8 text-xs border-slate-200 text-slate-600 hover:text-maroon hover:border-maroon/50"
+                  >
+                    Clear Split
+                  </Button>
+                  {previousSnapshot && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleUndo}
+                      className="h-8 text-xs border-maroon/30 text-maroon hover:bg-maroon/5"
+                    >
+                      Undo
+                    </Button>
+                  )}
                 </div>
 
                 {/* Workout Summary Snapshot (Read-Only) */}
