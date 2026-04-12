@@ -46,7 +46,7 @@ import { BodyMap } from '@/src/components/BodyMap';
 
 export default function Progress() {
   const { user } = useFirebase();
-  const [view, setView] = useState<'weekly-volume' | 'session-volume' | 'strength' | 'conditioning' | 'battery' | 'body-map'>('weekly-volume');
+  const [view, setView] = useState<'weekly-volume' | 'session-volume' | 'strength' | 'conditioning' | 'battery'>('weekly-volume');
   const [selectedExercise, setSelectedExercise] = useState(INITIAL_EXERCISES[5].name); // Flat Bench Press
   const [selectedWorkoutId, setSelectedWorkoutId] = useState<string | null>(null);
   const [history, setHistory] = useState<Workout[]>([]);
@@ -499,15 +499,6 @@ export default function Progress() {
           >
             Body Battery
           </button>
-          <button 
-            onClick={() => setView('body-map')}
-            className={cn(
-              "px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-md transition-all",
-              view === 'body-map' ? "bg-card text-maroon shadow-sm" : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            Body Map
-          </button>
         </div>
       </header>
 
@@ -604,6 +595,26 @@ export default function Progress() {
               Log workouts in the last 7 days to see weekly breakdowns.
             </Card>
           )}
+
+          <Card className="border-border shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-sm uppercase tracking-wider text-slate-500">
+                Weekly Volume Heatmap
+              </CardTitle>
+              <CardDescription>
+                Shading reflects this week's training volume per muscle group. Hover for details.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {weeklyVolume && weeklyVolume.muscleGroupData.length > 0 ? (
+                <BodyMap muscleGroupData={weeklyVolume.muscleGroupData} />
+              ) : (
+                <p className="text-sm text-muted-foreground italic text-center py-8">
+                  No workout data this week yet. Log some workouts to see your body map.
+                </p>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Volume Targets Section */}
           <section className="space-y-4 mt-8">

@@ -153,7 +153,7 @@ export function BodyMap({ muscleGroupData }: BodyMapProps) {
           style={{ left: mousePos.x, top: mousePos.y }}
         >
           <div className="font-bold mb-1">{hoveredData.names.join(', ')}</div>
-          <div>Volume: {hoveredData.volume} sets</div>
+          <div>Volume: {hoveredData.volume.toLocaleString()} lbs moved</div>
         </div>
       )}
 
@@ -188,7 +188,7 @@ export function BodyMap({ muscleGroupData }: BodyMapProps) {
                 <div className="w-3 h-3 rounded-full shadow-sm border border-border" style={{ backgroundColor: color }} />
                 <div className="flex flex-col">
                   <span className="text-sm font-medium">{data.name}</span>
-                  <span className="text-xs text-muted-foreground">{data.value} sets</span>
+                  <span className="text-xs text-muted-foreground">{data.value.toLocaleString()} lbs moved</span>
                 </div>
               </div>
             );
