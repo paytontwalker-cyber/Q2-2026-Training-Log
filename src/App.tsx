@@ -42,6 +42,17 @@ function AppContent() {
   const { user, loading, login, loginAsGuest, logout } = useFirebase();
   const isGuest = user && 'isGuest' in user;
 
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobileMenuOpen]);
+
   const navItems = [
     { id: 'home', label: 'Home', icon: LayoutDashboard },
     { id: 'split', label: 'Split', icon: Calendar },
@@ -108,12 +119,23 @@ function AppContent() {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-background">
+      {/* Mobile Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/40 md:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar / Navigation */}
       <nav className={cn(
-        "bg-card border-r border-border flex-shrink-0 z-50 transition-all duration-300 relative",
-        isSidebarCollapsed ? "md:w-20" : "md:w-64",
-        "fixed md:relative",
-        isMobileMenuOpen ? "translate-x-0 w-64" : "-translate-x-full md:translate-x-0"
+        "bg-card border-r border-border flex-shrink-0 z-50 transition-all duration-300 flex flex-col",
+        // Mobile styles
+        "fixed left-0 top-0 h-dvh w-[280px] max-w-[85vw] shadow-xl",
+        isMobileMenuOpen ? "translate-x-0" : "-translate-x-full",
+        // Desktop styles
+        "md:relative md:h-auto md:w-auto md:translate-x-0 md:shadow-none",
+        isSidebarCollapsed ? "md:w-20" : "md:w-64"
       )}>
         {/* Collapse Toggle Button (Desktop Only) */}
         <button 
@@ -124,7 +146,8 @@ function AppContent() {
         </button>
 
         <div className={cn(
-          "p-6 border-b border-border flex items-center justify-between",
+          "flex items-center justify-between border-b border-border",
+          "px-4 py-4 md:p-6",
           isSidebarCollapsed && "md:p-4 md:justify-center"
         )}>
           <h1 className={cn(
@@ -139,15 +162,15 @@ function AppContent() {
             {isSidebarCollapsed && <span className="hidden md:inline">T<span className="text-gold">L</span></span>}
           </h1>
           <button 
-            className="md:hidden p-2 text-muted-foreground"
+            className="md:hidden p-2 -mr-2 text-muted-foreground"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <X size={24} />
           </button>
         </div>
         
-        <div className="py-4 flex flex-col h-[calc(100%-88px)]">
-          <div className="flex-1">
+        <div className="flex-1 overflow-y-auto py-3 md:py-4 flex flex-col">
+          <div className="flex-1 px-3 md:px-0 space-y-1 md:space-y-0">
             {navItems.map((item) => (
               <button
                 key={item.id}
@@ -157,10 +180,11 @@ function AppContent() {
                 }}
                 title={isSidebarCollapsed ? item.label : undefined}
                 className={cn(
-                  "w-full flex items-center gap-3 px-6 py-3 text-sm font-medium transition-colors",
+                  "w-full flex items-center gap-3 py-3 text-sm font-medium transition-colors",
+                  "px-3 rounded-md md:px-6 md:rounded-none",
                   isSidebarCollapsed && "md:px-0 md:justify-center",
                   currentPage === item.id 
-                    ? "text-maroon bg-maroon/5 border-r-4 border-maroon" 
+                    ? "text-maroon bg-maroon/5 md:border-r-4 border-maroon" 
                     : "text-muted-foreground hover:text-maroon hover:bg-muted"
                 )}
               >
@@ -175,7 +199,7 @@ function AppContent() {
             ))}
           </div>
           
-          <div className="px-6 py-4 border-t border-border space-y-4">
+          <div className="px-4 py-3 md:px-6 md:py-4 border-t border-border space-y-4 mt-auto">
             <button
               onClick={logout}
               className={cn(
@@ -184,13 +208,14 @@ function AppContent() {
               )}
             >
               <LogOut size={20} />
-              {!isSidebarCollapsed && <span>Sign Out</span>}
+              <span className={cn(isSidebarCollapsed && "md:hidden")}>Sign Out</span>
             </button>
-            {!isSidebarCollapsed && (
-              <div className="text-xs text-muted-foreground">
-                v{APP_VERSION}
-              </div>
-            )}
+            <div className={cn(
+              "text-xs text-muted-foreground",
+              isSidebarCollapsed && "md:hidden"
+            )}>
+              v{APP_VERSION}
+            </div>
           </div>
         </div>
       </nav>

@@ -1451,8 +1451,13 @@ export default function DailyLog() {
               type="date" 
               value={format(date, 'yyyy-MM-dd')}
               onChange={(e) => {
+                const value = e.target.value;
+                if (!value) return;
+
+                const [year, month, day] = value.split('-').map(Number);
+
                 runWithUndo(() => {
-                  setDate(new Date(e.target.value));
+                  setDate(new Date(year, month - 1, day));
                   setManualSplit(null);
                 });
               }}
