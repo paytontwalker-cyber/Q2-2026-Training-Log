@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { User, LogOut, LogIn, Settings, Info, ShieldCheck, AlertTriangle, UserCircle, Save } from 'lucide-react';
+import { User, LogOut, LogIn, Settings, Info, ShieldCheck, AlertTriangle, UserCircle, Save, Download, Map } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -22,6 +22,71 @@ import {
 } from '@/components/ui/select';
 import { useTheme } from '@/src/components/ThemeProvider';
 import { THEME_PRESETS, ThemeMode } from '../theme';
+import { APP_VERSION } from '../constants';
+import Export from './Export';
+
+const ROADMAP_ITEMS = [
+  {
+    category: 'Progress Page',
+    items: [
+      'Date range filter for historical analysis',
+      'Sort controls on Volume Targets',
+      'Exercise filter for progress charts',
+      'Long-term trend analysis across weeks/months',
+    ],
+  },
+  {
+    category: 'Daily Log',
+    items: [
+      'Block-level drag-and-drop reordering',
+      'Collapse/expand individual blocks',
+      'Duplicate block action',
+      'Visual placement tags (Before / After / Separate Session)',
+      'Clearer programmed vs logged value differentiation',
+    ],
+  },
+  {
+    category: 'Split Page',
+    items: [
+      'Multi-block day editor (e.g. define "Lift + HIIT" explicitly on one day)',
+    ],
+  },
+  {
+    category: 'History',
+    items: [
+      'Filter by exercise or date range',
+      'Full-text search across workouts',
+    ],
+  },
+  {
+    category: 'Calendar & Scheduling',
+    items: [
+      'Proper date picker / week view on Daily Log',
+      'Week/month calendar navigation',
+    ],
+  },
+  {
+    category: 'Theming',
+    items: [
+      'Optional dark mode reintroduction (charcoal palette is already in index.css)',
+    ],
+  },
+  {
+    category: 'Authentication',
+    items: [
+      'Passwordless email sign-in',
+      'Account recovery flow',
+    ],
+  },
+  {
+    category: 'Integrations',
+    items: [
+      'Garmin Connect import',
+      'Strava import',
+      'Apple Health import',
+    ],
+  },
+];
 
 export default function ProfileSettings() {
   const { user, login, logout } = useFirebase();
@@ -378,6 +443,48 @@ export default function ProfileSettings() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Export Workouts */}
+        <Card className="border-border shadow-sm md:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Download className="text-muted-foreground" size={20} />
+              Export Workouts
+            </CardTitle>
+            <CardDescription>Download your workout history as CSV or JSON.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Export embedded />
+          </CardContent>
+        </Card>
+
+        {/* Roadmap & Backlog */}
+        <Card className="border-border shadow-sm md:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Map className="text-muted-foreground" size={20} />
+              Roadmap & Backlog
+            </CardTitle>
+            <CardDescription>Features and improvements that are planned or under consideration.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-5">
+              {ROADMAP_ITEMS.map(section => (
+                <div key={section.category}>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">{section.category}</h4>
+                  <ul className="space-y-1.5 text-sm text-foreground">
+                    {section.items.map((item, i) => (
+                      <li key={i} className="flex gap-2">
+                        <span className="text-muted-foreground mt-0.5">•</span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* 4. Application Info */}
         <Card className="border-border shadow-sm md:col-span-2">

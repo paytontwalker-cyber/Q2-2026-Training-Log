@@ -525,33 +525,35 @@ export default function Progress() {
                 <CardHeader>
                   <CardTitle className="text-sm uppercase tracking-wider text-slate-500">Muscle Group Split</CardTitle>
                 </CardHeader>
-                <CardContent className="h-[280px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={weeklyVolume.muscleGroupData}
-                        cx="50%"
-                        cy="40%"
-                        innerRadius={50}
-                        outerRadius={70}
-                        paddingAngle={5}
-                        dataKey="value"
-                      >
-                        {weeklyVolume.muscleGroupData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                        formatter={(value: number, name: string, props: any) => {
-                          const total = weeklyVolume.muscleGroupData.reduce((sum, entry) => sum + entry.value, 0);
-                          const percent = ((value / total) * 100).toFixed(1);
-                          return [`${value.toLocaleString()} lbs (${percent}%)`, name];
-                        }}
-                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
+                <CardContent>
+                  <div className="h-[220px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={weeklyVolume.muscleGroupData}
+                          cx="50%"
+                          cy="40%"
+                          innerRadius={45}
+                          outerRadius={65}
+                          paddingAngle={5}
+                          dataKey="value"
+                        >
+                          {weeklyVolume.muscleGroupData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          formatter={(value: number, name: string, props: any) => {
+                            const total = weeklyVolume.muscleGroupData.reduce((sum, entry) => sum + entry.value, 0);
+                            const percent = ((value / total) * 100).toFixed(1);
+                            return [`${value.toLocaleString()} lbs (${percent}%)`, name];
+                          }}
+                          contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
                     {weeklyVolume.muscleGroupData.slice(0, 6).map((entry, index) => (
                       <div key={entry.name} className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
@@ -623,7 +625,7 @@ export default function Progress() {
                 </div>
 
                 <div className="space-y-4">
-                  {volumeTargets.map((t) => (
+                  {volumeTargets.filter(t => t.actualVolume > 0).map((t) => (
                     <div key={t.muscleGroup} className="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
                       <div className="flex justify-between items-center mb-2">
                         <span className="font-bold text-slate-700">{t.muscleGroup}</span>
@@ -635,18 +637,46 @@ export default function Progress() {
                       </div>
                     </div>
                   ))}
+
+                  {volumeTargets.filter(t => t.actualVolume === 0).length > 0 && (
+                    <>
+                      <div className="flex items-center gap-2 mt-6">
+                        <div className="flex-grow h-px bg-slate-200" />
+                        <span className="text-xs font-bold text-slate-400 uppercase">Untouched Groups</span>
+                        <div className="flex-grow h-px bg-slate-200" />
+                      </div>
+
+                      {volumeTargets.filter(t => t.actualVolume === 0).map((t) => (
+                        <div key={t.muscleGroup} className="bg-slate-50 p-3 rounded-lg border border-slate-100 flex justify-between items-center">
+                          <span className="text-sm font-medium text-slate-500">{t.muscleGroup}</span>
+                          <span className="text-xs text-slate-400">0 / {t.targetVolume.toLocaleString()} lbs (0%)</span>
+                        </div>
+                      ))}
+                    </>
+                  )}
                 </div>
 
                 <Card className="border-slate-200 shadow-sm">
                   <CardHeader><CardTitle>Detailed Breakdown</CardTitle></CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {volumeTargets.map(t => (
+                      {volumeTargets.filter(t => t.actualVolume > 0).map(t => (
                         <div key={t.muscleGroup} className="flex justify-between text-sm py-2 border-b border-slate-100 last:border-0">
                           <span className="font-medium text-slate-700">{t.muscleGroup}</span>
                           <span className="text-slate-500">{t.actualVolume.toLocaleString()} / {t.targetVolume.toLocaleString()} ({t.percentOfTarget.toFixed(0)}%) - <span className={cn("font-bold", t.status === 'Low' ? 'text-red-500' : t.status === 'Near' ? 'text-gold' : 'text-green-600')}>{t.status}</span></span>
                         </div>
                       ))}
+                      {volumeTargets.filter(t => t.actualVolume === 0).length > 0 && (
+                        <>
+                          <div className="text-xs font-bold text-slate-400 uppercase pt-4 pb-2 border-t border-slate-200 mt-2">Untouched Groups</div>
+                          {volumeTargets.filter(t => t.actualVolume === 0).map(t => (
+                            <div key={t.muscleGroup} className="flex justify-between text-sm py-2 border-b border-slate-100 last:border-0 text-slate-400">
+                              <span className="font-medium">{t.muscleGroup}</span>
+                              <span>0 / {t.targetVolume.toLocaleString()} (0%)</span>
+                            </div>
+                          ))}
+                        </>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -715,33 +745,35 @@ export default function Progress() {
                   <CardHeader>
                     <CardTitle className="text-sm uppercase tracking-wider text-slate-500">Muscle Group Split</CardTitle>
                   </CardHeader>
-                  <CardContent className="h-[280px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={latestWorkoutSummary.muscleGroupData}
-                          cx="50%"
-                          cy="40%"
-                          innerRadius={50}
-                          outerRadius={70}
-                          paddingAngle={5}
-                          dataKey="value"
-                        >
-                          {latestWorkoutSummary.muscleGroupData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip 
-                          formatter={(value: number, name: string, props: any) => {
-                            const total = latestWorkoutSummary.muscleGroupData.reduce((sum, entry) => sum + entry.value, 0);
-                            const percent = ((value / total) * 100).toFixed(1);
-                            return [`${value.toLocaleString()} lbs (${percent}%)`, name];
-                          }}
-                          contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                    <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
+                  <CardContent>
+                    <div className="h-[220px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={latestWorkoutSummary.muscleGroupData}
+                            cx="50%"
+                            cy="40%"
+                            innerRadius={50}
+                            outerRadius={70}
+                            paddingAngle={5}
+                            dataKey="value"
+                          >
+                            {latestWorkoutSummary.muscleGroupData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip 
+                            formatter={(value: number, name: string, props: any) => {
+                              const total = latestWorkoutSummary.muscleGroupData.reduce((sum, entry) => sum + entry.value, 0);
+                              const percent = ((value / total) * 100).toFixed(1);
+                              return [`${value.toLocaleString()} lbs (${percent}%)`, name];
+                            }}
+                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
                       {latestWorkoutSummary.muscleGroupData.slice(0, 6).map((entry, index) => (
                         <div key={entry.name} className="flex items-center gap-2">
                           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />

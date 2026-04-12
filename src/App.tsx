@@ -10,7 +10,6 @@ import {
   Dumbbell, 
   History as HistoryIcon, 
   Calendar, 
-  Download,
   Menu,
   X,
   LogOut,
@@ -31,11 +30,10 @@ import Progress from './pages/Progress';
 import Exercises from './pages/Exercises';
 import History from './pages/History';
 import Split from './pages/Split';
-import Export from './pages/Export';
 import ProfileSettings from './pages/ProfileSettings';
 import Social from './pages/Social';
 
-type Page = 'home' | 'log' | 'progress' | 'exercises' | 'history' | 'split' | 'export' | 'profile' | 'social';
+type Page = 'home' | 'log' | 'progress' | 'exercises' | 'history' | 'split' | 'profile' | 'social';
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
@@ -63,7 +61,6 @@ function AppContent() {
     { id: 'progress', label: 'Progress', icon: LineChart },
     { id: 'history', label: 'History', icon: HistoryIcon },
     { id: 'social', label: 'Social', icon: Users },
-    { id: 'export', label: 'Export', icon: Download },
     { id: 'profile', label: 'Profile & Settings', icon: UserCircle },
   ];
 
@@ -115,7 +112,6 @@ function AppContent() {
       case 'history': return <History setCurrentPage={setCurrentPage} />;
       case 'split': return <Split />;
       case 'social': return <Social />;
-      case 'export': return <Export />;
       case 'profile': return <ProfileSettings />;
       default: return <Home setCurrentPage={setCurrentPage} />;
     }

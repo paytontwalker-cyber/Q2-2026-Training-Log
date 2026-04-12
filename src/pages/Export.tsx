@@ -13,7 +13,7 @@ import { useFirebase } from '@/src/components/FirebaseProvider';
 import { Workout } from '@/src/types';
 import { format } from 'date-fns';
 
-export default function Export() {
+export default function Export({ embedded = false }: { embedded?: boolean } = {}) {
   const { user } = useFirebase();
   const [history, setHistory] = useState<Workout[]>([]);
   const [isExporting, setIsExporting] = useState(false);
@@ -94,10 +94,12 @@ export default function Export() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Export Data</h2>
-        <p className="text-slate-500">Take your training data with you</p>
-      </header>
+      {!embedded && (
+        <header>
+          <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Export Data</h2>
+          <p className="text-slate-500">Take your training data with you</p>
+        </header>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 no-print">
         <Card className="border-slate-200 shadow-sm">
