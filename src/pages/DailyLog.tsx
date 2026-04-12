@@ -877,7 +877,9 @@ export default function DailyLog() {
     workoutMeta: Partial<Workout>;
     blocks: Block[];
     manualSplit: string | null;
+    date: Date;
     expandedSupersets: Record<string, boolean>;
+    expandedNotes: Record<string, boolean>;
   }
   const [previousSnapshot, setPreviousSnapshot] = useState<WorkoutSnapshot | null>(null);
 
@@ -886,17 +888,53 @@ export default function DailyLog() {
       workoutMeta: { ...workoutMeta },
       blocks: JSON.parse(JSON.stringify(blocks)),
       manualSplit,
+      date: new Date(date),
       expandedSupersets: { ...expandedSupersets },
+      expandedNotes: { ...expandedNotes },
     });
   };
 
+  const runWithUndo = (fn: () => void) => {
+    captureSnapshot();
+    fn();
+  };
+
+  const isEditingRef = useRef(false);
+
+  const beginUndoableEdit = () => {
+    if (!isEditingRef.current) {
+      captureSnapshot();
+      isEditingRef.current = true;
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      isEditingRef.current = false;
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [workoutMeta, blocks, manualSplit, date]);
+
   const handleUndo = () => {
     if (!previousSnapshot) return;
+
+    const currentSnapshot: WorkoutSnapshot = {
+      workoutMeta: { ...workoutMeta },
+      blocks: JSON.parse(JSON.stringify(blocks)),
+      manualSplit,
+      date: new Date(date),
+      expandedSupersets: { ...expandedSupersets },
+      expandedNotes: { ...expandedNotes },
+    };
+
     setWorkoutMeta(previousSnapshot.workoutMeta);
     setBlocks(previousSnapshot.blocks);
     setManualSplit(previousSnapshot.manualSplit);
+    setDate(new Date(previousSnapshot.date));
     setExpandedSupersets(previousSnapshot.expandedSupersets);
-    setPreviousSnapshot(null);
+    setExpandedNotes(previousSnapshot.expandedNotes);
+
+    setPreviousSnapshot(currentSnapshot);
   };
 
   const liftBlock = blocks.find((b): b is LiftBlock => b.kind === 'lift');
@@ -1099,135 +1137,153 @@ export default function DailyLog() {
   }, [date, library, splits, manualSplit, workoutMeta.workoutName, liftExercises.length]);
 
   const addExercise = () => {
-    const newEx: ExerciseEntry = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: '',
-      muscleGroup: 'Other',
-      trackingMode: 'reps',
-      sets: 0,
-      reps: 0,
-      distance: 0,
-      time: 0,
-      timeUnit: 'min',
-      weight: 0,
-      rpe: null,
-      rir: null,
-      notes: '',
-    };
-    setBlocks(prev => {
-      const liftIdx = prev.findIndex(b => b.kind === 'lift');
-      if (liftIdx === -1) {
-        const newLiftBlock: LiftBlock = {
-          id: `lift_${Math.random().toString(36).substr(2, 9)}`,
-          kind: 'lift',
-          exercises: [newEx],
-        };
-        return [newLiftBlock, ...prev];
-      }
-      return prev.map((b, i) =>
-        i === liftIdx
-          ? { ...(b as LiftBlock), exercises: [...(b as LiftBlock).exercises, newEx] }
-          : b
-      );
+    runWithUndo(() => {
+      const newEx: ExerciseEntry = {
+        id: Math.random().toString(36).substr(2, 9),
+        name: '',
+        muscleGroup: 'Other',
+        trackingMode: 'reps',
+        sets: 0,
+        reps: 0,
+        distance: 0,
+        time: 0,
+        timeUnit: 'min',
+        weight: 0,
+        rpe: null,
+        rir: null,
+        notes: '',
+      };
+      setBlocks(prev => {
+        const liftIdx = prev.findIndex(b => b.kind === 'lift');
+        if (liftIdx === -1) {
+          const newLiftBlock: LiftBlock = {
+            id: `lift_${Math.random().toString(36).substr(2, 9)}`,
+            kind: 'lift',
+            exercises: [newEx],
+          };
+          return [newLiftBlock, ...prev];
+        }
+        return prev.map((b, i) =>
+          i === liftIdx
+            ? { ...(b as LiftBlock), exercises: [...(b as LiftBlock).exercises, newEx] }
+            : b
+        );
+      });
     });
   };
 
   const addLiftBlock = () => addExercise();
 
   const addCardioBlock = () => {
-    const newBlock: CardioBlock = {
-      id: `cardio_${Math.random().toString(36).substr(2, 9)}`,
-      kind: 'cardio',
-      placement: 'after',
-      programmedName: '',
-    };
-    setBlocks(prev => [...prev, newBlock]);
+    runWithUndo(() => {
+      const newBlock: CardioBlock = {
+        id: `cardio_${Math.random().toString(36).substr(2, 9)}`,
+        kind: 'cardio',
+        placement: 'after',
+        programmedName: '',
+      };
+      setBlocks(prev => [...prev, newBlock]);
+    });
   };
 
   const addHiitBlock = () => {
-    const newBlock: HiitBlock = {
-      id: `hiit_${Math.random().toString(36).substr(2, 9)}`,
-      kind: 'hiit',
-      placement: 'after',
-      programmedName: '',
-    };
-    setBlocks(prev => [...prev, newBlock]);
+    runWithUndo(() => {
+      const newBlock: HiitBlock = {
+        id: `hiit_${Math.random().toString(36).substr(2, 9)}`,
+        kind: 'hiit',
+        placement: 'after',
+        programmedName: '',
+      };
+      setBlocks(prev => [...prev, newBlock]);
+    });
   };
 
   const updateExercise = (id: string, updates: Partial<ExerciseEntry>) => {
-    setBlocks(prev => prev.map(b =>
-      b.kind === 'lift'
-        ? { ...b, exercises: b.exercises.map(ex => ex.id === id ? { ...ex, ...updates } : ex) }
-        : b
-    ));
+    runWithUndo(() => {
+      setBlocks(prev => prev.map(b =>
+        b.kind === 'lift'
+          ? { ...b, exercises: b.exercises.map(ex => ex.id === id ? { ...ex, ...updates } : ex) }
+          : b
+      ));
+    });
   };
 
   const updateSuperset = (id: string, superset: Partial<ExerciseEntry> | null) => {
-    setBlocks(prev =>
-      prev.map(block =>
-        block.kind === 'lift'
-          ? {
-              ...block,
-              exercises: block.exercises.map(ex =>
-                ex.id === id ? { ...ex, superset: (superset as ExerciseEntry | null) || null } : ex
-              ),
-            }
-          : block
-      )
-    );
+    runWithUndo(() => {
+      setBlocks(prev =>
+        prev.map(block =>
+          block.kind === 'lift'
+            ? {
+                ...block,
+                exercises: block.exercises.map(ex =>
+                  ex.id === id ? { ...ex, superset: (superset as ExerciseEntry | null) || null } : ex
+                ),
+              }
+            : block
+        )
+      );
+    });
   };
 
   const removeExercise = (id: string) => {
-    setBlocks(prev => prev.map(b =>
-      b.kind === 'lift'
-        ? { ...b, exercises: b.exercises.filter(ex => ex.id !== id) }
-        : b
-    ));
+    runWithUndo(() => {
+      setBlocks(prev => prev.map(b =>
+        b.kind === 'lift'
+          ? { ...b, exercises: b.exercises.filter(ex => ex.id !== id) }
+          : b
+      ));
+    });
   };
 
   const updateHiitExercise = (blockId: string, exerciseId: string, updates: Partial<ExerciseEntry>) => {
-    setBlocks(prev => prev.map(b => {
-      if (b.id !== blockId || b.kind !== 'hiit') return b;
-      return {
-        ...b,
-        exercises: (b.exercises || []).map(ex => ex.id === exerciseId ? { ...ex, ...updates } : ex)
-      };
-    }));
+    runWithUndo(() => {
+      setBlocks(prev => prev.map(b => {
+        if (b.id !== blockId || b.kind !== 'hiit') return b;
+        return {
+          ...b,
+          exercises: (b.exercises || []).map(ex => ex.id === exerciseId ? { ...ex, ...updates } : ex)
+        };
+      }));
+    });
   };
 
   const removeHiitExercise = (blockId: string, exerciseId: string) => {
-    setBlocks(prev => prev.map(b => {
-      if (b.id !== blockId || b.kind !== 'hiit') return b;
-      return {
-        ...b,
-        exercises: (b.exercises || []).filter(ex => ex.id !== exerciseId)
-      };
-    }));
+    runWithUndo(() => {
+      setBlocks(prev => prev.map(b => {
+        if (b.id !== blockId || b.kind !== 'hiit') return b;
+        return {
+          ...b,
+          exercises: (b.exercises || []).filter(ex => ex.id !== exerciseId)
+        };
+      }));
+    });
   };
 
   const addHiitExercise = (blockId: string) => {
-    const newEx: ExerciseEntry = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: '',
-      muscleGroup: 'Other',
-      trackingMode: 'reps',
-      sets: 0,
-      reps: 0,
-      distance: 0,
-      time: 0,
-      timeUnit: 'min',
-      weight: 0,
-      rpe: null,
-      rir: null,
-      notes: '',
-    };
-    setBlocks(prev => prev.map(b => {
-      if (b.id !== blockId || b.kind !== 'hiit') return b;
-      return {
-        ...b,
-        exercises: [...(b.exercises || []), newEx]
+    runWithUndo(() => {
+      const newEx: ExerciseEntry = {
+        id: Math.random().toString(36).substr(2, 9),
+        name: '',
+        muscleGroup: 'Other',
+        trackingMode: 'reps',
+        sets: 0,
+        reps: 0,
+        distance: 0,
+        time: 0,
+        timeUnit: 'min',
+        weight: 0,
+        rpe: null,
+        rir: null,
+        notes: '',
       };
-    }));
+      setBlocks(prev => prev.map(b => {
+        if (b.id !== blockId || b.kind !== 'hiit') return b;
+        return {
+          ...b,
+          exercises: [...(b.exercises || []), newEx]
+        };
+      }));
+    });
   };
 
   const toggleNotes = (id: string) => {
@@ -1267,105 +1323,111 @@ export default function DailyLog() {
   };
 
   const handleClearSplit = () => {
-    captureSnapshot();
-    setWorkoutMeta(prev => ({
-      ...prev,
-      workoutName: '',
-      workoutSummary: '',
-      runningStats: '',
-      notes: '',
-      postWorkoutEnergy: 5,
-    }));
-    setBlocks([]);
-    setManualSplit(NO_SPLIT_SENTINEL);
-    setExpandedSupersets({});
-  };
-
-  const handleReset = () => {
-    captureSnapshot();
-    if (manualSplit === NO_SPLIT_SENTINEL) {
+    runWithUndo(() => {
       setWorkoutMeta(prev => ({
         ...prev,
         workoutName: '',
         workoutSummary: '',
         runningStats: '',
         notes: '',
+        postWorkoutEnergy: 5,
       }));
       setBlocks([]);
-      return;
-    }
-
-    let currentSplit;
-    if (manualSplit) {
-      currentSplit = splits.find(s => s.name === manualSplit);
-    } else {
-      const dayName = format(date, 'EEEE');
-      currentSplit = splits.find(s => s.day === dayName);
-    }
-
-    if (!currentSplit) return;
-
-    const defaultExercises: ExerciseEntry[] = currentSplit.exercises.map(ex => {
-      const name = typeof ex === 'string' ? ex : ex.name;
-      const libEx = library.find(e => e.name === name);
-      return {
-        id: Math.random().toString(36).substr(2, 9),
-        name: name,
-        muscleGroup: libEx?.muscleGroup || 'Other',
-        muscleDistribution: libEx?.muscleDistribution,
-        trackingMode: libEx?.trackingMode || 'reps',
-        sets: 0,
-        reps: 0,
-        distance: 0,
-        time: 0,
-        timeUnit: 'min',
-        weight: 0,
-        rpe: null,
-        rir: null,
-        notes: '',
-      };
+      setManualSplit(NO_SPLIT_SENTINEL);
+      setExpandedSupersets({});
     });
+  };
 
-    setWorkoutMeta(prev => ({
-      ...prev,
-      workoutName: currentSplit.name,
-      workoutSummary: currentSplit.summary || '',
-      runningStats: currentSplit.running,
-      notes: '',
-      postWorkoutEnergy: 5,
-    }));
-    setBlocks(deriveBlocksFromLegacy(defaultExercises, currentSplit.conditioning));
-    setExpandedSupersets({});
+  const handleReset = () => {
+    runWithUndo(() => {
+      if (manualSplit === NO_SPLIT_SENTINEL) {
+        setWorkoutMeta(prev => ({
+          ...prev,
+          workoutName: '',
+          workoutSummary: '',
+          runningStats: '',
+          notes: '',
+        }));
+        setBlocks([]);
+        return;
+      }
+
+      let currentSplit;
+      if (manualSplit) {
+        currentSplit = splits.find(s => s.name === manualSplit);
+      } else {
+        const dayName = format(date, 'EEEE');
+        currentSplit = splits.find(s => s.day === dayName);
+      }
+
+      if (!currentSplit) return;
+
+      const defaultExercises: ExerciseEntry[] = currentSplit.exercises.map(ex => {
+        const name = typeof ex === 'string' ? ex : ex.name;
+        const libEx = library.find(e => e.name === name);
+        return {
+          id: Math.random().toString(36).substr(2, 9),
+          name: name,
+          muscleGroup: libEx?.muscleGroup || 'Other',
+          muscleDistribution: libEx?.muscleDistribution,
+          trackingMode: libEx?.trackingMode || 'reps',
+          sets: 0,
+          reps: 0,
+          distance: 0,
+          time: 0,
+          timeUnit: 'min',
+          weight: 0,
+          rpe: null,
+          rir: null,
+          notes: '',
+        };
+      });
+
+      setWorkoutMeta(prev => ({
+        ...prev,
+        workoutName: currentSplit.name,
+        workoutSummary: currentSplit.summary || '',
+        runningStats: currentSplit.running,
+        notes: '',
+        postWorkoutEnergy: 5,
+      }));
+      setBlocks(deriveBlocksFromLegacy(defaultExercises, currentSplit.conditioning));
+      setExpandedSupersets({});
+    });
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    setBlocks(prev => {
-      // Check if we are dragging a block
-      const activeBlockIndex = prev.findIndex(b => b.id === active.id);
-      const overBlockIndex = prev.findIndex(b => b.id === over.id);
+    runWithUndo(() => {
+      setBlocks(prev => {
+        // Check if we are dragging a block
+        const activeBlockIndex = prev.findIndex(b => b.id === active.id);
+        const overBlockIndex = prev.findIndex(b => b.id === over.id);
 
-      if (activeBlockIndex !== -1 && overBlockIndex !== -1) {
-        // Block-level reorder
-        return arrayMove(prev, activeBlockIndex, overBlockIndex);
-      }
+        if (activeBlockIndex !== -1 && overBlockIndex !== -1) {
+          // Block-level reorder
+          return arrayMove(prev, activeBlockIndex, overBlockIndex);
+        }
 
-      // Otherwise, it might be an exercise-level reorder inside the lift block
-      return prev.map(b => {
-        if (b.kind !== 'lift') return b;
-        const oldIndex = b.exercises.findIndex(ex => ex.id === active.id);
-        const newIndex = b.exercises.findIndex(ex => ex.id === over.id);
-        if (oldIndex === -1 || newIndex === -1) return b;
-        return { ...b, exercises: arrayMove(b.exercises, oldIndex, newIndex) };
+        // Otherwise, it might be an exercise-level reorder inside the lift block
+        return prev.map(b => {
+          if (b.kind !== 'lift') return b;
+          const oldIndex = b.exercises.findIndex(ex => ex.id === active.id);
+          const newIndex = b.exercises.findIndex(ex => ex.id === over.id);
+          if (oldIndex === -1 || newIndex === -1) return b;
+          return { ...b, exercises: arrayMove(b.exercises, oldIndex, newIndex) };
+        });
       });
     });
   };
 
   const changeDate = (days: number) => {
-    setDate(prev => addDays(prev, days));
-    setManualSplit(null); // Reset manual split when date changes
+    runWithUndo(() => {
+      setDate(prev => addDays(prev, days));
+      setManualSplit(null); // Reset manual split when date changes
+    });
   };
 
   return (
@@ -1389,8 +1451,10 @@ export default function DailyLog() {
               type="date" 
               value={format(date, 'yyyy-MM-dd')}
               onChange={(e) => {
-                setDate(new Date(e.target.value));
-                setManualSplit(null);
+                runWithUndo(() => {
+                  setDate(new Date(e.target.value));
+                  setManualSplit(null);
+                });
               }}
               className="w-auto border-none focus-visible:ring-0 h-8 text-sm text-foreground"
             />
@@ -1459,7 +1523,10 @@ export default function DailyLog() {
                     <Label className="text-xs uppercase tracking-wider text-slate-500">Workout Name</Label>
                     <Input 
                       value={workoutMeta.workoutName} 
-                      onChange={e => setWorkoutMeta(prev => ({ ...prev, workoutName: e.target.value }))}
+                      onChange={e => {
+                        beginUndoableEdit();
+                        setWorkoutMeta(prev => ({ ...prev, workoutName: e.target.value }));
+                      }}
                       className="h-9 text-base font-semibold"
                       placeholder="Enter workout name..."
                     />
@@ -1471,6 +1538,7 @@ export default function DailyLog() {
                     <Select 
                       value={manualSplit ?? ""} 
                       onValueChange={(val) => {
+                        captureSnapshot();
                         setManualSplit(val);
                         if (val === NO_SPLIT_SENTINEL) {
                           setWorkoutMeta(prev => ({
@@ -1594,12 +1662,16 @@ export default function DailyLog() {
                           removeHiitExercise={removeHiitExercise}
                           addHiitExercise={addHiitExercise}
                           onChange={(updates) => {
-                            setBlocks(prev => prev.map(b =>
-                              b.id === block.id ? ({ ...b, ...updates } as Block) : b
-                            ));
+                            runWithUndo(() => {
+                              setBlocks(prev => prev.map(b =>
+                                b.id === block.id ? ({ ...b, ...updates } as Block) : b
+                              ));
+                            });
                           }}
                           onDelete={() => {
-                            setBlocks(prev => prev.filter(b => b.id !== block.id));
+                            runWithUndo(() => {
+                              setBlocks(prev => prev.filter(b => b.id !== block.id));
+                            });
                           }}
                         />
                       );
@@ -1641,6 +1713,7 @@ export default function DailyLog() {
                 max={10} 
                 step={1}
                 onValueChange={(val) => {
+                  beginUndoableEdit();
                   const num = typeof val === 'number' ? val : (Array.isArray(val) ? val[0] : 5);
                   setWorkoutMeta(prev => ({ ...prev, postWorkoutEnergy: num }));
                 }}
@@ -1661,7 +1734,10 @@ export default function DailyLog() {
             <CardContent>
               <Textarea 
                 value={workoutMeta.notes}
-                onChange={e => setWorkoutMeta(prev => ({ ...prev, notes: e.target.value }))}
+                onChange={e => {
+                  beginUndoableEdit();
+                  setWorkoutMeta(prev => ({ ...prev, notes: e.target.value }));
+                }}
                 placeholder="Overall feeling, sleep, nutrition, etc..."
                 className="min-h-[120px]"
               />
