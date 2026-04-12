@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useMemo, useRef, Dispatch, SetStateAction } from 'react';
+import React, { useState, useEffect, useMemo, useRef, Dispatch, SetStateAction, useCallback } from 'react';
 import { 
   Plus, 
   Trash2, 
@@ -33,6 +33,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from '@/components/ui/dialog';
 import {
   DndContext, 
   closestCenter,
@@ -1052,6 +1062,77 @@ export default function DailyLog() {
     splitDataHash: null
   });
 
+  const getSplitForDate = useCallback((targetDate: Date, splitName: string | null) => {
+    if (splitName === NO_SPLIT_SENTINEL) return null;
+    if (library.length === 0 || splits.length === 0) return null;
+
+    let currentSplit;
+    if (splitName) {
+      currentSplit = splits.find(s => s.name === splitName);
+    } else {
+      const dayName = format(targetDate, 'EEEE');
+      currentSplit = splits.find(s => s.day === dayName);
+    }
+
+    if (!currentSplit) return null;
+
+    const sanitizedSplit = sanitizeSplitRecord(currentSplit);
+    if (!sanitizedSplit) return null;
+
+    return { currentSplit, sanitizedSplit };
+  }, [library, splits]);
+
+  const loadProgrammedWorkout = useCallback((targetDate: Date, splitName: string | null) => {
+    if (splitName === NO_SPLIT_SENTINEL) {
+      setWorkoutMeta(prev => ({
+        ...prev,
+        workoutName: '',
+        workoutSummary: '',
+        runningStats: '',
+        notes: '',
+      }));
+      setBlocks([]);
+      setExpandedSupersets({});
+      return;
+    }
+
+    const splitData = getSplitForDate(targetDate, splitName);
+    if (!splitData) return;
+    const { currentSplit, sanitizedSplit } = splitData;
+
+    const defaultExercises: ExerciseEntry[] = sanitizedSplit.exercises.map(ex => {
+      const name = typeof ex === 'string' ? ex : ex.name;
+      const libEx = library.find(e => e.name === name);
+      return {
+        id: Math.random().toString(36).substr(2, 9),
+        name: name,
+        muscleGroup: libEx?.muscleGroup || 'Other',
+        muscleDistribution: libEx?.muscleDistribution,
+        trackingMode: libEx?.trackingMode || 'reps',
+        sets: 0,
+        reps: 0,
+        distance: 0,
+        time: 0,
+        timeUnit: 'min',
+        weight: 0,
+        rpe: null,
+        rir: null,
+        notes: '',
+      };
+    });
+
+    setWorkoutMeta(prev => ({
+      ...prev,
+      workoutName: currentSplit.name,
+      workoutSummary: currentSplit.summary || '',
+      runningStats: currentSplit.running,
+    }));
+    setBlocks(deriveBlocksFromLegacy(defaultExercises, { name: '' }));
+    setExpandedSupersets({});
+    
+    return { currentSplit, sanitizedSplit };
+  }, [getSplitForDate, library]);
+
   // Load default split based on date or manual selection
   useEffect(() => {
     if (manualSplit === NO_SPLIT_SENTINEL) {
@@ -1069,18 +1150,9 @@ export default function DailyLog() {
     
     const dateStr = format(date, 'yyyy-MM-dd');
     
-    let currentSplit;
-    if (manualSplit) {
-      currentSplit = splits.find(s => s.name === manualSplit);
-    } else {
-      const dayName = format(date, 'EEEE');
-      currentSplit = splits.find(s => s.day === dayName);
-    }
-
-    if (!currentSplit) return;
-
-    const sanitizedSplit = sanitizeSplitRecord(currentSplit);
-    if (!sanitizedSplit) return;
+    const splitData = getSplitForDate(date, manualSplit);
+    if (!splitData) return;
+    const { currentSplit, sanitizedSplit } = splitData;
 
     // Create a simple hash of the split data to detect changes
     const splitDataHash = JSON.stringify({
@@ -1099,42 +1171,14 @@ export default function DailyLog() {
     // 2. The workout is currently empty
     // 3. The split data itself changed AND the workout is still "clean" (matches the old split data)
     if (isDateChanged || isSplitSelectionChanged || isWorkoutEmpty || (isSplitDataChanged && isWorkoutEmpty)) {
-      const defaultExercises: ExerciseEntry[] = sanitizedSplit.exercises.map(ex => {
-        const name = typeof ex === 'string' ? ex : ex.name;
-        const libEx = library.find(e => e.name === name);
-        return {
-          id: Math.random().toString(36).substr(2, 9),
-          name: name,
-          muscleGroup: libEx?.muscleGroup || 'Other',
-          muscleDistribution: libEx?.muscleDistribution,
-          trackingMode: libEx?.trackingMode || 'reps',
-          sets: 0,
-          reps: 0,
-          distance: 0,
-          time: 0,
-          timeUnit: 'min',
-          weight: 0,
-          rpe: null,
-          rir: null,
-          notes: '',
-        };
-      });
-
-      setWorkoutMeta(prev => ({
-        ...prev,
-        workoutName: currentSplit.name,
-        workoutSummary: currentSplit.summary || '',
-        runningStats: currentSplit.running,
-      }));
-      setBlocks(deriveBlocksFromLegacy(defaultExercises, { name: '' }));
-
+      loadProgrammedWorkout(date, manualSplit);
       lastLoadedRef.current = { 
         date: dateStr, 
         split: manualSplit,
         splitDataHash: splitDataHash
       };
     }
-  }, [date, library, splits, manualSplit, workoutMeta.workoutName, liftExercises.length]);
+  }, [date, library, splits, manualSplit, workoutMeta.workoutName, liftExercises.length, isDraftLoaded, loadProgrammedWorkout, getSplitForDate]);
 
   const addExercise = () => {
     runWithUndo(() => {
@@ -1299,12 +1343,23 @@ export default function DailyLog() {
       // Sanitize and normalize workout data before saving
       const { exercises, conditioning } = projectBlocksToLegacy(blocks);
 
+      // Safety check: if the date has changed from the originally loaded historical workout,
+      // we must generate a new ID to prevent overwriting the old record.
+      let finalId = workoutMeta.id;
+      if (workoutMeta.isHistorical && workoutMeta.date) {
+        const originalDateStr = format(new Date(workoutMeta.date), 'yyyy-MM-dd');
+        const currentDateStr = format(date, 'yyyy-MM-dd');
+        if (originalDateStr !== currentDateStr) {
+          finalId = undefined; // Force a new ID
+        }
+      }
+
       const workoutToSave = sanitizeData({
         ...workoutMeta,
         exercises,
         conditioning,
         blocks: blocks.length > 0 ? blocks : undefined,
-        id: workoutMeta.id || Math.random().toString(36).substr(2, 9),
+        id: finalId || Math.random().toString(36).substr(2, 9),
         date: date.toISOString(),
         timestamp: Date.now(),
         uid: user.uid,
@@ -1312,6 +1367,15 @@ export default function DailyLog() {
       
       await storage.saveWorkout(workoutToSave as Workout, user.uid);
       await storage.clearDraft(user.uid);
+      
+      // Update local state to reflect the new saved identity
+      setWorkoutMeta(prev => ({
+        ...prev,
+        id: workoutToSave.id,
+        date: workoutToSave.date,
+        isHistorical: true
+      }));
+      
       setSaveStatus('success');
       setTimeout(() => setSaveStatus('idle'), 3000);
     } catch (error) {
@@ -1338,62 +1402,16 @@ export default function DailyLog() {
     });
   };
 
-  const handleReset = () => {
+  const reloadWorkoutForDate = useCallback((targetDate: Date) => {
     runWithUndo(() => {
-      if (manualSplit === NO_SPLIT_SENTINEL) {
-        setWorkoutMeta(prev => ({
-          ...prev,
-          workoutName: '',
-          workoutSummary: '',
-          runningStats: '',
-          notes: '',
-        }));
-        setBlocks([]);
-        return;
-      }
-
-      let currentSplit;
-      if (manualSplit) {
-        currentSplit = splits.find(s => s.name === manualSplit);
-      } else {
-        const dayName = format(date, 'EEEE');
-        currentSplit = splits.find(s => s.day === dayName);
-      }
-
-      if (!currentSplit) return;
-
-      const defaultExercises: ExerciseEntry[] = currentSplit.exercises.map(ex => {
-        const name = typeof ex === 'string' ? ex : ex.name;
-        const libEx = library.find(e => e.name === name);
-        return {
-          id: Math.random().toString(36).substr(2, 9),
-          name: name,
-          muscleGroup: libEx?.muscleGroup || 'Other',
-          muscleDistribution: libEx?.muscleDistribution,
-          trackingMode: libEx?.trackingMode || 'reps',
-          sets: 0,
-          reps: 0,
-          distance: 0,
-          time: 0,
-          timeUnit: 'min',
-          weight: 0,
-          rpe: null,
-          rir: null,
-          notes: '',
-        };
-      });
-
-      setWorkoutMeta(prev => ({
-        ...prev,
-        workoutName: currentSplit.name,
-        workoutSummary: currentSplit.summary || '',
-        runningStats: currentSplit.running,
-        notes: '',
-        postWorkoutEnergy: 5,
-      }));
-      setBlocks(deriveBlocksFromLegacy(defaultExercises, currentSplit.conditioning));
-      setExpandedSupersets({});
+      setManualSplit(null);
+      loadProgrammedWorkout(targetDate, null);
+      setWorkoutMeta(prev => ({ ...prev, id: Math.random().toString(36).substr(2, 9) }));
     });
+  }, [loadProgrammedWorkout]);
+
+  const handleReset = () => {
+    reloadWorkoutForDate(date);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -1505,8 +1523,10 @@ export default function DailyLog() {
       {workoutMeta.isHistorical && (
         <div className="bg-maroon/10 border border-maroon/20 text-maroon p-4 rounded-lg flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Info size={20} />
-            <span className="font-semibold">Editing Historical Log • {format(date, 'MMMM d, yyyy')}</span>
+            <Info size={20} className="shrink-0" />
+            <span className="font-semibold text-sm">
+              Editing saved workout from {format(new Date(workoutMeta.date || date), 'MMMM d, yyyy')}. Changes will update that saved log unless you switch dates or create a new entry.
+            </span>
           </div>
           <Button variant="ghost" size="sm" onClick={() => {
             setWorkoutMeta(prev => ({ ...prev, isHistorical: false }));
@@ -1572,31 +1592,70 @@ export default function DailyLog() {
 
                 {/* Action row: Reset / Clear Split / Undo */}
                 <div className="flex flex-wrap items-center gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleReset}
-                    className="h-8 text-xs border-slate-200 text-slate-600 hover:text-maroon hover:border-maroon/50"
-                  >
-                    Reset Workout
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleClearSplit}
-                    className="h-8 text-xs border-slate-200 text-slate-600 hover:text-maroon hover:border-maroon/50"
-                  >
-                    Clear Split
-                  </Button>
+                  <Dialog>
+                    <DialogTrigger 
+                      render={
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-8 text-xs border-slate-200 text-slate-600 hover:text-maroon hover:border-maroon/50"
+                        >
+                          Reset Workout
+                        </Button>
+                      }
+                    />
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Reset this workout?</DialogTitle>
+                        <DialogDescription>
+                          This will discard your current in-progress changes and rebuild the workout from the programmed split for this day.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <DialogFooter>
+                        <DialogClose render={<Button variant="outline">Cancel</Button>} />
+                        <DialogClose render={<Button onClick={handleReset} className="bg-maroon hover:bg-maroon-light text-white">Reset Workout</Button>} />
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+
+                  <Dialog>
+                    <DialogTrigger 
+                      render={
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-8 text-xs border-slate-200 text-slate-600 hover:text-maroon hover:border-maroon/50"
+                        >
+                          Clear Split
+                        </Button>
+                      }
+                    />
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Clear this workout?</DialogTitle>
+                        <DialogDescription>
+                          This will remove the current workout blocks and notes for this log. You can still use Undo right after.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <DialogFooter>
+                        <DialogClose render={<Button variant="outline">Cancel</Button>} />
+                        <DialogClose render={<Button onClick={handleClearSplit} className="bg-maroon hover:bg-maroon-light text-white">Clear Workout</Button>} />
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+
                   {previousSnapshot && (
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={handleUndo}
-                      className="h-8 text-xs border-maroon/30 text-maroon hover:bg-maroon/5"
-                    >
-                      Undo
-                    </Button>
+                    <div className="flex items-center gap-2 ml-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleUndo}
+                        className="h-8 text-xs border-maroon/30 text-maroon hover:bg-maroon/5"
+                      >
+                        Undo
+                      </Button>
+                      <span className="text-xs text-slate-500 italic">Undo is available for your last reset/clear action.</span>
+                    </div>
                   )}
                 </div>
 
@@ -1713,14 +1772,15 @@ export default function DailyLog() {
                 <span className="text-xs text-slate-400 uppercase font-bold">Scale 1-10</span>
               </div>
               <Slider 
-                value={workoutMeta.postWorkoutEnergy ?? 5} 
-                min={1} 
+                value={workoutMeta.postWorkoutEnergy ? (workoutMeta.postWorkoutEnergy - 1) * (10 / 9) : 4.44} 
+                min={0} 
                 max={10} 
-                step={1}
+                step={0.1}
                 onValueChange={(val) => {
                   beginUndoableEdit();
-                  const num = typeof val === 'number' ? val : (Array.isArray(val) ? val[0] : 5);
-                  setWorkoutMeta(prev => ({ ...prev, postWorkoutEnergy: num }));
+                  const sliderVal = typeof val === 'number' ? val : (Array.isArray(val) ? val[0] : 4.44);
+                  const energy = Math.round(sliderVal * (9 / 10) + 1);
+                  setWorkoutMeta(prev => ({ ...prev, postWorkoutEnergy: Math.max(1, Math.min(10, energy)) }));
                 }}
               />
               <div className="flex justify-between text-[10px] text-slate-400 uppercase font-bold">

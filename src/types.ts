@@ -204,6 +204,11 @@ export interface Workout {
   isHistorical?: boolean;
 }
 
+export interface DeletedWorkout extends Workout {
+  deletedAt: number;
+  originalId: string;
+}
+
 export interface UserProfile {
   uid: string;
   email: string;

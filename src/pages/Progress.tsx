@@ -47,6 +47,8 @@ import { BodyMap } from '@/src/components/BodyMap';
 export default function Progress() {
   const { user } = useFirebase();
   const [view, setView] = useState<'weekly-volume' | 'session-volume' | 'strength' | 'conditioning' | 'battery'>('weekly-volume');
+  const [volumeRange, setVolumeRange] = useState<'24h' | '72h' | '1w' | '2w' | '1m' | '3m'>('1w');
+  const [heatMode, setHeatMode] = useState<'relative' | 'target'>('relative');
   const [selectedExercise, setSelectedExercise] = useState(INITIAL_EXERCISES[5].name); // Flat Bench Press
   const [selectedWorkoutId, setSelectedWorkoutId] = useState<string | null>(null);
   const [history, setHistory] = useState<Workout[]>([]);
@@ -192,8 +194,30 @@ export default function Progress() {
   // B. Weekly Volume Section
   const weeklyVolume = useMemo(() => {
     if (history.length === 0) return null;
-    const sevenDaysAgo = startOfDay(subDays(new Date(), 7));
-    const recentWorkouts = history.filter(w => isAfter(new Date(w.date), sevenDaysAgo));
+    
+    let cutoffDate = new Date();
+    switch (volumeRange) {
+      case '24h':
+        cutoffDate = subDays(new Date(), 1);
+        break;
+      case '72h':
+        cutoffDate = subDays(new Date(), 3);
+        break;
+      case '1w':
+        cutoffDate = startOfDay(subDays(new Date(), 7));
+        break;
+      case '2w':
+        cutoffDate = startOfDay(subDays(new Date(), 14));
+        break;
+      case '1m':
+        cutoffDate = startOfDay(subDays(new Date(), 30));
+        break;
+      case '3m':
+        cutoffDate = startOfDay(subDays(new Date(), 90));
+        break;
+    }
+    
+    const recentWorkouts = history.filter(w => isAfter(new Date(w.date), cutoffDate));
     
     let totalBodyVolume = 0;
     const muscleGroupVolume: Record<string, number> = {};
@@ -238,7 +262,7 @@ export default function Progress() {
       muscleGroupData,
       exerciseData
     };
-  }, [history]);
+  }, [history, volumeRange]);
 
   const volumeTargets = useMemo(() => {
     if (!weeklyVolume) return null;
@@ -504,9 +528,50 @@ export default function Progress() {
 
       {view === 'weekly-volume' && (
         <section className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Calendar className="text-gold" size={20} />
-            <h3 className="text-xl font-bold text-slate-800">Weekly Volume (Past 7 Days)</h3>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Calendar className="text-gold" size={20} />
+              <h3 className="text-xl font-bold text-slate-800">
+                Volume ({
+                  volumeRange === '24h' ? 'Last 24h' :
+                  volumeRange === '72h' ? 'Last 72h' :
+                  volumeRange === '1w' ? '1 Week' :
+                  volumeRange === '2w' ? '2 Weeks' :
+                  volumeRange === '1m' ? '1 Month' :
+                  '3 Months'
+                })
+              </h3>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <Label className="text-xs text-slate-500 uppercase font-bold">Time Range</Label>
+                <Select value={volumeRange} onValueChange={(v: any) => setVolumeRange(v)}>
+                  <SelectTrigger className="w-[120px] h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="24h">Last 24h</SelectItem>
+                    <SelectItem value="72h">Last 72h</SelectItem>
+                    <SelectItem value="1w">1 Week</SelectItem>
+                    <SelectItem value="2w">2 Weeks</SelectItem>
+                    <SelectItem value="1m">1 Month</SelectItem>
+                    <SelectItem value="3m">3 Months</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-2">
+                <Label className="text-xs text-slate-500 uppercase font-bold">Heat Mode</Label>
+                <Select value={heatMode} onValueChange={(v: any) => setHeatMode(v)}>
+                  <SelectTrigger className="w-[130px] h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="relative">Relative Heat</SelectItem>
+                    <SelectItem value="target">Target Heat</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
           {weeklyVolume && weeklyVolume.totalBodyVolume > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -592,7 +657,7 @@ export default function Progress() {
             </div>
           ) : (
             <Card className="border-slate-200 shadow-sm p-8 text-center text-slate-400 italic">
-              Log workouts in the last 7 days to see weekly breakdowns.
+              Log workouts in the selected range to see volume breakdowns.
             </Card>
           )}
 
@@ -604,13 +669,18 @@ export default function Progress() {
               <CardDescription>
                 Shading reflects this week's training volume per muscle group. Hover for details.
               </CardDescription>
+              <p className="text-sm text-muted-foreground mt-2">
+                {heatMode === 'relative'
+                  ? 'Relative Heat compares each muscle group to your highest-volume group in the selected time range.'
+                  : 'Target Heat compares each muscle group to its volume target, so colors reflect progress toward target rather than just this range’s highest group.'}
+              </p>
             </CardHeader>
             <CardContent>
               {weeklyVolume && weeklyVolume.muscleGroupData.length > 0 ? (
-                <BodyMap muscleGroupData={weeklyVolume.muscleGroupData} />
+                <BodyMap muscleGroupData={weeklyVolume.muscleGroupData} heatMode={heatMode} />
               ) : (
                 <p className="text-sm text-muted-foreground italic text-center py-8">
-                  No workout data this week yet. Log some workouts to see your body map.
+                  No workout data in this range yet. Log some workouts to see your body map.
                 </p>
               )}
             </CardContent>
@@ -1354,30 +1424,6 @@ export default function Progress() {
               Log at least one workout to see your readiness estimate.
             </Card>
           )}
-        </section>
-      )}
-
-      {view === 'body-map' && (
-        <section className="space-y-4">
-          <Card className="border-border shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-sm uppercase tracking-wider text-slate-500">
-                Weekly Volume Heatmap
-              </CardTitle>
-              <CardDescription>
-                Shading reflects this week's training volume per muscle group. Hover for details.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {weeklyVolume && weeklyVolume.muscleGroupData.length > 0 ? (
-                <BodyMap muscleGroupData={weeklyVolume.muscleGroupData} />
-              ) : (
-                <p className="text-sm text-muted-foreground italic text-center py-8">
-                  No workout data this week yet. Log some workouts to see your body map.
-                </p>
-              )}
-            </CardContent>
-          </Card>
         </section>
       )}
     </div>

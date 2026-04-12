@@ -154,15 +154,149 @@ export const storage = {
         parsed = [];
       }
       const workouts: Workout[] = sanitizeWorkoutList(parsed);
+      const workoutToDelete = workouts.find(w => w.id === id);
+      
+      if (workoutToDelete) {
+        // Move to deleted storage
+        const savedDeleted = sessionStorage.getItem('guest_deleted_workouts');
+        let parsedDeleted: unknown = [];
+        try {
+          parsedDeleted = savedDeleted ? JSON.parse(savedDeleted) : [];
+        } catch {
+          parsedDeleted = [];
+        }
+        const deletedWorkouts: any[] = Array.isArray(parsedDeleted) ? parsedDeleted : [];
+        deletedWorkouts.unshift({
+          ...workoutToDelete,
+          deletedAt: Date.now(),
+          originalId: workoutToDelete.id
+        });
+        sessionStorage.setItem('guest_deleted_workouts', JSON.stringify(deletedWorkouts));
+      }
+
       const filtered = workouts.filter(w => w.id !== id);
       sessionStorage.setItem('guest_workouts', JSON.stringify(filtered));
       return;
     }
 
     try {
+      if (uid) {
+        // Fetch the workout first to copy it
+        const q = query(collection(db, 'workouts'), where('uid', '==', uid));
+        const snapshot = await getDocs(q);
+        const workoutDoc = snapshot.docs.find(doc => doc.id === id);
+        
+        if (workoutDoc) {
+          const workoutData = workoutDoc.data();
+          const deletedRef = doc(db, 'deleted_workouts', id);
+          await setDoc(deletedRef, {
+            ...workoutData,
+            deletedAt: Date.now(),
+            originalId: id
+          });
+        }
+      }
       await deleteDoc(doc(db, 'workouts', id));
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `workouts/${id}`);
+    }
+  },
+
+  getDeletedWorkouts: async (uid: string) => {
+    const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+    
+    if (uid.startsWith('guest_')) {
+      const saved = sessionStorage.getItem('guest_deleted_workouts');
+      let parsed: unknown = [];
+      try {
+        parsed = saved ? JSON.parse(saved) : [];
+      } catch {
+        parsed = [];
+      }
+      const deletedWorkouts: any[] = Array.isArray(parsed) ? parsed : [];
+      return deletedWorkouts.filter(w => w.deletedAt >= sevenDaysAgo);
+    }
+
+    try {
+      const q = query(
+        collection(db, 'deleted_workouts'),
+        where('uid', '==', uid),
+        where('deletedAt', '>=', sevenDaysAgo),
+        orderBy('deletedAt', 'desc')
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+      console.error("Error fetching deleted workouts:", error);
+      return [];
+    }
+  },
+
+  restoreWorkout: async (deletedWorkout: any, uid: string) => {
+    const { deletedAt, originalId, ...workoutData } = deletedWorkout;
+    
+    // Ensure it has a valid ID for restoration
+    const restoreId = originalId || deletedWorkout.id;
+    const workoutToRestore = { ...workoutData, id: restoreId, uid };
+
+    if (uid.startsWith('guest_')) {
+      // 1. Add back to workouts
+      const saved = sessionStorage.getItem('guest_workouts');
+      let parsed: unknown = [];
+      try {
+        parsed = saved ? JSON.parse(saved) : [];
+      } catch {
+        parsed = [];
+      }
+      const workouts: Workout[] = sanitizeWorkoutList(parsed);
+      workouts.unshift(workoutToRestore);
+      sessionStorage.setItem('guest_workouts', JSON.stringify(workouts));
+
+      // 2. Remove from deleted
+      const savedDeleted = sessionStorage.getItem('guest_deleted_workouts');
+      let parsedDeleted: unknown = [];
+      try {
+        parsedDeleted = savedDeleted ? JSON.parse(savedDeleted) : [];
+      } catch {
+        parsedDeleted = [];
+      }
+      const deletedWorkouts: any[] = Array.isArray(parsedDeleted) ? parsedDeleted : [];
+      const filteredDeleted = deletedWorkouts.filter(w => w.id !== deletedWorkout.id);
+      sessionStorage.setItem('guest_deleted_workouts', JSON.stringify(filteredDeleted));
+      return;
+    }
+
+    try {
+      // 1. Add back to workouts
+      const docRef = doc(db, 'workouts', restoreId);
+      await setDoc(docRef, workoutToRestore);
+      
+      // 2. Remove from deleted
+      await deleteDoc(doc(db, 'deleted_workouts', deletedWorkout.id));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `workouts/${restoreId}`);
+    }
+  },
+
+  permanentlyDeleteWorkout: async (id: string, uid?: string) => {
+    if (uid?.startsWith('guest_')) {
+      const savedDeleted = sessionStorage.getItem('guest_deleted_workouts');
+      let parsedDeleted: unknown = [];
+      try {
+        parsedDeleted = savedDeleted ? JSON.parse(savedDeleted) : [];
+      } catch {
+        parsedDeleted = [];
+      }
+      const deletedWorkouts: any[] = Array.isArray(parsedDeleted) ? parsedDeleted : [];
+      const filteredDeleted = deletedWorkouts.filter(w => w.id !== id);
+      sessionStorage.setItem('guest_deleted_workouts', JSON.stringify(filteredDeleted));
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, 'deleted_workouts', id));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `deleted_workouts/${id}`);
     }
   },
 

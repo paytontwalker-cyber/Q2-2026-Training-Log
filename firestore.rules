@@ -60,7 +60,7 @@ service cloud.firestore {
     }
 
     function isDocOwner() {
-      return isAuthenticated() && request.auth.uid == resource.data.uid;
+      return isAuthenticated() && resource != null && request.auth.uid == resource.data.uid;
     }
 
     function uidUnchanged() {
@@ -129,6 +129,10 @@ service cloud.firestore {
              data.timestamp is number;
     }
 
+    function isValidDeletedWorkout(data) {
+      return true;
+    }
+
     // ===============================================================
     // Rules
     // ===============================================================
@@ -150,7 +154,13 @@ service cloud.firestore {
       allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
       allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid && isValidWorkout(request.resource.data);
       allow update: if isAuthenticated() && isDocOwner() && uidNotModified() && isValidWorkout(request.resource.data);
-      allow delete: if isAuthenticated() && isDocOwner();
+      allow delete: if isAuthenticated() && resource.data.uid == request.auth.uid;
+    }
+
+    match /deleted_workouts/{workoutId} {
+      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow create: if isAuthenticated();
+      allow delete: if isAuthenticated() && resource.data.uid == request.auth.uid;
     }
 
     match /splits/{splitId} {

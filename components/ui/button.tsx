@@ -44,14 +44,14 @@ function Button({
   className,
   variant = "default",
   size = "default",
-  asChild,
   ...props
 }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+  const { asChild, ...rest } = props as any;
   return (
     <ButtonPrimitive
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
+      {...rest}
     />
   )
 }

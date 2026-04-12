@@ -1,10 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { BODY_FRONT_PATHS, BODY_BACK_PATHS } from '@/src/lib/bodyMapPaths';
 import { MUSCLE_GROUP_TO_REGIONS } from '@/src/lib/bodyMapMapping';
+import { MUSCLE_VOLUME_TARGETS } from '@/src/constants';
 import type { MuscleGroup } from '@/src/types';
 
 interface BodyMapProps {
   muscleGroupData: { name: string; value: number }[];
+  heatMode?: 'relative' | 'target';
 }
 
 const HEATMAP_COLORS = [
@@ -17,7 +19,38 @@ const HEATMAP_COLORS = [
 ];
 const NO_DATA_COLOR = '#E5E7EB'; // neutral gray
 
-export function BodyMap({ muscleGroupData }: BodyMapProps) {
+const ALIAS_MAP: Record<string, string> = {
+  'Upper Back': 'Back',
+  'Lats': 'Back',
+  'Traps': 'Back',
+  'Lower Back': 'Back',
+  'Core': 'Abs/Core',
+};
+
+const getTargetForSlug = (slug: string) => {
+  const muscleGroups = Object.entries(MUSCLE_GROUP_TO_REGIONS)
+    .filter(([_, regions]) => regions?.some(r => r.slug === slug))
+    .map(([name]) => name);
+
+  const targetKeys = new Set<string>();
+  let totalTarget = 0;
+
+  muscleGroups.forEach(mg => {
+    if (MUSCLE_VOLUME_TARGETS[mg]) {
+      targetKeys.add(mg);
+    } else if (ALIAS_MAP[mg] && MUSCLE_VOLUME_TARGETS[ALIAS_MAP[mg]]) {
+      targetKeys.add(ALIAS_MAP[mg]);
+    }
+  });
+
+  targetKeys.forEach(key => {
+    totalTarget += MUSCLE_VOLUME_TARGETS[key];
+  });
+
+  return totalTarget;
+};
+
+export function BodyMap({ muscleGroupData, heatMode = 'relative' }: BodyMapProps) {
   const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
@@ -62,8 +95,19 @@ export function BodyMap({ muscleGroupData }: BodyMapProps) {
     const entry = entries.find(e => e.side === side);
     if (!entry || entry.volume === 0) return NO_DATA_COLOR;
     
-    if (maxVolume === 0) return HEATMAP_COLORS[0];
-    const bucket = Math.min(5, Math.floor((entry.volume / maxVolume) * 6));
+    let ratio = 0;
+    if (heatMode === 'target') {
+      const target = getTargetForSlug(slug);
+      if (target > 0) {
+        ratio = entry.volume / target;
+      } else {
+        ratio = maxVolume > 0 ? entry.volume / maxVolume : 0;
+      }
+    } else {
+      ratio = maxVolume > 0 ? entry.volume / maxVolume : 0;
+    }
+
+    const bucket = Math.min(5, Math.floor(ratio * 6));
     return HEATMAP_COLORS[Math.max(0, bucket)];
   };
 
