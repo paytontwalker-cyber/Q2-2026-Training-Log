@@ -5,7 +5,24 @@
 
 import { ExerciseLibraryEntry, MuscleGroup } from './types';
 
-export const APP_VERSION = '2.7.2';
+export const APP_VERSION = '2.7.7';
+
+export const MUSCLE_VOLUME_TARGETS: Record<string, number> = {
+  Chest: 8000,
+  Back: 12000,
+  Quads: 10000,
+  Hamstrings: 7000,
+  Glutes: 8000,
+  Shoulders: 5000,
+  'Side Delts': 3000,
+  'Rear Delts': 3500,
+  Biceps: 3500,
+  Triceps: 4000,
+  Calves: 6000,
+  'Abs/Core': 2500,
+  Traps: 4000,
+  Forearms: 2500,
+};
 
 export const MUSCLE_GROUPS: MuscleGroup[] = [
   'Chest',

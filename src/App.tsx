@@ -17,7 +17,8 @@ import {
   LogIn,
   ChevronLeft,
   ChevronRight,
-  UserCircle
+  UserCircle,
+  Users
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { APP_VERSION } from './constants';
@@ -32,8 +33,9 @@ import History from './pages/History';
 import Split from './pages/Split';
 import Export from './pages/Export';
 import ProfileSettings from './pages/ProfileSettings';
+import Social from './pages/Social';
 
-type Page = 'home' | 'log' | 'progress' | 'exercises' | 'history' | 'split' | 'export' | 'profile';
+type Page = 'home' | 'log' | 'progress' | 'exercises' | 'history' | 'split' | 'export' | 'profile' | 'social';
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
@@ -60,6 +62,7 @@ function AppContent() {
     { id: 'log', label: 'Daily Log', icon: LayoutDashboard },
     { id: 'progress', label: 'Progress', icon: LineChart },
     { id: 'history', label: 'History', icon: HistoryIcon },
+    { id: 'social', label: 'Social', icon: Users },
     { id: 'export', label: 'Export', icon: Download },
     { id: 'profile', label: 'Profile & Settings', icon: UserCircle },
   ];
@@ -111,6 +114,7 @@ function AppContent() {
       case 'exercises': return <Exercises />;
       case 'history': return <History setCurrentPage={setCurrentPage} />;
       case 'split': return <Split />;
+      case 'social': return <Social />;
       case 'export': return <Export />;
       case 'profile': return <ProfileSettings />;
       default: return <Home setCurrentPage={setCurrentPage} />;

@@ -35,7 +35,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { ExerciseSelector } from '@/src/components/ExerciseSelector';
-import { INITIAL_EXERCISES } from '@/src/constants';
+import { INITIAL_EXERCISES, MUSCLE_VOLUME_TARGETS } from '@/src/constants';
 import { Workout } from '@/src/types';
 import { storage } from '@/src/services/storage';
 import { useFirebase } from '@/src/components/FirebaseProvider';
@@ -45,7 +45,7 @@ import { getDistanceInMeters } from '../lib/workoutUtils';
 
 export default function Progress() {
   const { user } = useFirebase();
-  const [view, setView] = useState<'lifting' | 'running' | 'battery'>('lifting');
+  const [view, setView] = useState<'weekly-volume' | 'session-volume' | 'strength' | 'conditioning' | 'battery'>('weekly-volume');
   const [selectedExercise, setSelectedExercise] = useState(INITIAL_EXERCISES[5].name); // Flat Bench Press
   const [selectedWorkoutId, setSelectedWorkoutId] = useState<string | null>(null);
   const [history, setHistory] = useState<Workout[]>([]);
@@ -239,6 +239,42 @@ export default function Progress() {
     };
   }, [history]);
 
+  const volumeTargets = useMemo(() => {
+    if (!weeklyVolume) return null;
+    
+    // Alias map for muscle group labels to match MUSCLE_VOLUME_TARGETS
+    const aliasMap: Record<string, string> = {
+      'Upper Back': 'Back',
+      'Lats': 'Back',
+      'Traps': 'Back',
+      'Lower Back': 'Back',
+      'Core': 'Abs/Core',
+    };
+
+    return Object.entries(MUSCLE_VOLUME_TARGETS).map(([muscleGroup, targetVolume]) => {
+      // Find the actual volume from weeklyVolume.muscleGroupData
+      const actualVolume = weeklyVolume.muscleGroupData
+        .filter(d => d.name === muscleGroup || aliasMap[d.name] === muscleGroup)
+        .reduce((sum, d) => sum + d.value, 0);
+
+      const percentOfTarget = targetVolume > 0 ? (actualVolume / targetVolume) * 100 : 0;
+      
+      let status = 'Low';
+      if (percentOfTarget >= 120) status = 'Above Zone';
+      else if (percentOfTarget >= 100) status = 'On Target';
+      else if (percentOfTarget >= 70) status = 'Near';
+      
+      return {
+        muscleGroup,
+        actualVolume,
+        targetVolume,
+        percentOfTarget,
+        growthZoneUpper: targetVolume * 1.2,
+        status
+      };
+    });
+  }, [weeklyVolume]);
+
   // D. Strength Section - Latest Strength Summary
   const latestStrengthSummary = useMemo(() => {
     if (!selectedWorkout) return null;
@@ -418,22 +454,40 @@ export default function Progress() {
         
         <div className="flex bg-muted p-1 rounded-lg border border-border w-fit">
           <button 
-            onClick={() => setView('lifting')}
+            onClick={() => setView('weekly-volume')}
             className={cn(
               "px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-md transition-all",
-              view === 'lifting' ? "bg-card text-maroon shadow-sm" : "text-muted-foreground hover:text-foreground"
+              view === 'weekly-volume' ? "bg-card text-maroon shadow-sm" : "text-muted-foreground hover:text-foreground"
             )}
           >
-            Lifting
+            Weekly Volume
           </button>
           <button 
-            onClick={() => setView('running')}
+            onClick={() => setView('session-volume')}
             className={cn(
               "px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-md transition-all",
-              view === 'running' ? "bg-card text-maroon shadow-sm" : "text-muted-foreground hover:text-foreground"
+              view === 'session-volume' ? "bg-card text-maroon shadow-sm" : "text-muted-foreground hover:text-foreground"
             )}
           >
-            Running
+            Session Volume
+          </button>
+          <button 
+            onClick={() => setView('strength')}
+            className={cn(
+              "px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-md transition-all",
+              view === 'strength' ? "bg-card text-maroon shadow-sm" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Strength
+          </button>
+          <button 
+            onClick={() => setView('conditioning')}
+            className={cn(
+              "px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-md transition-all",
+              view === 'conditioning' ? "bg-card text-maroon shadow-sm" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Conditioning
           </button>
           <button 
             onClick={() => setView('battery')}
@@ -447,57 +501,23 @@ export default function Progress() {
         </div>
       </header>
 
-      {view === 'lifting' ? (
-        <>
-          {/* A. Most Recent Workout Volume Summary */}
-      <section className="space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {view === 'weekly-volume' && (
+        <section className="space-y-4">
           <div className="flex items-center gap-2">
-            <Activity className="text-maroon" size={20} />
-            <h3 className="text-xl font-bold text-slate-800">Workout Volume</h3>
+            <Calendar className="text-gold" size={20} />
+            <h3 className="text-xl font-bold text-slate-800">Weekly Volume (Past 7 Days)</h3>
           </div>
-          <div className="w-full md:w-64">
-            <Select value={selectedWorkoutId || (history.length > 0 ? [...history].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0].id : '')} onValueChange={setSelectedWorkoutId}>
-              <SelectTrigger>
-                <span className="text-sm font-medium">Swap Log</span>
-              </SelectTrigger>
-              <SelectContent>
-                {history.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(w => (
-                  <SelectItem key={w.id} value={w.id}>{w.workoutName} ({format(new Date(w.date), 'MMM dd')})</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        {latestWorkoutSummary ? (
-          <div className="space-y-6">
-            <Card className="border-slate-200 shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">{latestWorkoutSummary.name}</CardTitle>
-                <CardDescription>{latestWorkoutSummary.date}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {(latestWorkoutSummary.exercises || []).map((ex, i) => (
-                    <div key={i} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-100">
-                      <span className="font-medium text-slate-700 truncate mr-2">{ex.name}</span>
-                      <span className="text-maroon font-bold">{ex.volume.toLocaleString()} <span className="text-[10px] text-slate-400 font-normal uppercase">Vol</span></span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
+          {weeklyVolume && weeklyVolume.totalBodyVolume > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <Card className="border-slate-200 shadow-sm lg:col-span-1">
                 <CardHeader>
-                  <CardTitle className="text-sm uppercase tracking-wider text-slate-500">Total Volume</CardTitle>
+                  <CardTitle className="text-sm uppercase tracking-wider text-slate-500">Total Body Volume</CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col items-center justify-center py-6">
                   <div className="text-4xl font-black text-maroon mb-2">
-                    {latestWorkoutSummary.totalVolume.toLocaleString()}
+                    {weeklyVolume.totalBodyVolume.toLocaleString()}
                   </div>
-                  <p className="text-xs text-slate-400 font-bold uppercase">Lbs Moved</p>
+                  <p className="text-xs text-slate-400 font-bold uppercase">Total Lbs Moved</p>
                 </CardContent>
               </Card>
 
@@ -509,7 +529,7 @@ export default function Progress() {
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
-                        data={latestWorkoutSummary.muscleGroupData}
+                        data={weeklyVolume.muscleGroupData}
                         cx="50%"
                         cy="50%"
                         innerRadius={60}
@@ -517,7 +537,7 @@ export default function Progress() {
                         paddingAngle={5}
                         dataKey="value"
                       >
-                        {latestWorkoutSummary.muscleGroupData.map((entry, index) => (
+                        {weeklyVolume.muscleGroupData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
@@ -536,16 +556,16 @@ export default function Progress() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {latestWorkoutSummary.exerciseData.slice(0, 4).map((ex, i) => (
+                    {weeklyVolume.exerciseData.slice(0, 4).map((ex, i) => (
                       <div key={i} className="space-y-1">
                         <div className="flex justify-between text-xs">
                           <span className="text-slate-600 font-medium truncate w-32">{ex.name}</span>
-                          <span className="text-slate-400">{((ex.value / latestWorkoutSummary.totalVolume) * 100).toFixed(1)}%</span>
+                          <span className="text-slate-400">{((ex.value / weeklyVolume.totalBodyVolume) * 100).toFixed(1)}%</span>
                         </div>
                         <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
                           <div 
                             className="bg-maroon h-full" 
-                            style={{ width: `${(ex.value / latestWorkoutSummary.totalVolume) * 100}%` }}
+                            style={{ width: `${(ex.value / weeklyVolume.totalBodyVolume) * 100}%` }}
                           />
                         </div>
                       </div>
@@ -554,291 +574,275 @@ export default function Progress() {
                 </CardContent>
               </Card>
             </div>
-          </div>
-        ) : (
-          <Card className="border-slate-200 shadow-sm p-8 text-center text-slate-400 italic">
-            No workouts logged yet.
-          </Card>
-        )}
-      </section>
-
-      {/* B. Weekly Volume Section */}
-      <section className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Calendar className="text-gold" size={20} />
-          <h3 className="text-xl font-bold text-slate-800">Weekly Volume (Past 7 Days)</h3>
-        </div>
-        {weeklyVolume && weeklyVolume.totalBodyVolume > 0 ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="border-slate-200 shadow-sm lg:col-span-1">
-              <CardHeader>
-                <CardTitle className="text-sm uppercase tracking-wider text-slate-500">Total Body Volume</CardTitle>
-              </CardHeader>
-              <CardContent className="flex flex-col items-center justify-center py-6">
-                <div className="text-4xl font-black text-maroon mb-2">
-                  {weeklyVolume.totalBodyVolume.toLocaleString()}
-                </div>
-                <p className="text-xs text-slate-400 font-bold uppercase">Total Lbs Moved</p>
-              </CardContent>
+          ) : (
+            <Card className="border-slate-200 shadow-sm p-8 text-center text-slate-400 italic">
+              Log workouts in the last 7 days to see weekly breakdowns.
             </Card>
+          )}
 
-            <Card className="border-slate-200 shadow-sm lg:col-span-1">
-              <CardHeader>
-                <CardTitle className="text-sm uppercase tracking-wider text-slate-500">Muscle Group Split</CardTitle>
-              </CardHeader>
-              <CardContent className="h-[200px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={weeklyVolume.muscleGroupData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {weeklyVolume.muscleGroupData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+          {/* Volume Targets Section */}
+          <section className="space-y-4 mt-8">
+            <div className="flex items-center gap-2">
+              <Trophy className="text-gold" size={20} />
+              <h3 className="text-xl font-bold text-slate-800">Volume Targets</h3>
+            </div>
+            <p className="text-sm text-slate-500">Compare weekly muscle-group volume against your maintenance target and slight-growth zone.</p>
+            
+            {volumeTargets && (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <Card className="border-slate-200 shadow-sm">
+                    <CardHeader className="pb-2"><CardTitle className="text-xs uppercase tracking-wider text-slate-500">Groups On Target</CardTitle></CardHeader>
+                    <CardContent><div className="text-2xl font-black text-green-600">{volumeTargets.filter(t => t.status === 'On Target').length}</div></CardContent>
+                  </Card>
+                  <Card className="border-slate-200 shadow-sm">
+                    <CardHeader className="pb-2"><CardTitle className="text-xs uppercase tracking-wider text-slate-500">In Growth Zone</CardTitle></CardHeader>
+                    <CardContent><div className="text-2xl font-black text-gold">{volumeTargets.filter(t => t.status === 'Above Zone').length}</div></CardContent>
+                  </Card>
+                  <Card className="border-slate-200 shadow-sm">
+                    <CardHeader className="pb-2"><CardTitle className="text-xs uppercase tracking-wider text-slate-500">Lowest Coverage</CardTitle></CardHeader>
+                    <CardContent><div className="text-2xl font-black text-red-600">{volumeTargets.sort((a,b) => a.percentOfTarget - b.percentOfTarget)[0].muscleGroup}</div></CardContent>
+                  </Card>
+                  <Card className="border-slate-200 shadow-sm">
+                    <CardHeader className="pb-2"><CardTitle className="text-xs uppercase tracking-wider text-slate-500">Highest Overshoot</CardTitle></CardHeader>
+                    <CardContent><div className="text-2xl font-black text-maroon">{volumeTargets.sort((a,b) => b.percentOfTarget - a.percentOfTarget)[0].muscleGroup}</div></CardContent>
+                  </Card>
+                </div>
+
+                <div className="space-y-4">
+                  {volumeTargets.map((t) => (
+                    <div key={t.muscleGroup} className="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-bold text-slate-700">{t.muscleGroup}</span>
+                        <span className="text-xs font-bold text-slate-500">{t.actualVolume.toLocaleString()} / {t.targetVolume.toLocaleString()} lbs ({t.percentOfTarget.toFixed(0)}%)</span>
+                      </div>
+                      <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden relative">
+                        <div className="bg-maroon h-full" style={{ width: `${Math.min(t.percentOfTarget, 100)}%` }} />
+                        {t.percentOfTarget >= 100 && <div className="absolute top-0 right-0 bg-gold h-full" style={{ width: `${Math.min(Math.max(t.percentOfTarget - 100, 0), 20)}%` }} />}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <Card className="border-slate-200 shadow-sm">
+                  <CardHeader><CardTitle>Detailed Breakdown</CardTitle></CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {volumeTargets.map(t => (
+                        <div key={t.muscleGroup} className="flex justify-between text-sm py-2 border-b border-slate-100 last:border-0">
+                          <span className="font-medium text-slate-700">{t.muscleGroup}</span>
+                          <span className="text-slate-500">{t.actualVolume.toLocaleString()} / {t.targetVolume.toLocaleString()} ({t.percentOfTarget.toFixed(0)}%) - <span className={cn("font-bold", t.status === 'Low' ? 'text-red-500' : t.status === 'Near' ? 'text-gold' : 'text-green-600')}>{t.status}</span></span>
+                        </div>
                       ))}
-                    </Pie>
-                    <Tooltip 
-                      formatter={(value: number) => value.toLocaleString()}
-                      contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <Card className="border-slate-200 shadow-sm lg:col-span-1">
-              <CardHeader>
-                <CardTitle className="text-sm uppercase tracking-wider text-slate-500">Top Exercises</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {weeklyVolume.exerciseData.slice(0, 4).map((ex, i) => (
-                    <div key={i} className="space-y-1">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-600 font-medium truncate w-32">{ex.name}</span>
-                        <span className="text-slate-400">{((ex.value / weeklyVolume.totalBodyVolume) * 100).toFixed(1)}%</span>
-                      </div>
-                      <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                        <div 
-                          className="bg-maroon h-full" 
-                          style={{ width: `${(ex.value / weeklyVolume.totalBodyVolume) * 100}%` }}
-                        />
-                      </div>
                     </div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
+          </section>
+        </section>
+      )}
+      {view === 'session-volume' && (
+        <section className="space-y-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Activity className="text-maroon" size={20} />
+              <h3 className="text-xl font-bold text-slate-800">Workout Volume</h3>
+            </div>
+            <div className="w-full md:w-64">
+              <Select value={selectedWorkoutId || (history.length > 0 ? [...history].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0].id : '')} onValueChange={setSelectedWorkoutId}>
+                <SelectTrigger>
+                  <span className="text-sm font-medium">Swap Log</span>
+                </SelectTrigger>
+                <SelectContent>
+                  {history.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(w => (
+                    <SelectItem key={w.id} value={w.id}>{w.workoutName} ({format(new Date(w.date), 'MMM dd')})</SelectItem>
                   ))}
-                </div>
-              </CardContent>
-            </Card>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-        ) : (
-          <Card className="border-slate-200 shadow-sm p-8 text-center text-slate-400 italic">
-            Log workouts in the last 7 days to see weekly breakdowns.
-          </Card>
-        )}
-      </section>
-
-      {/* C. Individual Exercise Volume Section */}
-      <section className="space-y-6">
-        <div className="flex items-center gap-2">
-          <TrendingUp className="text-blue-500" size={20} />
-          <h3 className="text-xl font-bold text-slate-800">Individual Exercise Volume</h3>
-        </div>
-        
-        <Card className="border-slate-200 shadow-sm">
-          <CardHeader>
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="space-y-1">
-                <CardTitle>Volume Tracking</CardTitle>
-                <CardDescription>Select an exercise to view its volume history</CardDescription>
+          {latestWorkoutSummary ? (
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 mt-6">
+                <Hash className="text-maroon" size={20} />
+                <h3 className="text-xl font-bold text-slate-800">Individual Exercise Volume</h3>
               </div>
-              <div className="w-full md:w-72">
-                <ExerciseSelector 
-                  exercises={INITIAL_EXERCISES}
-                  value={selectedExercise}
-                  onSelect={(ex) => setSelectedExercise(ex.name)}
-                />
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
-
-        {chartData.length === 1 ? (
-          <Card className="border-slate-200 shadow-sm overflow-hidden">
-            <div className="flex flex-col md:flex-row">
-              <div className="p-6 md:w-1/3 bg-slate-50 border-b md:border-b-0 md:border-r border-slate-100 flex flex-col justify-center">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Single Session Data</p>
-                <div className="text-3xl font-black text-maroon">{chartData[0].volume.toLocaleString()}</div>
-                <p className="text-xs text-slate-500 font-medium mt-1">{chartData[0].date}</p>
-              </div>
-              <div className="p-6 flex-1 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-gold/10 flex items-center justify-center text-gold">
-                  <Trophy size={24} />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-slate-800">First session logged!</p>
-                  <p className="text-xs text-slate-500">Keep training to see your volume trend over time.</p>
-                </div>
-              </div>
-            </div>
-          </Card>
-        ) : chartData.length > 1 ? (
-          <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg">Volume Trend</CardTitle>
-                  <CardDescription>Total Volume (Sets x Reps x Weight (lbs))</CardDescription>
-                </div>
-                {summary && (
-                  <div className="text-right">
-                    <div className="text-sm font-bold text-maroon">
-                      {chartData[0].volume > 0 ? (
-                        <>+{((chartData[chartData.length-1].volume / chartData[0].volume - 1) * 100).toFixed(0)}%</>
-                      ) : (
-                        <>New</>
-                      )}
-                    </div>
-                    <div className="text-[10px] text-slate-400 uppercase font-bold">Overall Growth</div>
+              <Card className="border-slate-200 shadow-sm">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">{latestWorkoutSummary.name}</CardTitle>
+                  <CardDescription>{latestWorkoutSummary.date}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {(latestWorkoutSummary.exercises || []).map((ex, i) => (
+                      <div key={i} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-100">
+                        <span className="font-medium text-slate-700 truncate mr-2">{ex.name}</span>
+                        <span className="text-maroon font-bold">{ex.volume.toLocaleString()} <span className="text-[10px] text-slate-400 font-normal uppercase">Vol</span></span>
+                      </div>
+                    ))}
                   </div>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="h-[350px] pt-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
-                  <defs>
-                    <linearGradient id="colorVolume" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#D4AF37" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis 
-                    dataKey="date" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fontSize: 11, fill: '#94a3b8' }}
-                    dy={10}
-                  />
-                  <YAxis 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fontSize: 11, fill: '#94a3b8' }}
-                    tickFormatter={(val) => val >= 1000 ? `${(val/1000).toFixed(1)}k` : val}
-                  />
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
-                    formatter={(value: number) => [value.toLocaleString() + " lbs", "Total Volume"]}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="volume" 
-                    stroke="#D4AF37" 
-                    strokeWidth={3}
-                    fillOpacity={1} 
-                    fill="url(#colorVolume)" 
-                    animationDuration={1500}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="border-slate-200 shadow-sm p-12 text-center">
-            <p className="text-slate-400 italic">No data for this exercise yet.</p>
-          </Card>
-        )}
-      </section>
+                </CardContent>
+              </Card>
 
-      {/* D. Strength Section */}
-      <section className="space-y-6">
-        <div className="flex items-center gap-2">
-          <Dumbbell className="text-slate-700" size={20} />
-          <h3 className="text-xl font-bold text-slate-800">Strength Analysis</h3>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="border-slate-200 shadow-sm lg:col-span-1">
-            <CardHeader>
-              <CardTitle className="text-sm uppercase tracking-wider text-slate-500">Latest Strength Summary</CardTitle>
-              {latestStrengthSummary && <CardDescription>{latestStrengthSummary.date}</CardDescription>}
-            </CardHeader>
-            <CardContent>
-              {latestStrengthSummary ? (
-                <div className="space-y-3">
-                  {(latestStrengthSummary.exercises || []).map((ex, i) => (
-                    <div key={i} className="flex justify-between items-center text-sm">
-                      <span className="text-slate-600 font-medium truncate mr-2">{ex.name}</span>
-                      <span className="text-slate-900 font-bold">{ex.weight} <span className="text-[10px] text-slate-400 font-normal uppercase">lbs</span></span>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Card className="border-slate-200 shadow-sm lg:col-span-1">
+                  <CardHeader>
+                    <CardTitle className="text-sm uppercase tracking-wider text-slate-500">Total Volume</CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex flex-col items-center justify-center py-6">
+                    <div className="text-4xl font-black text-maroon mb-2">
+                      {latestWorkoutSummary.totalVolume.toLocaleString()}
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-slate-400 italic text-center py-4">No data available.</p>
-              )}
-            </CardContent>
-          </Card>
+                    <p className="text-xs text-slate-400 font-bold uppercase">Lbs Moved</p>
+                  </CardContent>
+                </Card>
 
-          <Card className="border-slate-200 shadow-sm lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="text-lg">Strength Progress</CardTitle>
-              <CardDescription>Actual logged weight for {selectedExercise}</CardDescription>
-            </CardHeader>
-            <CardContent className="h-[300px] pt-4">
-              {chartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <RechartsLineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis 
-                      dataKey="date" 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fontSize: 12, fill: '#64748b' }}
-                      dy={10}
-                    />
-                    <YAxis 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fontSize: 12, fill: '#64748b' }}
-                      domain={['dataMin - 10', 'dataMax + 10']}
-                    />
-                    <Tooltip 
-                      contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                      cursor={{ stroke: '#800000', strokeWidth: 1 }}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="weight" 
-                      stroke="#800000" 
-                      strokeWidth={3} 
-                      dot={{ r: 4, fill: '#800000', strokeWidth: 2, stroke: '#fff' }}
-                      activeDot={{ r: 6, strokeWidth: 0 }}
-                      name="Weight (lbs)"
-                    />
-                  </RechartsLineChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-full flex items-center justify-center text-slate-400 italic">
-                  No data for this exercise yet.
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-    </>
-  ) : view === 'running' ? (
+                <Card className="border-slate-200 shadow-sm lg:col-span-1">
+                  <CardHeader>
+                    <CardTitle className="text-sm uppercase tracking-wider text-slate-500">Muscle Group Split</CardTitle>
+                  </CardHeader>
+                  <CardContent className="h-[200px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={latestWorkoutSummary.muscleGroupData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={80}
+                          paddingAngle={5}
+                          dataKey="value"
+                        >
+                          {latestWorkoutSummary.muscleGroupData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          formatter={(value: number) => value.toLocaleString()}
+                          contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-slate-200 shadow-sm lg:col-span-1">
+                  <CardHeader>
+                    <CardTitle className="text-sm uppercase tracking-wider text-slate-500">Top Exercises</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {latestWorkoutSummary.exerciseData.slice(0, 4).map((ex, i) => (
+                        <div key={i} className="space-y-1">
+                          <div className="flex justify-between text-xs">
+                            <span className="text-slate-600 font-medium truncate w-32">{ex.name}</span>
+                            <span className="text-slate-400">{((ex.value / latestWorkoutSummary.totalVolume) * 100).toFixed(1)}%</span>
+                          </div>
+                          <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                            <div 
+                              className="bg-maroon h-full" 
+                              style={{ width: `${(ex.value / latestWorkoutSummary.totalVolume) * 100}%` }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          ) : (
+            <Card className="border-slate-200 shadow-sm p-8 text-center text-slate-400 italic">
+              No workouts logged yet.
+            </Card>
+          )}
+        </section>
+      )}
+      {view === 'strength' && (
+          <section className="space-y-6">
+            <div className="flex items-center gap-2">
+              <Dumbbell className="text-slate-700" size={20} />
+              <h3 className="text-xl font-bold text-slate-800">Strength Analysis</h3>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Card className="border-slate-200 shadow-sm lg:col-span-1">
+                <CardHeader>
+                  <CardTitle className="text-sm uppercase tracking-wider text-slate-500">Latest Strength Summary</CardTitle>
+                  {latestStrengthSummary && <CardDescription>{latestStrengthSummary.date}</CardDescription>}
+                </CardHeader>
+                <CardContent>
+                  {latestStrengthSummary ? (
+                    <div className="space-y-3">
+                      {(latestStrengthSummary.exercises || []).map((ex, i) => (
+                        <div key={i} className="flex justify-between items-center text-sm">
+                          <span className="text-slate-600 font-medium truncate mr-2">{ex.name}</span>
+                          <span className="text-slate-900 font-bold">{ex.weight} <span className="text-[10px] text-slate-400 font-normal uppercase">lbs</span></span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-slate-400 italic text-center py-4">No data available.</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="border-slate-200 shadow-sm lg:col-span-2">
+                <CardHeader>
+                  <CardTitle className="text-lg">Strength Progress</CardTitle>
+                  <CardDescription>Actual logged weight for {selectedExercise}</CardDescription>
+                </CardHeader>
+                <CardContent className="h-[300px] pt-4">
+                  {chartData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RechartsLineChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <XAxis 
+                          dataKey="date" 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tick={{ fontSize: 12, fill: '#64748b' }}
+                          dy={10}
+                        />
+                        <YAxis 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tick={{ fontSize: 12, fill: '#64748b' }}
+                          domain={['dataMin - 10', 'dataMax + 10']}
+                        />
+                        <Tooltip 
+                          contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                          cursor={{ stroke: '#800000', strokeWidth: 1 }}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="weight" 
+                          stroke="#800000" 
+                          strokeWidth={3} 
+                          dot={{ r: 4, fill: '#800000', strokeWidth: 2, stroke: '#fff' }}
+                          activeDot={{ r: 6, strokeWidth: 0 }}
+                          name="Weight (lbs)"
+                        />
+                      </RechartsLineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-slate-400 italic">
+                      No data for this exercise yet.
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </section>
+      )}
+      {view === 'conditioning' && (
         <>
-          {/* Running View */}
+          {/* Conditioning View (Renamed from Running) */}
           <section className="space-y-6">
             <div className="flex items-center gap-2">
               <Zap className="text-gold" size={20} />
-              <h3 className="text-xl font-bold text-slate-800">Running Overview</h3>
+              <h3 className="text-xl font-bold text-slate-800">Conditioning Overview</h3>
             </div>
 
             {runningAnalytics ? (
@@ -896,7 +900,7 @@ export default function Progress() {
               </div>
             ) : (
               <Card className="border-slate-200 shadow-sm p-8 text-center text-slate-400 italic">
-                No running data logged yet.
+                No conditioning data logged yet.
               </Card>
             )}
           </section>
@@ -1087,7 +1091,8 @@ export default function Progress() {
             </div>
           )}
         </>
-      ) : (
+      )}
+      {view === 'battery' && (
         <section className="space-y-8">
           <div className="flex items-center gap-2">
             <Zap className="text-maroon" size={20} />
