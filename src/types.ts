@@ -6,6 +6,7 @@
 export type MuscleGroup =
   | 'Chest'
   | 'Shoulders'
+  | 'Side Delts'
   | 'Rear Delts'
   | 'Triceps'
   | 'Biceps'

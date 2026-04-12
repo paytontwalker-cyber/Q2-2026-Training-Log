@@ -525,15 +525,15 @@ export default function Progress() {
                 <CardHeader>
                   <CardTitle className="text-sm uppercase tracking-wider text-slate-500">Muscle Group Split</CardTitle>
                 </CardHeader>
-                <CardContent className="h-[200px]">
+                <CardContent className="h-[280px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
                         data={weeklyVolume.muscleGroupData}
                         cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={80}
+                        cy="40%"
+                        innerRadius={50}
+                        outerRadius={70}
                         paddingAngle={5}
                         dataKey="value"
                       >
@@ -542,11 +542,24 @@ export default function Progress() {
                         ))}
                       </Pie>
                       <Tooltip 
-                        formatter={(value: number) => value.toLocaleString()}
+                        formatter={(value: number, name: string, props: any) => {
+                          const total = weeklyVolume.muscleGroupData.reduce((sum, entry) => sum + entry.value, 0);
+                          const percent = ((value / total) * 100).toFixed(1);
+                          return [`${value.toLocaleString()} lbs (${percent}%)`, name];
+                        }}
                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                       />
                     </PieChart>
                   </ResponsiveContainer>
+                  <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
+                    {weeklyVolume.muscleGroupData.slice(0, 6).map((entry, index) => (
+                      <div key={entry.name} className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                        <span className="truncate text-slate-600">{entry.name}</span>
+                        <span className="ml-auto font-bold text-slate-900">{((entry.value / weeklyVolume.totalBodyVolume) * 100).toFixed(0)}%</span>
+                      </div>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
 
@@ -702,15 +715,15 @@ export default function Progress() {
                   <CardHeader>
                     <CardTitle className="text-sm uppercase tracking-wider text-slate-500">Muscle Group Split</CardTitle>
                   </CardHeader>
-                  <CardContent className="h-[200px]">
+                  <CardContent className="h-[280px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
                           data={latestWorkoutSummary.muscleGroupData}
                           cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={80}
+                          cy="40%"
+                          innerRadius={50}
+                          outerRadius={70}
                           paddingAngle={5}
                           dataKey="value"
                         >
@@ -719,11 +732,24 @@ export default function Progress() {
                           ))}
                         </Pie>
                         <Tooltip 
-                          formatter={(value: number) => value.toLocaleString()}
+                          formatter={(value: number, name: string, props: any) => {
+                            const total = latestWorkoutSummary.muscleGroupData.reduce((sum, entry) => sum + entry.value, 0);
+                            const percent = ((value / total) * 100).toFixed(1);
+                            return [`${value.toLocaleString()} lbs (${percent}%)`, name];
+                          }}
                           contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                         />
                       </PieChart>
                     </ResponsiveContainer>
+                    <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
+                      {latestWorkoutSummary.muscleGroupData.slice(0, 6).map((entry, index) => (
+                        <div key={entry.name} className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                          <span className="truncate text-slate-600">{entry.name}</span>
+                          <span className="ml-auto font-bold text-slate-900">{((entry.value / latestWorkoutSummary.totalVolume) * 100).toFixed(0)}%</span>
+                        </div>
+                      ))}
+                    </div>
                   </CardContent>
                 </Card>
 
@@ -764,6 +790,31 @@ export default function Progress() {
             <div className="flex items-center gap-2">
               <Dumbbell className="text-slate-700" size={20} />
               <h3 className="text-xl font-bold text-slate-800">Strength Analysis</h3>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <Label htmlFor="exercise-search">Search Exercises</Label>
+              <input
+                id="exercise-search"
+                type="text"
+                placeholder="Search..."
+                className="w-full md:w-64 px-3 py-2 border rounded-md"
+                onChange={(e) => {
+                  const val = e.target.value.toLowerCase();
+                  const filtered = INITIAL_EXERCISES.filter(ex => ex.name.toLowerCase().includes(val));
+                  if (filtered.length > 0) setSelectedExercise(filtered[0].name);
+                }}
+              />
+              <Select value={selectedExercise} onValueChange={setSelectedExercise}>
+                <SelectTrigger className="w-full md:w-64">
+                  <SelectValue placeholder="Select exercise" />
+                </SelectTrigger>
+                <SelectContent>
+                  {INITIAL_EXERCISES.map(ex => (
+                    <SelectItem key={ex.id} value={ex.name}>{ex.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -963,7 +1014,7 @@ export default function Progress() {
                       <Pie
                         data={runningAnalytics.typeData}
                         cx="50%"
-                        cy="50%"
+                        cy="40%"
                         innerRadius={60}
                         outerRadius={80}
                         paddingAngle={5}

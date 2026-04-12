@@ -5,7 +5,7 @@
 
 import { ExerciseLibraryEntry, MuscleGroup } from './types';
 
-export const APP_VERSION = '2.7.7';
+export const APP_VERSION = '2.7.8';
 
 export const MUSCLE_VOLUME_TARGETS: Record<string, number> = {
   Chest: 8000,
@@ -27,6 +27,7 @@ export const MUSCLE_VOLUME_TARGETS: Record<string, number> = {
 export const MUSCLE_GROUPS: MuscleGroup[] = [
   'Chest',
   'Shoulders',
+  'Side Delts',
   'Rear Delts',
   'Triceps',
   'Biceps',
@@ -71,9 +72,9 @@ export const INITIAL_EXERCISES: ExerciseLibraryEntry[] = [
   { id: 's2', name: 'Standing OHP', muscleGroup: 'Shoulders', trackingMode: 'reps', muscleDistribution: [{ group: 'Shoulders', percent: 55 }, { group: 'Triceps', percent: 30 }, { group: 'Core', percent: 15 }] },
   { id: 's3', name: 'Seated DB Shoulder Press', muscleGroup: 'Shoulders', trackingMode: 'reps', muscleDistribution: [{ group: 'Shoulders', percent: 60 }, { group: 'Triceps', percent: 30 }, { group: 'Upper Back', percent: 10 }] },
   { id: 's4', name: 'Arnold Press', muscleGroup: 'Shoulders', trackingMode: 'reps', muscleDistribution: [{ group: 'Shoulders', percent: 60 }, { group: 'Triceps', percent: 25 }, { group: 'Chest', percent: 15 }] },
-  { id: 's5', name: 'DB Lateral Raises', muscleGroup: 'Shoulders', trackingMode: 'reps', muscleDistribution: [{ group: 'Shoulders', percent: 90 }, { group: 'Rear Delts', percent: 10 }] },
-  { id: 's6', name: 'Cable Lateral Raises', muscleGroup: 'Shoulders', trackingMode: 'reps', muscleDistribution: [{ group: 'Shoulders', percent: 90 }, { group: 'Rear Delts', percent: 10 }] },
-  { id: 's7', name: 'Machine Lateral Raises', muscleGroup: 'Shoulders', trackingMode: 'reps', muscleDistribution: [{ group: 'Shoulders', percent: 90 }, { group: 'Rear Delts', percent: 10 }] },
+  { id: 's5', name: 'DB Lateral Raises', muscleGroup: 'Side Delts', trackingMode: 'reps', muscleDistribution: [{ group: 'Side Delts', percent: 85 }, { group: 'Shoulders', percent: 15 }] },
+  { id: 's6', name: 'Cable Lateral Raises', muscleGroup: 'Side Delts', trackingMode: 'reps', muscleDistribution: [{ group: 'Side Delts', percent: 85 }, { group: 'Shoulders', percent: 15 }] },
+  { id: 's7', name: 'Machine Lateral Raises', muscleGroup: 'Side Delts', trackingMode: 'reps', muscleDistribution: [{ group: 'Side Delts', percent: 85 }, { group: 'Shoulders', percent: 15 }] },
   { id: 's8', name: 'Upright Row', muscleGroup: 'Shoulders', trackingMode: 'reps', muscleDistribution: [{ group: 'Shoulders', percent: 50 }, { group: 'Traps', percent: 35 }, { group: 'Upper Back', percent: 15 }] },
 
   // Rear Delts
