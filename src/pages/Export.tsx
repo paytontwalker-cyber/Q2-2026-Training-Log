@@ -34,42 +34,152 @@ export default function Export({ embedded = false }: { embedded?: boolean } = {}
     setTimeout(() => {
       const headers = [
         "Date",
+        "Day of Week",
         "Workout Name",
-        "Conditioning Stats",
-        "Exercise Name",
+        "Type",
+        "Exercise / Block Name",
+        "Subtype",
         "Muscle Group",
         "Sets",
         "Reps",
         "Weight (lbs)",
+        "Distance",
+        "Duration",
         "RPE",
         "RIR",
-        "Exercise Notes",
+        "Entry Notes",
         "Post-Workout Energy",
         "Workout Notes"
       ];
 
-      const rows = history.flatMap(workout => 
-        (workout.exercises || []).map(ex => [
-          format(new Date(workout.date), 'yyyy-MM-dd'),
-          `"${workout.workoutName.replace(/"/g, '""')}"`,
-          `"${(workout.runningStats || '').replace(/"/g, '""')}"`,
-          `"${ex.name.replace(/"/g, '""')}"`,
-          ex.muscleGroup,
-          ex.sets,
-          ex.reps,
-          ex.usePerSetWeights && ex.perSetWeights 
-            ? `"${ex.perSetWeights.join(', ')}"` 
-            : ex.weight,
-          ex.rpe || "",
-          ex.rir || "",
-          `"${(ex.notes || '').replace(/"/g, '""')}"`,
-          workout.postWorkoutEnergy,
-          `"${(workout.notes || '').replace(/"/g, '""')}"`
-        ])
-      );
+      const escapeCSV = (v: any): string => {
+        if (v === null || v === undefined) return '';
+        const s = String(v);
+        if (s.includes('"') || s.includes(',') || s.includes('\n')) {
+          return `"${s.replace(/"/g, '""')}"`;
+        }
+        return s;
+      };
+
+      const rows = history.flatMap(workout => {
+        const date = new Date(workout.date);
+        const dateStr = format(date, 'yyyy-MM-dd');
+        const dow = format(date, 'EEEE');
+        const workoutRows: (string | number)[][] = [];
+
+        // Prefer blocks if present (post-2.6 workouts), otherwise fall back to legacy exercises + conditioning
+        const blocks = (workout as any).blocks as any[] | undefined;
+
+        if (blocks && blocks.length > 0) {
+          for (const block of blocks) {
+            if (block.kind === 'lift' && block.exercises) {
+              for (const ex of block.exercises) {
+                workoutRows.push([
+                  escapeCSV(dateStr),
+                  escapeCSV(dow),
+                  escapeCSV(workout.workoutName),
+                  'Lift',
+                  escapeCSV(ex.name),
+                  '',
+                  escapeCSV(ex.muscleGroup),
+                  escapeCSV(ex.sets),
+                  escapeCSV(ex.reps),
+                  escapeCSV(ex.usePerSetWeights && ex.perSetWeights ? ex.perSetWeights.join(' / ') : ex.weight),
+                  '', '',
+                  escapeCSV(ex.rpe ?? ''),
+                  escapeCSV(ex.rir ?? ''),
+                  escapeCSV(ex.notes || ''),
+                  escapeCSV(workout.postWorkoutEnergy),
+                  escapeCSV(workout.notes || ''),
+                ]);
+              }
+            } else if (block.kind === 'cardio') {
+              workoutRows.push([
+                escapeCSV(dateStr),
+                escapeCSV(dow),
+                escapeCSV(workout.workoutName),
+                'Cardio',
+                escapeCSV(block.programmedName || ''),
+                escapeCSV(block.subtype || ''),
+                '', '', '', '',
+                escapeCSV(block.loggedDistance || block.programmedDistance || ''),
+                escapeCSV(block.loggedDuration || block.programmedDuration || ''),
+                '', '',
+                escapeCSV(block.loggedNotes || block.programmedNotes || ''),
+                escapeCSV(workout.postWorkoutEnergy),
+                escapeCSV(workout.notes || ''),
+              ]);
+            } else if (block.kind === 'hiit') {
+              workoutRows.push([
+                escapeCSV(dateStr),
+                escapeCSV(dow),
+                escapeCSV(workout.workoutName),
+                'HIIT',
+                escapeCSV(block.programmedName || ''),
+                escapeCSV(block.subtype || ''),
+                '',
+                '',
+                escapeCSV(block.programmedReps ?? ''),
+                '',
+                escapeCSV(block.programmedWorkDistance || ''),
+                escapeCSV(block.programmedWorkDuration || ''),
+                '', '',
+                escapeCSV(block.loggedNotes || ''),
+                escapeCSV(workout.postWorkoutEnergy),
+                escapeCSV(workout.notes || ''),
+              ]);
+            }
+          }
+        } else {
+          // Legacy fallback for pre-2.6 workouts
+          for (const ex of (workout.exercises || [])) {
+            workoutRows.push([
+              escapeCSV(dateStr),
+              escapeCSV(dow),
+              escapeCSV(workout.workoutName),
+              'Lift',
+              escapeCSV(ex.name),
+              '',
+              escapeCSV(ex.muscleGroup),
+              escapeCSV(ex.sets),
+              escapeCSV(ex.reps),
+              escapeCSV(ex.usePerSetWeights && ex.perSetWeights ? ex.perSetWeights.join(' / ') : ex.weight),
+              '', '',
+              escapeCSV(ex.rpe ?? ''),
+              escapeCSV(ex.rir ?? ''),
+              escapeCSV(ex.notes || ''),
+              escapeCSV(workout.postWorkoutEnergy),
+              escapeCSV(workout.notes || ''),
+            ]);
+          }
+          // Also emit a conditioning row if legacy conditioning field has content
+          const cond = (workout as any).conditioning;
+          if (cond && (cond.type || cond.name)) {
+            workoutRows.push([
+              escapeCSV(dateStr),
+              escapeCSV(dow),
+              escapeCSV(workout.workoutName),
+              'Conditioning',
+              escapeCSV(cond.name || cond.type || ''),
+              escapeCSV(cond.type || ''),
+              '', '',
+              escapeCSV(cond.reps ?? ''),
+              '',
+              escapeCSV(cond.workDistance || ''),
+              escapeCSV(cond.workDuration || ''),
+              '', '',
+              escapeCSV(cond.notes || ''),
+              escapeCSV(workout.postWorkoutEnergy),
+              escapeCSV(workout.notes || ''),
+            ]);
+          }
+        }
+
+        return workoutRows;
+      });
 
       const csvContent = [
-        headers.join(","),
+        headers.map(escapeCSV).join(","),
         ...rows.map(row => row.join(","))
       ].join("\n");
 
