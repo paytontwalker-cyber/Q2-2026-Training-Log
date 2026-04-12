@@ -208,6 +208,8 @@ export interface UserProfile {
   uid: string;
   email: string;
   displayName: string;
+  bio?: string;        // NEW
+  photoURL?: string;   // NEW
   height?: string;
   weight?: string;
   goalWeight?: string;

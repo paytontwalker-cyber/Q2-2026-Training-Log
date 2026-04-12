@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { User, LogOut, LogIn, Settings, Info, ShieldCheck, AlertTriangle, UserCircle, Save, Download, Map } from 'lucide-react';
+import { User, LogOut, LogIn, Settings, Info, ShieldCheck, AlertTriangle, UserCircle, Save, Download, Map, Plug } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -13,6 +13,7 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -21,7 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useTheme } from '@/src/components/ThemeProvider';
-import { THEME_PRESETS, ThemeMode } from '../theme';
+import { THEME_PRESETS } from '../theme';
 import { APP_VERSION } from '../constants';
 import Export from './Export';
 
@@ -78,19 +79,49 @@ const ROADMAP_ITEMS = [
       'Account recovery flow',
     ],
   },
+];
+
+const INTEGRATIONS: { name: string; status: string }[] = [
+  { name: 'Strava', status: 'Planned' },
+  { name: 'Garmin Connect', status: 'Planned' },
+  { name: 'Apple Health', status: 'Planned' },
+  { name: 'RENPHO', status: 'Planned' },
+];
+
+const UPDATE_ITEMS = [
   {
-    category: 'Integrations',
+    category: 'Export',
     items: [
-      'Garmin Connect import',
-      'Strava import',
-      'Apple Health import',
+      'Export moved into Settings',
+      'Embedded export tools inside settings',
+    ],
+  },
+  {
+    category: 'Progress Page',
+    items: [
+      'Progress expanded into 5 tabs',
+      'Volume Targets restored',
+      'Untouched Groups added',
+    ],
+  },
+  {
+    category: 'Exercises',
+    items: [
+      'Side Delts tracking added/fixed',
+      'Strength exercise search added',
+    ],
+  },
+  {
+    category: 'Settings',
+    items: [
+      'Profile & Settings expanded',
     ],
   },
 ];
 
 export default function ProfileSettings() {
   const { user, login, logout } = useFirebase();
-  const { primaryColor, secondaryColor, themeMode, setTheme } = useTheme();
+  const { primaryColor, secondaryColor, setTheme } = useTheme();
   const isGuest = user && 'isGuest' in user;
   const [profile, setProfile] = useState({
     height: '',
@@ -99,12 +130,19 @@ export default function ProfileSettings() {
     birthday: '',
     sex: '',
   });
+  const [identity, setIdentity] = useState({
+    displayName: '',
+    bio: '',
+    photoURL: '',
+  });
   const [appSettings, setAppSettings] = useState(() => {
     const savedTheme = localStorage.getItem('traininglog_theme');
     const savedUnits = localStorage.getItem('traininglog_units');
-    const theme = savedTheme ? JSON.parse(savedTheme) : { primaryColor, secondaryColor, themeMode };
+    const theme = savedTheme ? JSON.parse(savedTheme) : { primaryColor, secondaryColor };
     const units = savedUnits ? JSON.parse(savedUnits) : { weightUnit: 'lbs', heightUnit: 'in', distanceUnit: 'miles' };
-    return { ...theme, ...units };
+    // Strip any legacy themeMode field from previously-saved theme objects
+    const { themeMode: _legacyThemeMode, ...themeClean } = theme;
+    return { ...themeClean, ...units };
   });
   const [saving, setSaving] = useState(false);
 
@@ -122,15 +160,19 @@ export default function ProfileSettings() {
             birthday: data.birthday || '',
             sex: data.sex || '',
           });
+          setIdentity({
+            displayName: data.displayName || user.displayName || '',
+            bio: data.bio || '',
+            photoURL: data.photoURL || '',
+          });
           setAppSettings({
             weightUnit: data.weightUnit || 'lbs',
             heightUnit: data.heightUnit || 'in',
             distanceUnit: data.distanceUnit || 'miles',
             primaryColor: data.primaryColor || primaryColor,
             secondaryColor: data.secondaryColor || secondaryColor,
-            themeMode: data.themeMode || themeMode,
           });
-          setTheme(data.primaryColor || primaryColor, data.secondaryColor || secondaryColor, data.themeMode || themeMode);
+          setTheme(data.primaryColor || primaryColor, data.secondaryColor || secondaryColor, 'light');
         }
       };
       fetchProfile();
@@ -151,10 +193,27 @@ export default function ProfileSettings() {
     }
   };
 
+  const saveIdentity = async () => {
+    if (!user || isGuest) return;
+    setSaving(true);
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        displayName: identity.displayName.trim(),
+        bio: identity.bio.trim(),
+        photoURL: identity.photoURL.trim(),
+      });
+    } catch (error) {
+      console.error('Error saving identity:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const saveAppSettings = async () => {
-    localStorage.setItem('traininglog_theme', JSON.stringify({ primaryColor: appSettings.primaryColor, secondaryColor: appSettings.secondaryColor, themeMode: appSettings.themeMode }));
+    localStorage.setItem('traininglog_theme', JSON.stringify({ primaryColor: appSettings.primaryColor, secondaryColor: appSettings.secondaryColor }));
     localStorage.setItem('traininglog_units', JSON.stringify({ weightUnit: appSettings.weightUnit, heightUnit: appSettings.heightUnit, distanceUnit: appSettings.distanceUnit }));
-    setTheme(appSettings.primaryColor, appSettings.secondaryColor, appSettings.themeMode);
+    setTheme(appSettings.primaryColor, appSettings.secondaryColor, 'light');
     
     if (user && !isGuest) {
       setSaving(true);
@@ -199,12 +258,21 @@ export default function ProfileSettings() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex items-center gap-4 p-4 bg-muted rounded-xl border border-border">
-              <div className="w-12 h-12 rounded-full bg-maroon/10 flex items-center justify-center text-maroon font-bold text-lg border border-maroon/20">
-                {user?.displayName?.[0] || user?.email?.[0] || 'G'}
+              <div className="w-12 h-12 rounded-full bg-maroon/10 flex items-center justify-center text-maroon font-bold text-lg border border-maroon/20 overflow-hidden flex-shrink-0">
+                {identity.photoURL ? (
+                  <img 
+                    src={identity.photoURL} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                ) : (
+                  <span>{identity.displayName?.[0]?.toUpperCase() || user?.displayName?.[0] || user?.email?.[0] || 'G'}</span>
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-base font-semibold text-foreground truncate">
-                  {user?.displayName || (isGuest ? 'Guest User' : 'User')}
+                  {identity.displayName || user?.displayName || (isGuest ? 'Guest User' : 'User')}
                 </p>
                 <p className="text-sm text-muted-foreground truncate">
                   {isGuest ? 'Temporary local session' : user?.email}
@@ -254,7 +322,83 @@ export default function ProfileSettings() {
           </CardContent>
         </Card>
 
-        {/* 2. Profile Details */}
+        {/* Profile */}
+        <Card className="border-border shadow-sm no-print">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="text-maroon" size={20} />
+              Profile
+            </CardTitle>
+            <CardDescription>How you appear in the app</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isGuest ? (
+              <p className="text-sm text-muted-foreground italic">Sign in to edit your profile.</p>
+            ) : (
+              <>
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-full bg-maroon/10 flex items-center justify-center text-maroon font-bold text-2xl border border-maroon/20 overflow-hidden flex-shrink-0">
+                    {identity.photoURL ? (
+                      <img 
+                        src={identity.photoURL} 
+                        alt="Profile" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    ) : (
+                      <span>{identity.displayName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Preview</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="identity-name" className="text-xs">Display Name</Label>
+                  <Input
+                    id="identity-name"
+                    value={identity.displayName}
+                    onChange={(e) => setIdentity({ ...identity, displayName: e.target.value })}
+                    placeholder="Your name"
+                    maxLength={50}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="identity-bio" className="text-xs">Bio</Label>
+                  <Textarea
+                    id="identity-bio"
+                    value={identity.bio}
+                    onChange={(e) => setIdentity({ ...identity, bio: e.target.value })}
+                    placeholder="A short bio"
+                    rows={3}
+                    maxLength={200}
+                  />
+                  <p className="text-[10px] text-muted-foreground text-right">{identity.bio.length}/200</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="identity-photo" className="text-xs">Profile Picture URL</Label>
+                  <Input
+                    id="identity-photo"
+                    type="url"
+                    value={identity.photoURL}
+                    onChange={(e) => setIdentity({ ...identity, photoURL: e.target.value })}
+                    placeholder="https://..."
+                  />
+                  <p className="text-[10px] text-muted-foreground">Paste a public image URL. File uploads coming later.</p>
+                </div>
+
+                <Button 
+                  onClick={saveIdentity}
+                  disabled={saving}
+                  className="w-full bg-maroon hover:bg-maroon-light text-white"
+                >
+                  {saving ? 'Saving...' : 'Save Profile'}
+                </Button>
+              </>
+            )}
+          </CardContent>
+        </Card>
         <Card className="border-border shadow-sm no-print">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -458,18 +602,69 @@ export default function ProfileSettings() {
           </CardContent>
         </Card>
 
-        {/* Roadmap & Backlog */}
+        {/* Integrations */}
+        <Card className="border-border shadow-sm md:col-span-2 no-print">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Plug className="text-muted-foreground" size={20} />
+              Integrations
+            </CardTitle>
+            <CardDescription>Future device and platform connections. None are active yet.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="divide-y divide-border">
+              {INTEGRATIONS.map(integration => (
+                <li key={integration.name} className="flex items-center justify-between py-3">
+                  <span className="text-sm font-medium text-foreground">{integration.name}</span>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-muted text-muted-foreground border border-border">
+                    {integration.status}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+
+        {/* Roadmap */}
         <Card className="border-border shadow-sm md:col-span-2 no-print">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Map className="text-muted-foreground" size={20} />
-              Roadmap & Backlog
+              Roadmap
             </CardTitle>
-            <CardDescription>Features and improvements that are planned or under consideration.</CardDescription>
+            <CardDescription>Planned features and improvements still ahead.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-5">
               {ROADMAP_ITEMS.map(section => (
+                <div key={section.category}>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">{section.category}</h4>
+                  <ul className="space-y-1.5 text-sm text-foreground">
+                    {section.items.map((item, i) => (
+                      <li key={i} className="flex gap-2">
+                        <span className="text-muted-foreground mt-0.5">•</span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Updates / Patches */}
+        <Card className="border-border shadow-sm md:col-span-2 no-print">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Info className="text-muted-foreground" size={20} />
+              Updates / Patches
+            </CardTitle>
+            <CardDescription>Features and improvements already added to the app.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-5">
+              {UPDATE_ITEMS.map(section => (
                 <div key={section.category}>
                   <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">{section.category}</h4>
                   <ul className="space-y-1.5 text-sm text-foreground">
