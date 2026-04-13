@@ -5,8 +5,14 @@
 
 import { ExerciseLibraryEntry, MuscleGroup } from './types';
 
-export const APP_VERSION = '2.9.27';
+export const APP_VERSION = '3.0.3';
 
+export const STATUS_EXPLANATIONS: Record<string, string> = {
+  'Low': 'Under 70% of target volume.',
+  'Near': '70% to 99% of target volume.',
+  'On Target': '100% to 119% of target volume.',
+  'Above Zone': '120% or more of target volume.',
+};
 export const MUSCLE_VOLUME_TARGETS: Record<string, number> = {
   Chest: 8000,
   Back: 12000,

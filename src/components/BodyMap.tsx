@@ -167,7 +167,9 @@ export function BodyMap({ muscleGroupData, heatMode = 'relative' }: BodyMapProps
 
   const hoveredData = useMemo(() => {
     if (!hoveredSlug) return null;
-    const [slug, side] = hoveredSlug.split('-') as [string, 'front'|'back'];
+    const lastHyphenIndex = hoveredSlug.lastIndexOf('-');
+    const slug = hoveredSlug.substring(0, lastHyphenIndex);
+    const side = hoveredSlug.substring(lastHyphenIndex + 1) as 'front'|'back';
     const names = getMuscleGroupNames(slug, side);
     if (names.length === 0) return null; // Unmapped region
     const volume = getVolume(slug, side);

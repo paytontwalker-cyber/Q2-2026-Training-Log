@@ -29,7 +29,7 @@ import {
   Area
 } from 'recharts';
 import { LineChart as LineChartIcon, TrendingUp, Trophy, Activity, Hash, Calendar, Dumbbell, PieChart as PieChartIcon, Timer, MapPin, Zap } from 'lucide-react';
-import { format, subDays, startOfDay, isAfter, parseISO } from 'date-fns';
+import { format, subDays, startOfDay, isAfter, parseISO, startOfWeek, endOfWeek, endOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -53,6 +53,19 @@ export default function Progress() {
   const [selectedExercise, setSelectedExercise] = useState(INITIAL_EXERCISES[5].name); // Flat Bench Press
   const [selectedWorkoutId, setSelectedWorkoutId] = useState<string | null>(null);
   const [history, setHistory] = useState<Workout[]>([]);
+  const [targetsSortBy, setTargetsSortBy] = useState<'percent' | 'name' | 'volume'>('percent');
+  const [hideUntouched, setHideUntouched] = useState(false);
+  const [useCustomRange, setUseCustomRange] = useState(false);
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const STATUS_EXPLANATIONS: Record<string, string> = {
+    'Low': 'Under 70% of your weekly volume target.',
+    'Near': 'Between 70% and 99% of your weekly target — close but not there.',
+    'On Target': 'Between 100% and 119% of target — hitting your weekly volume.',
+    'Above Zone': 'At or above 120% of target — exceeding the growth zone.',
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -224,35 +237,45 @@ export default function Progress() {
           status
         };
       });
-  }, [latestWorkoutSummary]);
+  }, [history, volumeRange, useCustomRange, customStartDate, customEndDate]);
 
   // B. Weekly Volume Section
   const weeklyVolume = useMemo(() => {
     if (history.length === 0) return null;
     
     let cutoffDate = new Date();
-    switch (volumeRange) {
-      case '24h':
-        cutoffDate = subDays(new Date(), 1);
-        break;
-      case '72h':
-        cutoffDate = subDays(new Date(), 3);
-        break;
-      case '1w':
-        cutoffDate = startOfDay(subDays(new Date(), 7));
-        break;
-      case '2w':
-        cutoffDate = startOfDay(subDays(new Date(), 14));
-        break;
-      case '1m':
-        cutoffDate = startOfDay(subDays(new Date(), 30));
-        break;
-      case '3m':
-        cutoffDate = startOfDay(subDays(new Date(), 90));
-        break;
+    let endDate = new Date();
+    
+    if (useCustomRange && customStartDate && customEndDate) {
+      cutoffDate = startOfDay(parseISO(customStartDate));
+      endDate = endOfDay(parseISO(customEndDate));
+    } else {
+      switch (volumeRange) {
+        case '24h':
+          cutoffDate = subDays(new Date(), 1);
+          break;
+        case '72h':
+          cutoffDate = subDays(new Date(), 3);
+          break;
+        case '1w':
+          cutoffDate = startOfWeek(new Date(), { weekStartsOn: 0 }); // Sunday
+          break;
+        case '2w':
+          cutoffDate = startOfDay(subDays(new Date(), 14));
+          break;
+        case '1m':
+          cutoffDate = startOfDay(subDays(new Date(), 30));
+          break;
+        case '3m':
+          cutoffDate = startOfDay(subDays(new Date(), 90));
+          break;
+      }
     }
     
-    const recentWorkouts = history.filter(w => isAfter(new Date(w.date), cutoffDate));
+    const recentWorkouts = history.filter(w => {
+      const date = new Date(w.date);
+      return isAfter(date, cutoffDate) && (useCustomRange ? date <= endDate : true);
+    });
     
     let totalBodyVolume = 0;
     const muscleGroupVolume: Record<string, number> = {};
@@ -334,6 +357,28 @@ export default function Progress() {
       };
     });
   }, [weeklyVolume]);
+
+  const activeTargets = useMemo(() => {
+    if (!volumeTargets) return [];
+    const active = volumeTargets.filter(t => t.actualVolume > 0);
+    switch (targetsSortBy) {
+      case 'name':
+        return [...active].sort((a, b) => a.muscleGroup.localeCompare(b.muscleGroup));
+      case 'volume':
+        return [...active].sort((a, b) => b.actualVolume - a.actualVolume);
+      case 'percent':
+      default:
+        return [...active].sort((a, b) => a.percentOfTarget - b.percentOfTarget);
+    }
+  }, [volumeTargets, targetsSortBy]);
+
+  const untouchedTargets = useMemo(() => {
+    if (!volumeTargets) return [];
+    const untouched = volumeTargets.filter(t => t.actualVolume === 0);
+    return targetsSortBy === 'name'
+      ? [...untouched].sort((a, b) => a.muscleGroup.localeCompare(b.muscleGroup))
+      : untouched;
+  }, [volumeTargets, targetsSortBy]);
 
   // D. Strength Section - Latest Strength Summary
   const latestStrengthSummary = useMemo(() => {
@@ -568,6 +613,7 @@ export default function Progress() {
               <Calendar className="text-gold" size={20} />
               <h3 className="text-xl font-bold text-slate-800">
                 Volume ({
+                  useCustomRange ? 'Custom Range' :
                   volumeRange === '24h' ? 'Last 24h' :
                   volumeRange === '72h' ? 'Last 72h' :
                   volumeRange === '1w' ? '1 Week' :
@@ -580,7 +626,7 @@ export default function Progress() {
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
                 <Label className="text-xs text-slate-500 uppercase font-bold">Time Range</Label>
-                <Select value={volumeRange} onValueChange={(v: any) => setVolumeRange(v)}>
+                <Select value={volumeRange} onValueChange={(v: any) => { setVolumeRange(v); setUseCustomRange(false); }}>
                   <SelectTrigger className="w-[120px] h-8 text-xs">
                     <SelectValue />
                   </SelectTrigger>
@@ -594,6 +640,15 @@ export default function Progress() {
                   </SelectContent>
                 </Select>
               </div>
+              <label className="flex items-center gap-2 text-xs text-slate-500 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={useCustomRange}
+                  onChange={(e) => setUseCustomRange(e.target.checked)}
+                  className="h-3.5 w-3.5 rounded border-slate-300 accent-maroon"
+                />
+                Use custom range
+              </label>
               <div className="flex items-center gap-2">
                 <Label className="text-xs text-slate-500 uppercase font-bold">Heat Mode</Label>
                 <Select value={heatMode} onValueChange={(v: any) => setHeatMode(v)}>
@@ -608,6 +663,53 @@ export default function Progress() {
               </div>
             </div>
           </div>
+          
+          {useCustomRange && (
+            <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200 mt-4">
+              <div className="flex items-center gap-2">
+                <Label className="text-xs text-slate-500 uppercase font-bold">Start</Label>
+                <input type="date" value={customStartDate} onChange={(e) => setCustomStartDate(e.target.value)} className="h-8 text-xs px-2 rounded-md border border-slate-200 bg-white" />
+              </div>
+              <div className="flex items-center gap-2">
+                <Label className="text-xs text-slate-500 uppercase font-bold">End</Label>
+                <input type="date" value={customEndDate} onChange={(e) => setCustomEndDate(e.target.value)} className="h-8 text-xs px-2 rounded-md border border-slate-200 bg-white" />
+              </div>
+            </div>
+          )}
+
+          <Card className="border-slate-200 shadow-sm mt-4">
+            <CardContent className="py-3 px-4 text-xs text-slate-500">
+              <span className="font-bold text-slate-700">Data Notes:</span> {
+                useCustomRange ? 'Data is calculated from your selected custom start and end dates.' :
+                volumeRange === '1w' ? 'Weekly data is currently grouped from Sunday through today.' :
+                'Data is calculated from the selected rolling time range.'
+              }
+            </CardContent>
+          </Card>
+          <Card className="border-border shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-sm uppercase tracking-wider text-slate-500">
+                Weekly Volume Heatmap
+              </CardTitle>
+              <CardDescription>
+                Shading reflects this week's training volume per muscle group. Hover for details.
+              </CardDescription>
+              <p className="text-sm text-muted-foreground mt-2">
+                {heatMode === 'relative'
+                  ? 'Relative Heat compares each muscle group to your highest-volume group in the selected time range.'
+                  : 'Target Heat compares each muscle group to its volume target, so colors reflect progress toward target rather than just this range’s highest group.'}
+              </p>
+            </CardHeader>
+            <CardContent>
+              {weeklyVolume && weeklyVolume.muscleGroupData.length > 0 ? (
+                <BodyMap muscleGroupData={weeklyVolume.muscleGroupData} heatMode={heatMode} />
+              ) : (
+                <p className="text-sm text-muted-foreground italic text-center py-8">
+                  No workout data in this range yet. Log some workouts to see your body map.
+                </p>
+              )}
+            </CardContent>
+          </Card>
           {weeklyVolume && weeklyVolume.totalBodyVolume > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <Card className="border-slate-200 shadow-sm lg:col-span-1">
@@ -696,31 +798,6 @@ export default function Progress() {
             </Card>
           )}
 
-          <Card className="border-border shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-sm uppercase tracking-wider text-slate-500">
-                Weekly Volume Heatmap
-              </CardTitle>
-              <CardDescription>
-                Shading reflects this week's training volume per muscle group. Hover for details.
-              </CardDescription>
-              <p className="text-sm text-muted-foreground mt-2">
-                {heatMode === 'relative'
-                  ? 'Relative Heat compares each muscle group to your highest-volume group in the selected time range.'
-                  : 'Target Heat compares each muscle group to its volume target, so colors reflect progress toward target rather than just this range’s highest group.'}
-              </p>
-            </CardHeader>
-            <CardContent>
-              {weeklyVolume && weeklyVolume.muscleGroupData.length > 0 ? (
-                <BodyMap muscleGroupData={weeklyVolume.muscleGroupData} heatMode={heatMode} />
-              ) : (
-                <p className="text-sm text-muted-foreground italic text-center py-8">
-                  No workout data in this range yet. Log some workouts to see your body map.
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
           {/* Volume Targets Section */}
           <section className="space-y-4 mt-8">
             <div className="flex items-center gap-2">
@@ -729,6 +806,30 @@ export default function Progress() {
             </div>
             <p className="text-sm text-slate-500">Compare weekly muscle-group volume against your maintenance target and slight-growth zone.</p>
             
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
+              <div className="flex items-center gap-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Sort by</label>
+                <select
+                  value={targetsSortBy}
+                  onChange={(e) => setTargetsSortBy(e.target.value as 'percent' | 'name' | 'volume')}
+                  className="h-8 text-xs px-2 rounded-md border border-slate-200 bg-white text-slate-700"
+                >
+                  <option value="percent">% of Target (low → high)</option>
+                  <option value="name">Muscle Group (A → Z)</option>
+                  <option value="volume">Volume (high → low)</option>
+                </select>
+              </div>
+              <label className="flex items-center gap-2 text-xs text-slate-500 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={hideUntouched}
+                  onChange={(e) => setHideUntouched(e.target.checked)}
+                  className="h-3.5 w-3.5 rounded border-slate-300 accent-maroon"
+                />
+                Hide untouched
+              </label>
+            </div>
+
             {volumeTargets && (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -751,10 +852,13 @@ export default function Progress() {
                 </div>
 
                 <div className="space-y-4">
-                  {volumeTargets.filter(t => t.actualVolume > 0).map((t) => (
+                  {activeTargets.map((t) => (
                     <div key={t.muscleGroup} className="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="font-bold text-slate-700">{t.muscleGroup}</span>
+                        <span className="font-bold text-slate-700 flex items-center gap-2">
+                          {t.muscleGroup}
+                          <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded cursor-help" title={STATUS_EXPLANATIONS[t.status] || ''}>Why this group?</span>
+                        </span>
                         <span className="text-xs font-bold text-slate-500">{t.actualVolume.toLocaleString()} / {t.targetVolume.toLocaleString()} lbs ({t.percentOfTarget.toFixed(0)}%)</span>
                       </div>
                       <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden relative">
@@ -764,15 +868,15 @@ export default function Progress() {
                     </div>
                   ))}
 
-                  {volumeTargets.filter(t => t.actualVolume === 0).length > 0 && (
+                  {!hideUntouched && untouchedTargets.length > 0 && (
                     <>
                       <div className="flex items-center gap-2 mt-6">
                         <div className="flex-grow h-px bg-slate-200" />
-                        <span className="text-xs font-bold text-slate-400 uppercase">Untouched Groups</span>
+                        <span className="text-xs font-bold text-slate-400 uppercase">Untouched Groups ({untouchedTargets.length})</span>
                         <div className="flex-grow h-px bg-slate-200" />
                       </div>
 
-                      {volumeTargets.filter(t => t.actualVolume === 0).map((t) => (
+                      {untouchedTargets.map((t) => (
                         <div key={t.muscleGroup} className="bg-slate-50 p-3 rounded-lg border border-slate-100 flex justify-between items-center">
                           <span className="text-sm font-medium text-slate-500">{t.muscleGroup}</span>
                           <span className="text-xs text-slate-400">0 / {t.targetVolume.toLocaleString()} lbs (0%)</span>
@@ -786,16 +890,16 @@ export default function Progress() {
                   <CardHeader><CardTitle>Detailed Breakdown</CardTitle></CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {volumeTargets.filter(t => t.actualVolume > 0).map(t => (
+                      {activeTargets.map(t => (
                         <div key={t.muscleGroup} className="flex justify-between text-sm py-2 border-b border-slate-100 last:border-0">
                           <span className="font-medium text-slate-700">{t.muscleGroup}</span>
-                          <span className="text-slate-500">{t.actualVolume.toLocaleString()} / {t.targetVolume.toLocaleString()} ({t.percentOfTarget.toFixed(0)}%) - <span className={cn("font-bold", t.status === 'Low' ? 'text-red-500' : t.status === 'Near' ? 'text-gold' : 'text-green-600')}>{t.status}</span></span>
+                          <span className="text-slate-500">{t.actualVolume.toLocaleString()} / {t.targetVolume.toLocaleString()} ({t.percentOfTarget.toFixed(0)}%) - <span className={cn("font-bold cursor-help", t.status === 'Low' ? 'text-red-500' : t.status === 'Near' ? 'text-gold' : 'text-green-600')} title={STATUS_EXPLANATIONS[t.status] || ''}>{t.status} ⓘ</span></span>
                         </div>
                       ))}
-                      {volumeTargets.filter(t => t.actualVolume === 0).length > 0 && (
+                      {!hideUntouched && untouchedTargets.length > 0 && (
                         <>
-                          <div className="text-xs font-bold text-slate-400 uppercase pt-4 pb-2 border-t border-slate-200 mt-2">Untouched Groups</div>
-                          {volumeTargets.filter(t => t.actualVolume === 0).map(t => (
+                          <div className="text-xs font-bold text-slate-400 uppercase pt-4 pb-2 border-t border-slate-200 mt-2">Untouched Groups ({untouchedTargets.length})</div>
+                          {untouchedTargets.map(t => (
                             <div key={t.muscleGroup} className="flex justify-between text-sm py-2 border-b border-slate-100 last:border-0 text-slate-400">
                               <span className="font-medium">{t.muscleGroup}</span>
                               <span>0 / {t.targetVolume.toLocaleString()} (0%)</span>
@@ -845,6 +949,25 @@ export default function Progress() {
               </div>
             </div>
           </div>
+          <Card className="border-border shadow-sm mb-6">
+            <CardHeader>
+              <CardTitle className="text-sm uppercase tracking-wider text-slate-500">
+                Session Volume Heatmap
+              </CardTitle>
+              <CardDescription>
+                Shading reflects the selected workout's training volume per muscle group. Hover for details.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {latestWorkoutSummary.muscleGroupData.length > 0 ? (
+                <BodyMap muscleGroupData={latestWorkoutSummary.muscleGroupData} heatMode={sessionHeatMode} />
+              ) : (
+                <p className="text-sm text-muted-foreground italic text-center py-8">
+                  No session data available yet. Select or log a workout to see the body map.
+                </p>
+              )}
+            </CardContent>
+          </Card>
           {latestWorkoutSummary ? (
             <div className="space-y-6">
               <div className="flex items-center gap-2 mt-6">
@@ -871,7 +994,11 @@ export default function Progress() {
               <Card className="border-slate-200 shadow-sm">
                 <CardHeader>
                   <CardTitle>Session Volume Targets</CardTitle>
-                  <CardDescription>Compare this workout's muscle-group volume against your target benchmarks.</CardDescription>
+                  <CardDescription>
+                  {sessionHeatMode === 'relative' 
+                    ? 'Relative Heat compares each muscle group to the highest-volume group in this session.'
+                    : 'Target Heat compares each muscle group to its volume target, so colors reflect progress toward target rather than just this session’s highest group.'}
+                </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
@@ -971,25 +1098,6 @@ export default function Progress() {
                 </Card>
               </div>
 
-              <Card className="border-border shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-sm uppercase tracking-wider text-slate-500">
-                    Session Volume Heatmap
-                  </CardTitle>
-                  <CardDescription>
-                    Shading reflects the selected workout's training volume per muscle group. Hover for details.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {latestWorkoutSummary.muscleGroupData.length > 0 ? (
-                    <BodyMap muscleGroupData={latestWorkoutSummary.muscleGroupData} heatMode={sessionHeatMode} />
-                  ) : (
-                    <p className="text-sm text-muted-foreground italic text-center py-8">
-                      No session data available yet. Select or log a workout to see the body map.
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
             </div>
           ) : (
             <Card className="border-slate-200 shadow-sm p-8 text-center text-slate-400 italic">
@@ -1014,8 +1122,7 @@ export default function Progress() {
                 className="w-full md:w-64 px-3 py-2 border rounded-md"
                 onChange={(e) => {
                   const val = e.target.value.toLowerCase();
-                  const filtered = INITIAL_EXERCISES.filter(ex => ex.name.toLowerCase().includes(val));
-                  if (filtered.length > 0) setSelectedExercise(filtered[0].name);
+                  setSearchQuery(val);
                 }}
               />
               <Select value={selectedExercise} onValueChange={setSelectedExercise}>
@@ -1023,9 +1130,11 @@ export default function Progress() {
                   <SelectValue placeholder="Select exercise" />
                 </SelectTrigger>
                 <SelectContent>
-                  {INITIAL_EXERCISES.map(ex => (
-                    <SelectItem key={ex.id} value={ex.name}>{ex.name}</SelectItem>
-                  ))}
+                  {INITIAL_EXERCISES
+                    .filter(ex => ex.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                    .map(ex => (
+                      <SelectItem key={ex.id} value={ex.name}>{ex.name}</SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>

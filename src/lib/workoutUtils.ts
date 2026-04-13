@@ -5,13 +5,28 @@ export const getDistanceInMeters = (c: Conditioning): number => {
     return c.distanceInMeters;
   }
   
-  const dist = parseFloat(c.workDistance || '0');
-  const unit = c.workUnits?.toLowerCase();
+  // Supports both structured (workDistance + workUnits) and freeform (workDistance contains units) formats
+  let distStr = c.workDistance || '0';
+  let unit = c.workUnits?.toLowerCase();
+
+  // If unit is missing, try to extract it from workDistance
+  if (!unit) {
+    const match = distStr.match(/(\d+(?:\.\d+)?)\s*([a-z]+)/i);
+    if (match) {
+      distStr = match[1];
+      unit = match[2].toLowerCase();
+    }
+  }
+
+  const dist = parseFloat(distStr);
+  if (isNaN(dist)) return 0;
   
-  if (unit === 'miles' || unit === 'mi') return dist * 1609.34;
-  if (unit === 'km') return dist * 1000;
-  if (unit === 'meters' || unit === 'm') return dist;
-  if (unit === 'yards' || unit === 'yd') return dist * 0.9144;
+  if (!unit) return 0;
+
+  if (['miles', 'mile', 'mi'].includes(unit)) return dist * 1609.34;
+  if (['km', 'kilometer', 'kilometers'].includes(unit)) return dist * 1000;
+  if (['meters', 'meter', 'm'].includes(unit)) return dist;
+  if (['yards', 'yard', 'yards'].includes(unit)) return dist * 0.9144;
   
   return 0;
 };
