@@ -46,11 +46,11 @@ const ROADMAP_ITEMS = [
     ],
   },
   {
-    category: 'Split / Programming',
+    category: 'Program / Programming',
     items: [
-      'AI Guided Split Builder',
-      'Guided split creation with Gemini AI',
-      'User cooperates with AI to build a split based on goals/preferences',
+      'AI Guided Program Builder',
+      'Guided program creation with Gemini AI',
+      'User cooperates with AI to build a program based on goals/preferences',
     ],
   },
   {
@@ -65,7 +65,7 @@ const ROADMAP_ITEMS = [
     items: [
       'Editable profile expansion',
       'Friends / network expansion',
-      'Posts, shared splits, and feed/autopost ideas',
+      'Posts, shared programs, and feed/autopost ideas',
     ],
   },
   {
@@ -146,6 +146,7 @@ export default function ProfileSettings() {
     weight: '',
     goalWeight: '',
     birthday: '',
+    age: '',
     sex: '',
   });
   const [identity, setIdentity] = useState({
@@ -176,6 +177,7 @@ export default function ProfileSettings() {
             weight: data.weight || '',
             goalWeight: data.goalWeight || '',
             birthday: data.birthday || '',
+            age: data.age || '',
             sex: data.sex || '',
           });
           setIdentity({
@@ -337,6 +339,58 @@ export default function ProfileSettings() {
                 </Button>
               )}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* 2. Account Details */}
+        <Card className="border-border shadow-sm no-print">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UserCircle className="text-maroon" size={20} />
+              Account Details
+            </CardTitle>
+            <CardDescription>Personal body metrics and account details.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs">Height</Label>
+                <Input value={profile.height} onChange={(e) => setProfile({...profile, height: e.target.value})} placeholder="e.g. 70" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Current Weight</Label>
+                <Input value={profile.weight} onChange={(e) => setProfile({...profile, weight: e.target.value})} placeholder="e.g. 180" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Goal Weight</Label>
+                <Input value={profile.goalWeight} onChange={(e) => setProfile({...profile, goalWeight: e.target.value})} placeholder="e.g. 170" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Age</Label>
+                <Input value={profile.age} onChange={(e) => setProfile({...profile, age: e.target.value})} placeholder="e.g. 30" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Birthday</Label>
+              <Input type="date" value={profile.birthday} onChange={(e) => setProfile({...profile, birthday: e.target.value})} />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Sex/Gender</Label>
+              <Select value={profile.sex} onValueChange={(val) => setProfile({...profile, sex: val})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={saveProfile} disabled={saving} className="w-full bg-maroon hover:bg-maroon-light text-white">
+              <Save className="mr-2" size={16} />
+              {saving ? 'Saving...' : 'Save Account Details'}
+            </Button>
           </CardContent>
         </Card>
 

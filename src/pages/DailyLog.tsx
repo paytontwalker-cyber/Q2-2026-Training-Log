@@ -1437,6 +1437,35 @@ export default function DailyLog() {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
+    // Check if we are dropping into a superset
+    if (over.id.toString().startsWith('superset-drop-')) {
+      const parentId = over.id.toString().replace('superset-drop-', '');
+      runWithUndo(() => {
+        setBlocks(prev => prev.map(b => {
+          if (b.kind !== 'lift') return b;
+          
+          // Find the exercise being dragged
+          const activeExercise = b.exercises.find(ex => ex.id === active.id);
+          if (!activeExercise) return b;
+
+          // Remove from current position
+          const newExercises = b.exercises.filter(ex => ex.id !== active.id);
+          
+          // Add to superset
+          return {
+            ...b,
+            exercises: newExercises.map(ex => {
+              if (ex.id === parentId) {
+                return { ...ex, superset: activeExercise };
+              }
+              return ex;
+            })
+          };
+        }));
+      });
+      return;
+    }
+
     runWithUndo(() => {
       setBlocks(prev => {
         // Check if we are dragging a block
@@ -1576,9 +1605,9 @@ export default function DailyLog() {
                     />
                   </div>
 
-                  {/* Change Split */}
+                  {/* Change Program */}
                   <div className="w-full md:w-48 space-y-1">
-                    <Label className="text-xs uppercase tracking-wider text-slate-500">Split</Label>
+                    <Label className="text-xs uppercase tracking-wider text-slate-500">Program</Label>
                     <Select 
                       value={manualSplit ?? ""} 
                       onValueChange={(val) => {
@@ -1597,10 +1626,10 @@ export default function DailyLog() {
                       }}
                     >
                       <SelectTrigger className="h-9">
-                        <span className="text-sm">Change Split</span>
+                        <span className="text-sm">Change Workout</span>
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value={NO_SPLIT_SENTINEL}>No Split</SelectItem>
+                        <SelectItem value={NO_SPLIT_SENTINEL}>No Program</SelectItem>
                         {splits.map(s => (
                           <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
                         ))}
@@ -1609,7 +1638,7 @@ export default function DailyLog() {
                   </div>
                 </div>
 
-                {/* Action row: Reset / Clear Split / Undo */}
+                {/* Action row: Reset / Clear Program / Undo */}
                 <div className="flex flex-wrap items-center gap-2">
                   <Dialog>
                     <DialogTrigger 
@@ -1645,7 +1674,7 @@ export default function DailyLog() {
                           size="sm" 
                           className="h-8 text-xs border-slate-200 text-slate-600 hover:text-maroon hover:border-maroon/50"
                         >
-                          Clear Split
+                          Clear Exercises
                         </Button>
                       }
                     />

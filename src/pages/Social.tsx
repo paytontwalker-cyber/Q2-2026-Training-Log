@@ -106,7 +106,7 @@ export default function Social() {
     { id: 'friends', label: 'Friends', icon: Users },
     { id: 'activity', label: 'Activity', icon: Activity },
     { id: 'posts', label: 'Posts', icon: MessageSquare },
-    { id: 'shared-splits', label: 'Shared Splits', icon: Share2 },
+    { id: 'shared-programs', label: 'Shared Programs', icon: Share2 },
   ] as const;
 
   return (
@@ -218,29 +218,46 @@ export default function Social() {
                 <CardDescription>Your public training identity and shared stats.</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-col md:flex-row items-center md:items-start gap-6 mb-8">
-                  <div className="h-24 w-24 rounded-full bg-slate-100 border-4 border-white shadow-sm flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    {profile.photoURL ? (
-                      <img 
-                        src={profile.photoURL} 
-                        alt="Profile" 
-                        className="w-full h-full object-cover"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  <div className="flex flex-col md:flex-row items-center md:items-start gap-6 mb-8">
+                    <div className="relative group">
+                      <div className="h-24 w-24 rounded-full bg-slate-100 border-4 border-white shadow-sm flex items-center justify-center flex-shrink-0 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity" onClick={() => document.getElementById('photo-upload')?.click()}>
+                        {profile.photoURL ? (
+                          <img 
+                            src={profile.photoURL} 
+                            alt="Profile" 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <UserCircle className="h-12 w-12 text-slate-300" />
+                        )}
+                      </div>
+                      <input 
+                        id="photo-upload"
+                        type="file" 
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setProfile({...profile, photoURL: reader.result as string});
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
                       />
-                    ) : (
-                      <UserCircle className="h-12 w-12 text-slate-300" />
-                    )}
-                  </div>
-                  <div className="text-center md:text-left space-y-2 flex-1">
-                    <div>
-                      <h3 className="text-xl font-bold text-slate-800">{profile.displayName || 'Your Name'}</h3>
-                      <p className="text-sm font-medium text-maroon">@{profile.username || 'username'}</p>
                     </div>
-                    <p className="text-sm text-slate-600 max-w-md">
-                      {profile.bio || 'Training, discipline, and progress.'}
-                    </p>
+                    <div className="text-center md:text-left space-y-2 flex-1">
+                      <div>
+                        <h3 className="text-xl font-bold text-slate-800">{profile.displayName || 'Your Name'}</h3>
+                        <p className="text-sm font-medium text-maroon">@{profile.username || 'username'}</p>
+                      </div>
+                      <p className="text-sm text-slate-600 max-w-md">
+                        {profile.bio || 'Training, discipline, and progress.'}
+                      </p>
+                    </div>
                   </div>
-                </div>
 
                 <div className="space-y-4 pt-6 border-t border-slate-100">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -260,14 +277,6 @@ export default function Social() {
                         onChange={(e) => setProfile({...profile, username: e.target.value})}
                       />
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="photoURL">Profile Picture URL</Label>
-                    <Input 
-                      id="photoURL"
-                      value={profile.photoURL}
-                      onChange={(e) => setProfile({...profile, photoURL: e.target.value})}
-                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="bio">Bio</Label>
@@ -296,10 +305,10 @@ export default function Social() {
           />
         )}
 
-        {activeTab === 'shared-splits' && (
+        {activeTab === 'shared-programs' && (
           <ComingSoonCard 
-            title="Shared Splits" 
-            description="Browse and share training splits."
+            title="Shared Programs" 
+            description="Browse and share training programs."
             icon={Share2}
           />
         )}

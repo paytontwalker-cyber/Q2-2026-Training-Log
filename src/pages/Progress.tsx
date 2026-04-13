@@ -649,7 +649,7 @@ export default function Progress() {
                             const percent = ((value / total) * 100).toFixed(1);
                             return [`${value.toLocaleString()} lbs (${percent}%)`, name];
                           }}
-                          contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                          contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', color: 'black' }}
                         />
                       </PieChart>
                     </ResponsiveContainer>

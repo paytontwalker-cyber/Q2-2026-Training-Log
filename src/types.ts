@@ -261,4 +261,6 @@ export interface SavedSplit {
   }>;
   uid: string;
   timestamp: number;
+  isAIGenerated?: boolean;
+  generatedBy?: string;
 }

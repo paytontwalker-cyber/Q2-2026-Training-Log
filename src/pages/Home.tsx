@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) => void }) {
   const navItems = [
     { id: 'log', label: 'Daily Log', icon: LayoutDashboard, description: 'Log your daily workout' },
-    { id: 'programming', label: 'Programming', icon: Dumbbell, description: 'Manage your workout splits and exercise library' },
+    { id: 'programming', label: 'Programming', icon: Dumbbell, description: 'Manage your workout programs and exercise library' },
     { id: 'progress', label: 'Progress', icon: LineChart, description: 'Track your training data' },
     { id: 'history', label: 'History', icon: HistoryIcon, description: 'Review past workouts' },
     { id: 'wellness', label: 'Health / Wellness', icon: Activity, description: 'Explore future wellness and recovery tracking' },

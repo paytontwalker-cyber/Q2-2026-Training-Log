@@ -18,6 +18,16 @@ import { db, handleFirestoreError, OperationType } from '../firebase';
 import { Workout, ExerciseLibraryEntry, Split, SavedSplit } from '../types';
 import { INITIAL_EXERCISES, DEFAULT_SPLIT } from '../constants';
 
+const removeUndefined = (obj: any): any => {
+  const newObj = { ...obj };
+  Object.keys(newObj).forEach(key => {
+    if (newObj[key] === undefined) {
+      delete newObj[key];
+    }
+  });
+  return newObj;
+};
+
 const sanitizeWorkoutRecord = (raw: unknown): Workout | null => {
   if (!raw || typeof raw !== 'object') return null;
   const w = raw as Partial<Workout>;
@@ -136,7 +146,7 @@ export const storage = {
     }
 
     try {
-      const workoutToSave = { ...workout, uid };
+      const workoutToSave = removeUndefined({ ...workout, uid });
       const docRef = doc(db, 'workouts', workout.id);
       await setDoc(docRef, workoutToSave);
     } catch (error) {
@@ -673,7 +683,7 @@ export const storage = {
 
     try {
       const docRef = doc(db, 'drafts', uid);
-      await setDoc(docRef, { ...draft, uid, timestamp: Date.now() });
+      await setDoc(docRef, removeUndefined({ ...draft, uid, timestamp: Date.now() }));
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `drafts/${uid}`);
     }

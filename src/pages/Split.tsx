@@ -45,11 +45,12 @@ import { CSS } from '@dnd-kit/utilities';
 
 interface SortableExerciseBadgeProps {
   key?: string;
-  id: string;
+  exercise: string | ProgrammedExercise;
   onRemove: () => void;
 }
 
-const SortableExerciseBadge = ({ id, onRemove }: { id: string; onRemove: () => void; key?: string }) => {
+const SortableExerciseBadge = ({ exercise, onRemove }: SortableExerciseBadgeProps) => {
+  const id = typeof exercise === 'string' ? exercise : exercise.name;
   const {
     attributes,
     listeners,
@@ -66,17 +67,27 @@ const SortableExerciseBadge = ({ id, onRemove }: { id: string; onRemove: () => v
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const isProgrammed = typeof exercise !== 'string';
+
   return (
     <div 
       ref={setNodeRef}
       style={style}
       className="bg-white border border-slate-200 rounded-md p-3 flex items-center justify-between shadow-sm group"
     >
-      <div className="flex items-center gap-3">
-        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600">
-          <GripVertical size={16} />
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-3">
+          <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600">
+            <GripVertical size={16} />
+          </div>
+          <span className="font-medium text-slate-700">{id}</span>
         </div>
-        <span className="font-medium text-slate-700">{id}</span>
+        {isProgrammed && (
+          <div className="pl-9 text-xs text-slate-500 space-y-0.5">
+            {exercise.sets && exercise.reps && <div>{exercise.sets}x{exercise.reps}</div>}
+            {exercise.targetNotes && <div>{exercise.targetNotes}</div>}
+          </div>
+        )}
       </div>
       <button 
         onClick={(e) => {
@@ -387,13 +398,13 @@ export default function Split() {
     return (
       <div className="space-y-6">
         <header>
-          <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Weekly Split</h2>
+          <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Weekly Program</h2>
           <p className="text-slate-500">Choose a starting point for your training structure</p>
         </header>
 
         <div className="max-w-2xl mx-auto space-y-8 pt-4">
           <div className="space-y-4">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400">New Split</h3>
+            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400">New Program</h3>
             <Card 
               className="border-slate-200 shadow-sm hover:border-maroon/50 cursor-pointer transition-all group"
               onClick={startFromScratch}
@@ -403,7 +414,7 @@ export default function Split() {
                   <Plus size={24} />
                 </div>
                 <div>
-                  <CardTitle className="text-xl group-hover:text-maroon transition-colors">Custom Split</CardTitle>
+                  <CardTitle className="text-xl group-hover:text-maroon transition-colors">Custom Program</CardTitle>
                   <CardDescription>Build your training week from scratch, day by day.</CardDescription>
                 </div>
               </CardHeader>
@@ -435,7 +446,7 @@ export default function Split() {
 
           {savedSplits.length > 0 && (
             <div className="space-y-4">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400">Your Saved Splits</h3>
+              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400">Your Saved Programs</h3>
               <div className="grid grid-cols-1 gap-4">
                 {savedSplits.map((saved) => (
                   <Card 
@@ -450,9 +461,16 @@ export default function Split() {
                         </div>
                         <div>
                           <CardTitle className="text-xl group-hover:text-maroon transition-colors">{saved.name}</CardTitle>
-                          <CardDescription>
-                            {Object.values(saved.days).filter((d: any) => d.name && d.name !== 'Rest').map((d: any) => d.name).join(' / ')}
-                          </CardDescription>
+                          <div className="flex items-center gap-2">
+                            <CardDescription>
+                              {Object.values(saved.days).filter((d: any) => d.name && d.name !== 'Rest').map((d: any) => d.name).join(' / ')}
+                            </CardDescription>
+                            {saved.isAIGenerated && (
+                              <Badge variant="secondary" className="text-[10px] bg-maroon/10 text-maroon">
+                                AI Generated · {saved.generatedBy === 'gemini' ? 'Gemini' : 'AI'}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <Button 
@@ -481,7 +499,7 @@ export default function Split() {
     <div className="space-y-6">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Weekly Split</h2>
+          <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Weekly Program</h2>
           <p className="text-slate-500">Customize your hybrid training structure</p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -490,7 +508,7 @@ export default function Split() {
               onClick={assignStagedSplit}
               className="bg-maroon hover:bg-maroon-light text-white"
             >
-              Assign Split
+              Assign Program
             </Button>
           )}
           {showUnassignButton && (
@@ -499,7 +517,7 @@ export default function Split() {
               onClick={unassignSplit}
               className="border-red-200 text-red-600 hover:bg-red-50"
             >
-              Unassign Split
+              Unassign Program
             </Button>
           )}
           <Button 
@@ -507,7 +525,7 @@ export default function Split() {
             onClick={() => setIsSelecting(true)}
             className="border-slate-200 text-slate-600"
           >
-            Go to Other Splits
+            Go to Other Programs
           </Button>
           <Button 
             onClick={() => setIsSaveDialogOpen(true)}
@@ -517,7 +535,7 @@ export default function Split() {
               saveAllSuccess ? "bg-green-600 hover:bg-green-700" : "bg-maroon hover:bg-maroon-light"
             )}
           >
-            {savingAll ? "Saving..." : saveAllSuccess ? <><Check size={18} className="mr-2" /> Saved!</> : "Save New Custom Split"}
+            {savingAll ? "Saving..." : saveAllSuccess ? <><Check size={18} className="mr-2" /> Saved!</> : "Save New Custom Program"}
           </Button>
         </div>
       </header>
@@ -525,14 +543,14 @@ export default function Split() {
       <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Save Split Configuration</DialogTitle>
+            <DialogTitle>Save Program Configuration</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="split-name">Split Name</Label>
+              <Label htmlFor="split-name">Program Name</Label>
               <Input 
                 id="split-name"
-                placeholder="e.g. My Hypertrophy Split" 
+                placeholder="e.g. My Hypertrophy Program" 
                 value={newSplitName}
                 onChange={e => setNewSplitName(e.target.value)}
               />
@@ -545,7 +563,7 @@ export default function Split() {
               disabled={!newSplitName.trim() || savingAll}
               className="bg-maroon hover:bg-maroon-light"
             >
-              Save Split
+              Save Program
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -565,7 +583,7 @@ export default function Split() {
                     value={split.name}
                     onChange={e => updateSplit(split.id, { name: e.target.value })}
                     className="mt-2 font-medium text-slate-700 bg-white min-h-[40px] py-2"
-                    placeholder="Split Name (e.g. Push)"
+                    placeholder="Program Name (e.g. Push)"
                     rows={2}
                   />
                   {stagedSplitDays === null && (
@@ -624,7 +642,7 @@ export default function Split() {
                               return (
                                 <SortableExerciseBadge 
                                   key={name} 
-                                  id={name} 
+                                  exercise={ex}
                                   onRemove={() => removeExerciseFromSplit(split.id, name)} 
                                 />
                               );
