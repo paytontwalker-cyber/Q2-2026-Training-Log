@@ -28,55 +28,67 @@ import Export from './Export';
 
 const ROADMAP_ITEMS = [
   {
-    category: 'Progress Page',
+    category: 'Progress / Analytics Improvements',
     items: [
-      'Date range filter for historical analysis',
-      'Sort controls on Volume Targets',
-      'Exercise filter for progress charts',
-      'Long-term trend analysis across weeks/months',
+      'Why this group?',
+      'Untouched Groups count label',
+      'Hide zero-volume groups toggle',
+      'Volume Targets sorting',
+      'Date range presets / Custom date range',
+      'Sunday reset weekly logic',
+      'Overshoot scaling',
+      'Data Notes',
+      'Top contributors',
+      'Body map raw volume vs % of target toggle',
+      'Front/back isolate toggle',
+      'Session Body Map vs Session Target Gaps toggle',
+      'Absolute lbs vs % of target toggle',
     ],
   },
   {
-    category: 'Daily Log',
+    category: 'Split / Programming',
     items: [
-      'Block-level drag-and-drop reordering',
-      'Collapse/expand individual blocks',
-      'Duplicate block action',
-      'Visual placement tags (Before / After / Separate Session)',
-      'Clearer programmed vs logged value differentiation',
+      'AI Guided Split Builder',
+      'Guided split creation with Gemini AI',
+      'User cooperates with AI to build a split based on goals/preferences',
     ],
   },
   {
-    category: 'Split Page',
+    category: 'Wellness / Recovery',
     items: [
-      'Multi-block day editor (e.g. define "Lift + HIIT" explicitly on one day)',
+      'Future Wellness or Recovery page',
+      'Sleep, nutrition, fatigue, readiness, and health metrics',
     ],
   },
   {
-    category: 'History',
+    category: 'Social / Profile',
     items: [
-      'Filter by exercise or date range',
-      'Full-text search across workouts',
+      'Editable profile expansion',
+      'Friends / network expansion',
+      'Posts, shared splits, and feed/autopost ideas',
     ],
   },
   {
-    category: 'Calendar & Scheduling',
+    category: 'Architecture / Navigation',
     items: [
-      'Proper date picker / week view on Daily Log',
-      'Week/month calendar navigation',
+      'Sidebar reorganization into buckets',
+      'Page organization / consolidation rethink',
     ],
   },
   {
-    category: 'Theming',
+    category: 'Auth / Integrations',
     items: [
-      'Optional dark mode reintroduction (charcoal palette is already in index.css)',
+      'Email/password sign-in',
+      'Guest account upgrade/conversion',
+      'Garmin / Strava / Apple Health / RENPHO future support',
     ],
   },
   {
-    category: 'Authentication',
+    category: 'Learn More Framework',
     items: [
-      'Passwordless email sign-in',
-      'Account recovery flow',
+      'Learn More buttons throughout the app',
+      'Internal learning subpages',
+      'Research / article-backed education pages',
     ],
   },
 ];
@@ -90,31 +102,37 @@ const INTEGRATIONS: { name: string; status: string }[] = [
 
 const UPDATE_ITEMS = [
   {
-    category: 'Export',
-    items: [
-      'Export moved into Settings',
-      'Embedded export tools inside settings',
-    ],
-  },
-  {
-    category: 'Progress Page',
-    items: [
-      'Progress expanded into 5 tabs',
-      'Volume Targets restored',
-      'Untouched Groups added',
-    ],
-  },
-  {
-    category: 'Exercises',
-    items: [
-      'Side Delts tracking added/fixed',
-      'Strength exercise search added',
-    ],
-  },
-  {
     category: 'Settings',
     items: [
+      'Export moved into Settings',
       'Profile & Settings expanded',
+    ],
+  },
+  {
+    category: 'Progress',
+    items: [
+      'Progress expanded into structured subpages/tabs',
+      'Volume Targets restored',
+      'Untouched Groups added',
+      'Body Map added to Weekly Volume',
+      'Body Map added to Session Volume',
+      'Session and Weekly pie charts aligned with body-map palette',
+    ],
+  },
+  {
+    category: 'History',
+    items: [
+      'Recently Deleted added',
+      'History tabs cleaned up',
+    ],
+  },
+  {
+    category: 'Exercises & Daily Log',
+    items: [
+      'Side Delts tracking fixed',
+      'Strength exercise search added',
+      'Body Map labels fixed to lbs moved',
+      'Reset button fixed',
     ],
   },
 ];
@@ -322,153 +340,6 @@ export default function ProfileSettings() {
           </CardContent>
         </Card>
 
-        {/* Profile */}
-        <Card className="border-border shadow-sm no-print">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="text-maroon" size={20} />
-              Profile
-            </CardTitle>
-            <CardDescription>How you appear in the app</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {isGuest ? (
-              <p className="text-sm text-muted-foreground italic">Sign in to edit your profile.</p>
-            ) : (
-              <>
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-full bg-maroon/10 flex items-center justify-center text-maroon font-bold text-2xl border border-maroon/20 overflow-hidden flex-shrink-0">
-                    {identity.photoURL ? (
-                      <img 
-                        src={identity.photoURL} 
-                        alt="Profile" 
-                        className="w-full h-full object-cover"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                      />
-                    ) : (
-                      <span>{identity.displayName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}</span>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground">Preview</p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="identity-name" className="text-xs">Display Name</Label>
-                  <Input
-                    id="identity-name"
-                    value={identity.displayName}
-                    onChange={(e) => setIdentity({ ...identity, displayName: e.target.value })}
-                    placeholder="Your name"
-                    maxLength={50}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="identity-bio" className="text-xs">Bio</Label>
-                  <Textarea
-                    id="identity-bio"
-                    value={identity.bio}
-                    onChange={(e) => setIdentity({ ...identity, bio: e.target.value })}
-                    placeholder="A short bio"
-                    rows={3}
-                    maxLength={200}
-                  />
-                  <p className="text-[10px] text-muted-foreground text-right">{identity.bio.length}/200</p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="identity-photo" className="text-xs">Profile Picture URL</Label>
-                  <Input
-                    id="identity-photo"
-                    type="url"
-                    value={identity.photoURL}
-                    onChange={(e) => setIdentity({ ...identity, photoURL: e.target.value })}
-                    placeholder="https://..."
-                  />
-                  <p className="text-[10px] text-muted-foreground">Paste a public image URL. File uploads coming later.</p>
-                </div>
-
-                <Button 
-                  onClick={saveIdentity}
-                  disabled={saving}
-                  className="w-full bg-maroon hover:bg-maroon-light text-white"
-                >
-                  {saving ? 'Saving...' : 'Save Profile'}
-                </Button>
-              </>
-            )}
-          </CardContent>
-        </Card>
-        <Card className="border-border shadow-sm no-print">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <UserCircle className="text-maroon" size={20} />
-              Profile Details
-            </CardTitle>
-            <CardDescription>
-              Manage your personal body metrics
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {isGuest ? (
-              <div className="p-4 bg-muted rounded-lg border border-border text-sm text-muted-foreground text-center">
-                Sign in to save your profile details.
-              </div>
-            ) : (
-              <>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Height</Label>
-                    <Input value={profile.height} onChange={e => setProfile({...profile, height: e.target.value})} placeholder="e.g. 180cm" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Birthday</Label>
-                    <Input type="date" value={profile.birthday} onChange={e => setProfile({...profile, birthday: e.target.value})} />
-                  </div>
-                  {profile.birthday && (
-                    <div className="space-y-1">
-                      <Label className="text-xs">Age</Label>
-                      <Input readOnly value={calculateAge(profile.birthday)} />
-                    </div>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Current Weight</Label>
-                    <Input value={profile.weight} onChange={e => setProfile({...profile, weight: e.target.value})} placeholder="e.g. 80kg" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Goal Weight</Label>
-                    <Input value={profile.goalWeight} onChange={e => setProfile({...profile, goalWeight: e.target.value})} placeholder="e.g. 75kg" />
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Sex/Gender</Label>
-                  <Select 
-                    value={profile.sex}
-                    onValueChange={(val) => setProfile({...profile, sex: val})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select sex/gender" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Male">Male</SelectItem>
-                      <SelectItem value="Female">Female</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-[10px] text-muted-foreground mt-1">
-                    These numbers may be used to calculate training metrics, pace estimates, and other app insights.
-                  </p>
-                </div>
-                <Button onClick={saveProfile} disabled={saving} className="w-full bg-maroon hover:bg-maroon-light text-white">
-                  <Save className="mr-2" size={16} />
-                  {saving ? 'Saving...' : 'Save Profile'}
-                </Button>
-              </>
-            )}
-          </CardContent>
-        </Card>
-
         {/* 3. App Settings */}
         <div className="space-y-6">
           <Card className="border-border shadow-sm no-print">
@@ -636,9 +507,11 @@ export default function ProfileSettings() {
           </CardHeader>
           <CardContent>
             <div className="space-y-5">
-              {ROADMAP_ITEMS.map(section => (
+              {ROADMAP_ITEMS.map((section, index) => (
                 <div key={section.category}>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">{section.category}</h4>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                    {index + 1}. {section.category}
+                  </h4>
                   <ul className="space-y-1.5 text-sm text-foreground">
                     {section.items.map((item, i) => (
                       <li key={i} className="flex gap-2">
@@ -653,14 +526,14 @@ export default function ProfileSettings() {
           </CardContent>
         </Card>
 
-        {/* Updates / Patches */}
+        {/* Completed Updates / Patches */}
         <Card className="border-border shadow-sm md:col-span-2 no-print">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Info className="text-muted-foreground" size={20} />
-              Updates / Patches
+              Completed Updates / Patches
             </CardTitle>
-            <CardDescription>Features and improvements already added to the app.</CardDescription>
+            <CardDescription>Features and improvements already shipped.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-5">

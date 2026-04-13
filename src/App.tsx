@@ -17,7 +17,9 @@ import {
   ChevronLeft,
   ChevronRight,
   UserCircle,
-  Users
+  Users,
+  Activity,
+  ChevronDown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { APP_VERSION } from './constants';
@@ -27,41 +29,71 @@ import { Button } from '@/components/ui/button';
 import Home from './pages/Home';
 import DailyLog from './pages/DailyLog';
 import Progress from './pages/Progress';
-import Exercises from './pages/Exercises';
 import History from './pages/History';
-import Split from './pages/Split';
+import Programming from './pages/Programming';
 import ProfileSettings from './pages/ProfileSettings';
 import Social from './pages/Social';
+import Wellness from './pages/Wellness';
 
-type Page = 'home' | 'log' | 'progress' | 'exercises' | 'history' | 'split' | 'profile' | 'social';
+type Page = 'home' | 'log' | 'progress' | 'history' | 'programming' | 'profile' | 'social' | 'wellness';
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [expandedBuckets, setExpandedBuckets] = useState<Record<string, boolean>>({
+    train: true,
+    analyze: true,
+    social: true,
+    settings: true,
+  });
   const { user, loading, login, loginAsGuest, logout } = useFirebase();
   const isGuest = user && 'isGuest' in user;
 
+  // Auto-expand bucket containing active page
   useEffect(() => {
-    if (isMobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
+    const activeBucket = navBuckets.find(b => b.items.some(i => i.id === currentPage));
+    if (activeBucket) {
+      setExpandedBuckets(prev => ({ ...prev, [activeBucket.id]: true }));
     }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isMobileMenuOpen]);
+  }, [currentPage]);
 
-  const navItems = [
-    { id: 'home', label: 'Home', icon: LayoutDashboard },
-    { id: 'split', label: 'Split', icon: Calendar },
-    { id: 'exercises', label: 'Exercises', icon: Dumbbell },
-    { id: 'log', label: 'Daily Log', icon: LayoutDashboard },
-    { id: 'progress', label: 'Progress', icon: LineChart },
-    { id: 'history', label: 'History', icon: HistoryIcon },
-    { id: 'social', label: 'Social', icon: Users },
-    { id: 'profile', label: 'Profile & Settings', icon: UserCircle },
+  const toggleBucket = (id: string) => {
+    setExpandedBuckets(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const navBuckets = [
+    {
+      id: 'train',
+      label: 'Train',
+      items: [
+        { id: 'log', label: 'Daily Log', icon: LayoutDashboard },
+        { id: 'programming', label: 'Programming', icon: Dumbbell },
+      ],
+    },
+    {
+      id: 'analyze',
+      label: 'Analyze',
+      items: [
+        { id: 'progress', label: 'Progress', icon: LineChart },
+        { id: 'history', label: 'History', icon: HistoryIcon },
+        { id: 'wellness', label: 'Health / Wellness', icon: Activity },
+      ],
+    },
+    {
+      id: 'social',
+      label: 'Social',
+      items: [
+        { id: 'social', label: 'Social', icon: Users },
+      ],
+    },
+    {
+      id: 'settings',
+      label: 'Settings',
+      items: [
+        { id: 'profile', label: 'Profile & Settings', icon: UserCircle },
+      ],
+    },
   ];
 
   if (loading) {
@@ -108,11 +140,11 @@ function AppContent() {
       case 'home': return <Home setCurrentPage={setCurrentPage} />;
       case 'log': return <DailyLog />;
       case 'progress': return <Progress />;
-      case 'exercises': return <Exercises />;
       case 'history': return <History setCurrentPage={setCurrentPage} />;
-      case 'split': return <Split />;
+      case 'programming': return <Programming />;
       case 'social': return <Social />;
       case 'profile': return <ProfileSettings />;
+      case 'wellness': return <Wellness />;
       default: return <Home setCurrentPage={setCurrentPage} />;
     }
   };
@@ -170,32 +202,73 @@ function AppContent() {
         </div>
         
         <div className="flex-1 overflow-y-auto py-3 md:py-4 flex flex-col">
-          <div className="flex-1 px-3 md:px-0 space-y-1 md:space-y-0">
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => {
-                  setCurrentPage(item.id as Page);
-                  setIsMobileMenuOpen(false);
-                }}
-                title={isSidebarCollapsed ? item.label : undefined}
-                className={cn(
-                  "w-full flex items-center gap-3 py-3 text-sm font-medium transition-colors",
-                  "px-3 rounded-md md:px-6 md:rounded-none",
-                  isSidebarCollapsed && "md:px-0 md:justify-center",
-                  currentPage === item.id 
-                    ? "text-maroon bg-maroon/5 md:border-r-4 border-maroon" 
-                    : "text-muted-foreground hover:text-maroon hover:bg-muted"
+          <div className="flex-1 px-3 md:px-0 space-y-4 md:space-y-6">
+            {/* Home Item */}
+            <button
+              onClick={() => {
+                setCurrentPage('home');
+                setIsMobileMenuOpen(false);
+              }}
+              className={cn(
+                "w-full flex items-center gap-3 py-2 text-sm font-medium transition-colors",
+                "px-4 rounded-md md:px-6 md:rounded-none",
+                isSidebarCollapsed && "md:px-0 md:justify-center",
+                currentPage === 'home' 
+                  ? "text-maroon bg-maroon/5 md:border-r-4 border-maroon" 
+                  : "text-muted-foreground hover:text-maroon hover:bg-muted"
+              )}
+            >
+              <LayoutDashboard size={18} className={currentPage === 'home' ? "text-maroon" : "text-muted-foreground"} />
+              <span className={cn(
+                "transition-opacity duration-300",
+                isSidebarCollapsed && "md:hidden"
+              )}>
+                Home
+              </span>
+            </button>
+
+            {navBuckets.map((bucket) => (
+              <div key={bucket.id}>
+                {!isSidebarCollapsed && (
+                  <button 
+                    onClick={() => toggleBucket(bucket.id)}
+                    className="w-full flex items-center justify-between px-4 text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2 hover:text-maroon"
+                  >
+                    {bucket.label}
+                    <ChevronDown size={12} className={cn("transition-transform", expandedBuckets[bucket.id] ? "" : "-rotate-90")} />
+                  </button>
                 )}
-              >
-                <item.icon size={18} className={currentPage === item.id ? "text-maroon" : "text-muted-foreground"} />
-                <span className={cn(
-                  "transition-opacity duration-300",
-                  isSidebarCollapsed && "md:hidden"
-                )}>
-                  {item.label}
-                </span>
-              </button>
+                {expandedBuckets[bucket.id] && (
+                  <div className="space-y-1">
+                    {bucket.items.map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          setCurrentPage(item.id as Page);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        title={isSidebarCollapsed ? item.label : undefined}
+                        className={cn(
+                          "w-full flex items-center gap-3 py-2 text-sm font-medium transition-colors",
+                          "px-4 rounded-md md:px-6 md:rounded-none",
+                          isSidebarCollapsed && "md:px-0 md:justify-center",
+                          currentPage === item.id 
+                            ? "text-maroon bg-maroon/5 md:border-r-4 border-maroon" 
+                            : "text-muted-foreground hover:text-maroon hover:bg-muted"
+                        )}
+                      >
+                        <item.icon size={18} className={currentPage === item.id ? "text-maroon" : "text-muted-foreground"} />
+                        <span className={cn(
+                          "transition-opacity duration-300",
+                          isSidebarCollapsed && "md:hidden"
+                        )}>
+                          {item.label}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
           

@@ -213,6 +213,7 @@ export interface UserProfile {
   uid: string;
   email: string;
   displayName: string;
+  username?: string;   // NEW
   bio?: string;        // NEW
   photoURL?: string;   // NEW
   height?: string;

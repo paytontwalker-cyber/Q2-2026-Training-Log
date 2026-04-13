@@ -199,9 +199,10 @@ const SortableExerciseCard = ({
               <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block truncate">Sets</Label>
               <Input 
                 type="number" 
-                value={ex.sets !== undefined && ex.sets !== null ? ex.sets : ''} 
+                value={ex.sets || ''} 
                 onChange={e => {
-                  const newSets = parseInt(e.target.value) || 0;
+                  const val = e.target.value;
+                  const newSets = val === '' ? 0 : parseInt(val);
                   const updates: Partial<ExerciseEntry> = { sets: newSets };
                   if (ex.usePerSetWeights) {
                     const newWeights = [...(ex.perSetWeights || [])];
@@ -224,8 +225,11 @@ const SortableExerciseCard = ({
                   <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block truncate">Dist</Label>
                   <Input 
                     type="number" 
-                    value={ex.distance !== undefined && ex.distance !== null ? ex.distance : ''} 
-                    onChange={e => updateExercise(ex.id, { distance: parseFloat(e.target.value) || 0 })}
+                    value={ex.distance || ''} 
+                    onChange={e => {
+                      const val = e.target.value;
+                      updateExercise(ex.id, { distance: val === '' ? 0 : parseFloat(val) });
+                    }}
                     onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
                     className="h-9 w-full"
                   />
@@ -256,8 +260,11 @@ const SortableExerciseCard = ({
                 </Label>
                 <Input 
                   type="number" 
-                  value={ex.time !== undefined && ex.time !== null ? ex.time : ''} 
-                  onChange={e => updateExercise(ex.id, { time: parseFloat(e.target.value) || 0 })}
+                  value={ex.time || ''} 
+                  onChange={e => {
+                    const val = e.target.value;
+                    updateExercise(ex.id, { time: val === '' ? 0 : parseFloat(val) });
+                  }}
                   onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
                   className="h-9 w-full"
                 />
@@ -267,8 +274,11 @@ const SortableExerciseCard = ({
                 <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block truncate">Reps</Label>
                 <Input 
                   type="number" 
-                  value={ex.reps !== undefined && ex.reps !== null ? ex.reps : ''} 
-                  onChange={e => updateExercise(ex.id, { reps: parseInt(e.target.value) || 0 })}
+                  value={ex.reps || ''} 
+                  onChange={e => {
+                    const val = e.target.value;
+                    updateExercise(ex.id, { reps: val === '' ? 0 : parseInt(val) });
+                  }}
                   onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
                   className="h-9 w-full"
                 />
@@ -283,8 +293,11 @@ const SortableExerciseCard = ({
               ) : (
                 <Input 
                   type="number" 
-                  value={ex.weight !== undefined && ex.weight !== null ? ex.weight : ''} 
-                  onChange={e => updateExercise(ex.id, { weight: parseFloat(e.target.value) || 0 })}
+                  value={ex.weight || ''} 
+                  onChange={e => {
+                    const val = e.target.value;
+                    updateExercise(ex.id, { weight: val === '' ? 0 : parseFloat(val) });
+                  }}
                   onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
                   className="h-9 w-full"
                 />
@@ -295,8 +308,11 @@ const SortableExerciseCard = ({
               <Input 
                 type="number" 
                 step="0.5"
-                value={ex.rpe !== undefined && ex.rpe !== null ? ex.rpe : ''} 
-                onChange={e => updateExercise(ex.id, { rpe: parseFloat(e.target.value) || null })}
+                value={ex.rpe || ''} 
+                onChange={e => {
+                  const val = e.target.value;
+                  updateExercise(ex.id, { rpe: val === '' ? null : parseFloat(val) });
+                }}
                 onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
                 className="h-9 w-full"
               />
@@ -305,8 +321,11 @@ const SortableExerciseCard = ({
               <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block truncate">RIR</Label>
               <Input 
                 type="number" 
-                value={ex.rir !== undefined && ex.rir !== null ? ex.rir : ''} 
-                onChange={e => updateExercise(ex.id, { rir: parseInt(e.target.value) || null })}
+                value={ex.rir || ''} 
+                onChange={e => {
+                  const val = e.target.value;
+                  updateExercise(ex.id, { rir: val === '' ? null : parseInt(val) });
+                }}
                 onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
                 className="h-9 w-full"
               />

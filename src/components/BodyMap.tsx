@@ -9,7 +9,7 @@ interface BodyMapProps {
   heatMode?: 'relative' | 'target';
 }
 
-const HEATMAP_COLORS = [
+export const HEATMAP_COLORS = [
   '#FEF3C7',  // very light yellow
   '#FDE68A',  // yellow-orange
   '#FB923C',  // orange

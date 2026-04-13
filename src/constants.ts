@@ -5,7 +5,7 @@
 
 import { ExerciseLibraryEntry, MuscleGroup } from './types';
 
-export const APP_VERSION = '2.9.3';
+export const APP_VERSION = '2.9.15';
 
 export const MUSCLE_VOLUME_TARGETS: Record<string, number> = {
   Chest: 8000,

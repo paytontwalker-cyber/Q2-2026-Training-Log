@@ -1,15 +1,15 @@
-import { LayoutDashboard, Calendar, Dumbbell, LineChart, History as HistoryIcon, Users, UserCircle } from 'lucide-react';
+import { LayoutDashboard, Dumbbell, LineChart, History as HistoryIcon, Users, UserCircle, Activity } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) => void }) {
   const navItems = [
-    { id: 'split', label: 'Split', icon: Calendar, description: 'Manage your weekly workout split' },
-    { id: 'exercises', label: 'Exercises', icon: Dumbbell, description: 'View and manage your exercise library' },
     { id: 'log', label: 'Daily Log', icon: LayoutDashboard, description: 'Log your daily workout' },
+    { id: 'programming', label: 'Programming', icon: Dumbbell, description: 'Manage your workout splits and exercise library' },
     { id: 'progress', label: 'Progress', icon: LineChart, description: 'Track your training data' },
-    { id: 'history', label: 'History', icon: HistoryIcon, description: 'View past workouts' },
+    { id: 'history', label: 'History', icon: HistoryIcon, description: 'Review past workouts' },
+    { id: 'wellness', label: 'Health / Wellness', icon: Activity, description: 'Explore future wellness and recovery tracking' },
     { id: 'social', label: 'Social', icon: Users, description: 'Connect with training partners' },
-    { id: 'profile', label: 'Profile & Settings', icon: UserCircle, description: 'Manage your account' },
+    { id: 'profile', label: 'Profile & Settings', icon: UserCircle, description: 'Manage your account and app preferences' },
   ];
 
   return (

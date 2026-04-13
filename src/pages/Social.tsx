@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Users, 
   MessageSquare, 
@@ -6,11 +6,18 @@ import {
   Activity, 
   Share2, 
   Search,
-  Clock
+  Clock,
+  Save
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { useFirebase } from '@/src/components/FirebaseProvider';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 
 type Tab = 'friends' | 'posts' | 'profile' | 'activity' | 'shared-splits';
 
@@ -41,6 +48,58 @@ const ComingSoonCard = ({ title, description, icon: Icon }: { title: string, des
 
 export default function Social() {
   const [activeTab, setActiveTab] = useState<Tab>('profile');
+  const { user } = useFirebase();
+  const [profile, setProfile] = useState({
+    displayName: '',
+    username: '',
+    bio: '',
+    photoURL: '',
+  });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (user && !('isGuest' in user)) {
+      const fetchProfile = async () => {
+        const userRef = doc(db, 'users', user.uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          const data = userSnap.data();
+          setProfile({
+            displayName: data.displayName || user.displayName || '',
+            username: data.username || '',
+            bio: data.bio || '',
+            photoURL: data.photoURL || '',
+          });
+        } else {
+          setProfile({
+            displayName: user.displayName || '',
+            username: '',
+            bio: '',
+            photoURL: user.photoURL || '',
+          });
+        }
+      };
+      fetchProfile();
+    }
+  }, [user]);
+
+  const saveProfile = async () => {
+    if (!user || 'isGuest' in user) return;
+    setSaving(true);
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        displayName: profile.displayName.trim(),
+        username: profile.username.trim(),
+        bio: profile.bio.trim(),
+        photoURL: profile.photoURL.trim(),
+      });
+    } catch (error) {
+      console.error('Error saving profile:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const tabs = [
     { id: 'profile', label: 'Profile', icon: UserCircle },
@@ -159,61 +218,71 @@ export default function Social() {
                 <CardDescription>Your public training identity and shared stats.</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-                  <div className="h-24 w-24 rounded-full bg-slate-100 border-4 border-white shadow-sm flex items-center justify-center flex-shrink-0">
-                    <UserCircle className="h-12 w-12 text-slate-300" />
+                <div className="flex flex-col md:flex-row items-center md:items-start gap-6 mb-8">
+                  <div className="h-24 w-24 rounded-full bg-slate-100 border-4 border-white shadow-sm flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    {profile.photoURL ? (
+                      <img 
+                        src={profile.photoURL} 
+                        alt="Profile" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    ) : (
+                      <UserCircle className="h-12 w-12 text-slate-300" />
+                    )}
                   </div>
                   <div className="text-center md:text-left space-y-2 flex-1">
                     <div>
-                      <h3 className="text-xl font-bold text-slate-800">Your Name</h3>
-                      <p className="text-sm font-medium text-maroon">@username</p>
+                      <h3 className="text-xl font-bold text-slate-800">{profile.displayName || 'Your Name'}</h3>
+                      <p className="text-sm font-medium text-maroon">@{profile.username || 'username'}</p>
                     </div>
                     <p className="text-sm text-slate-600 max-w-md">
-                      Training, discipline, and progress.
+                      {profile.bio || 'Training, discipline, and progress.'}
                     </p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-                  <div className="bg-slate-50 rounded-lg p-4 text-center border border-slate-100">
-                    <p className="text-2xl font-bold text-slate-800">0</p>
-                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Friends</p>
+                <div className="space-y-4 pt-6 border-t border-slate-100">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="displayName">Display Name</Label>
+                      <Input 
+                        id="displayName"
+                        value={profile.displayName}
+                        onChange={(e) => setProfile({...profile, displayName: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="username">Username</Label>
+                      <Input 
+                        id="username"
+                        value={profile.username}
+                        onChange={(e) => setProfile({...profile, username: e.target.value})}
+                      />
+                    </div>
                   </div>
-                  <div className="bg-slate-50 rounded-lg p-4 text-center border border-slate-100">
-                    <p className="text-2xl font-bold text-slate-800">0</p>
-                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Posts</p>
+                  <div className="space-y-2">
+                    <Label htmlFor="photoURL">Profile Picture URL</Label>
+                    <Input 
+                      id="photoURL"
+                      value={profile.photoURL}
+                      onChange={(e) => setProfile({...profile, photoURL: e.target.value})}
+                    />
                   </div>
-                  <div className="bg-slate-50 rounded-lg p-4 text-center border border-slate-100">
-                    <p className="text-2xl font-bold text-slate-800">0</p>
-                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Shared Splits</p>
+                  <div className="space-y-2">
+                    <Label htmlFor="bio">Bio</Label>
+                    <Textarea 
+                      id="bio"
+                      value={profile.bio}
+                      onChange={(e) => setProfile({...profile, bio: e.target.value})}
+                      rows={3}
+                    />
                   </div>
-                  <div className="bg-slate-50 rounded-lg p-4 text-center border border-slate-100">
-                    <p className="text-2xl font-bold text-slate-800">0</p>
-                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Logs Shared</p>
-                  </div>
+                  <Button onClick={saveProfile} disabled={saving} className="bg-maroon hover:bg-maroon-light text-white">
+                    <Save className="mr-2" size={16} />
+                    {saving ? 'Saving...' : 'Save Profile'}
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-slate-200 shadow-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Profile Features</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3">
-                  <li className="flex items-center gap-3 text-sm text-slate-600">
-                    <div className="h-1.5 w-1.5 rounded-full bg-maroon flex-shrink-0" />
-                    Display name and username
-                  </li>
-                  <li className="flex items-center gap-3 text-sm text-slate-600">
-                    <div className="h-1.5 w-1.5 rounded-full bg-maroon flex-shrink-0" />
-                    Public stats and shared content
-                  </li>
-                  <li className="flex items-center gap-3 text-sm text-slate-600">
-                    <div className="h-1.5 w-1.5 rounded-full bg-maroon flex-shrink-0" />
-                    Social identity for future features
-                  </li>
-                </ul>
               </CardContent>
             </Card>
           </div>

@@ -42,13 +42,14 @@ import { useFirebase } from '@/src/components/FirebaseProvider';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
 import { getDistanceInMeters } from '../lib/workoutUtils';
-import { BodyMap } from '@/src/components/BodyMap';
+import { BodyMap, HEATMAP_COLORS } from '@/src/components/BodyMap';
 
 export default function Progress() {
   const { user } = useFirebase();
   const [view, setView] = useState<'weekly-volume' | 'session-volume' | 'strength' | 'conditioning' | 'battery'>('weekly-volume');
   const [volumeRange, setVolumeRange] = useState<'24h' | '72h' | '1w' | '2w' | '1m' | '3m'>('1w');
   const [heatMode, setHeatMode] = useState<'relative' | 'target'>('relative');
+  const [sessionHeatMode, setSessionHeatMode] = useState<'relative' | 'target'>('relative');
   const [selectedExercise, setSelectedExercise] = useState(INITIAL_EXERCISES[5].name); // Flat Bench Press
   const [selectedWorkoutId, setSelectedWorkoutId] = useState<string | null>(null);
   const [history, setHistory] = useState<Workout[]>([]);
@@ -190,6 +191,40 @@ export default function Progress() {
       exerciseData
     };
   }, [selectedWorkout]);
+
+  const sessionVolumeTargets = useMemo(() => {
+    if (!latestWorkoutSummary) return null;
+    
+    const aliasMap: Record<string, string> = {
+      'Upper Back': 'Back',
+      'Lats': 'Back',
+      'Traps': 'Back',
+      'Lower Back': 'Back',
+      'Core': 'Abs/Core',
+    };
+
+    return latestWorkoutSummary.muscleGroupData
+      .filter(d => d.value > 0)
+      .map(d => {
+        const muscleGroup = aliasMap[d.name] || d.name;
+        const targetVolume = MUSCLE_VOLUME_TARGETS[muscleGroup] || 0;
+        const actualVolume = d.value;
+        const percentOfTarget = targetVolume > 0 ? (actualVolume / targetVolume) * 100 : 0;
+        
+        let status = 'Low';
+        if (percentOfTarget >= 120) status = 'Above Zone';
+        else if (percentOfTarget >= 100) status = 'On Target';
+        else if (percentOfTarget >= 70) status = 'Near';
+        
+        return {
+          muscleGroup: d.name,
+          actualVolume,
+          targetVolume,
+          percentOfTarget,
+          status
+        };
+      });
+  }, [latestWorkoutSummary]);
 
   // B. Weekly Volume Section
   const weeklyVolume = useMemo(() => {
@@ -605,7 +640,7 @@ export default function Progress() {
                           dataKey="value"
                         >
                           {weeklyVolume.muscleGroupData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            <Cell key={`cell-${index}`} fill={HEATMAP_COLORS[HEATMAP_COLORS.length - 1 - (index % HEATMAP_COLORS.length)]} />
                           ))}
                         </Pie>
                         <Tooltip 
@@ -622,7 +657,7 @@ export default function Progress() {
                   <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
                     {weeklyVolume.muscleGroupData.slice(0, 6).map((entry, index) => (
                       <div key={entry.name} className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: HEATMAP_COLORS[HEATMAP_COLORS.length - 1 - (index % HEATMAP_COLORS.length)] }} />
                         <span className="truncate text-slate-600">{entry.name}</span>
                         <span className="ml-auto font-bold text-slate-900">{((entry.value / weeklyVolume.totalBodyVolume) * 100).toFixed(0)}%</span>
                       </div>
@@ -783,17 +818,31 @@ export default function Progress() {
               <Activity className="text-maroon" size={20} />
               <h3 className="text-xl font-bold text-slate-800">Workout Volume</h3>
             </div>
-            <div className="w-full md:w-64">
-              <Select value={selectedWorkoutId || (history.length > 0 ? [...history].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0].id : '')} onValueChange={setSelectedWorkoutId}>
-                <SelectTrigger>
-                  <span className="text-sm font-medium">Swap Log</span>
-                </SelectTrigger>
-                <SelectContent>
-                  {history.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(w => (
-                    <SelectItem key={w.id} value={w.id}>{w.workoutName} ({format(new Date(w.date), 'MMM dd')})</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <Label className="text-xs text-slate-500 uppercase font-bold">Heat Mode</Label>
+                <Select value={sessionHeatMode} onValueChange={(v: any) => setSessionHeatMode(v)}>
+                  <SelectTrigger className="w-[130px] h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="relative">Relative Heat</SelectItem>
+                    <SelectItem value="target">Target Heat</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="w-full md:w-64">
+                <Select value={selectedWorkoutId || (history.length > 0 ? [...history].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0].id : '')} onValueChange={setSelectedWorkoutId}>
+                  <SelectTrigger>
+                    <span className="text-sm font-medium">Swap Log</span>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {history.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(w => (
+                      <SelectItem key={w.id} value={w.id}>{w.workoutName} ({format(new Date(w.date), 'MMM dd')})</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
           {latestWorkoutSummary ? (
@@ -815,6 +864,27 @@ export default function Progress() {
                         <span className="text-maroon font-bold">{ex.volume.toLocaleString()} <span className="text-[10px] text-slate-400 font-normal uppercase">Vol</span></span>
                       </div>
                     ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-slate-200 shadow-sm">
+                <CardHeader>
+                  <CardTitle>Session Volume Targets</CardTitle>
+                  <CardDescription>Compare this workout's muscle-group volume against your target benchmarks.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {sessionVolumeTargets && sessionVolumeTargets.length > 0 ? (
+                      sessionVolumeTargets.map(t => (
+                        <div key={t.muscleGroup} className="flex justify-between text-sm py-2 border-b border-slate-100 last:border-0">
+                          <span className="font-medium text-slate-700">{t.muscleGroup}</span>
+                          <span className="text-slate-500">{t.actualVolume.toLocaleString()} / {t.targetVolume.toLocaleString()} ({t.percentOfTarget.toFixed(0)}%) - <span className={cn("font-bold", t.status === 'Low' ? 'text-red-500' : t.status === 'Near' ? 'text-gold' : 'text-green-600')}>{t.status}</span></span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground italic text-center py-4">No session muscle-group data available yet.</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -850,7 +920,7 @@ export default function Progress() {
                             dataKey="value"
                           >
                             {latestWorkoutSummary.muscleGroupData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                              <Cell key={`cell-${index}`} fill={HEATMAP_COLORS[HEATMAP_COLORS.length - 1 - (index % HEATMAP_COLORS.length)]} />
                             ))}
                           </Pie>
                           <Tooltip 
@@ -867,7 +937,7 @@ export default function Progress() {
                     <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
                       {latestWorkoutSummary.muscleGroupData.slice(0, 6).map((entry, index) => (
                         <div key={entry.name} className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: HEATMAP_COLORS[HEATMAP_COLORS.length - 1 - (index % HEATMAP_COLORS.length)] }} />
                           <span className="truncate text-slate-600">{entry.name}</span>
                           <span className="ml-auto font-bold text-slate-900">{((entry.value / latestWorkoutSummary.totalVolume) * 100).toFixed(0)}%</span>
                         </div>
@@ -900,6 +970,26 @@ export default function Progress() {
                   </CardContent>
                 </Card>
               </div>
+
+              <Card className="border-border shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-sm uppercase tracking-wider text-slate-500">
+                    Session Volume Heatmap
+                  </CardTitle>
+                  <CardDescription>
+                    Shading reflects the selected workout's training volume per muscle group. Hover for details.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {latestWorkoutSummary.muscleGroupData.length > 0 ? (
+                    <BodyMap muscleGroupData={latestWorkoutSummary.muscleGroupData} heatMode={sessionHeatMode} />
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic text-center py-8">
+                      No session data available yet. Select or log a workout to see the body map.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           ) : (
             <Card className="border-slate-200 shadow-sm p-8 text-center text-slate-400 italic">
