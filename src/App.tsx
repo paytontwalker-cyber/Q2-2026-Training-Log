@@ -47,7 +47,50 @@ function AppContent() {
     social: true,
     settings: true,
   });
-  const { user, loading, login, loginAsGuest, logout } = useFirebase();
+  const { user, loading, login, loginAsGuest, logout, signUpWithEmail, signInWithEmail } = useFirebase();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  const handleAuth = async () => {
+    setAuthError(null);
+    try {
+      if (isCreatingAccount) {
+        await signUpWithEmail(email, password);
+      } else {
+        await signInWithEmail(email, password);
+      }
+    } catch (error: any) {
+      let message = 'An error occurred during authentication.';
+      switch (error.code) {
+        case 'auth/email-already-in-use':
+          message = 'This email is already in use.';
+          break;
+        case 'auth/invalid-email':
+          message = 'Enter a valid email address.';
+          break;
+        case 'auth/weak-password':
+          message = 'Password is too weak.';
+          break;
+        case 'auth/user-not-found':
+          message = 'No account found with that email.';
+          break;
+        case 'auth/wrong-password':
+          message = 'Wrong password.';
+          break;
+        case 'auth/invalid-credential':
+          message = 'Invalid email or password.';
+          break;
+        case 'auth/operation-not-allowed':
+          message = 'Email/password sign-in is not enabled in Firebase Authentication yet.';
+          break;
+        default:
+          message = `Authentication failed: ${error.message}`;
+      }
+      setAuthError(message);
+    }
+  };
   const isGuest = user && 'isGuest' in user;
 
   // Auto-expand bucket containing active page
@@ -57,6 +100,11 @@ function AppContent() {
       setExpandedBuckets(prev => ({ ...prev, [activeBucket.id]: true }));
     }
   }, [currentPage]);
+
+  const toggleAuthMode = () => {
+    setIsCreatingAccount(!isCreatingAccount);
+    setAuthError(null);
+  };
 
   const toggleBucket = (id: string) => {
     setExpandedBuckets(prev => ({ ...prev, [id]: !prev[id] }));
@@ -122,6 +170,46 @@ function AppContent() {
               <LogIn className="mr-2" size={20} />
               Sign in with Google
             </Button>
+            
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">Or</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <input 
+                type="email" 
+                placeholder="Email" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full p-2 border border-border rounded-md bg-background text-foreground"
+              />
+              <input 
+                type="password" 
+                placeholder="Password" 
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full p-2 border border-border rounded-md bg-background text-foreground"
+              />
+              {authError && <p className="text-destructive text-sm">{authError}</p>}
+              <Button 
+                onClick={handleAuth}
+                className="w-full bg-slate-800 hover:bg-slate-700 text-white h-10"
+              >
+                {isCreatingAccount ? 'Create Account' : 'Sign In'}
+              </Button>
+              <button 
+                onClick={toggleAuthMode}
+                className="w-full text-sm text-muted-foreground hover:text-maroon underline"
+              >
+                {isCreatingAccount ? 'Already have an account? Sign In' : 'Need an account? Create one'}
+              </button>
+            </div>
+
             <Button 
               onClick={loginAsGuest} 
               variant="outline"

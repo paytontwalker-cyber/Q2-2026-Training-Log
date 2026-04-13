@@ -670,22 +670,54 @@ const SortableConditioningBlock: React.FC<SortableConditioningBlockProps> = ({
                       </div>
                       <div>
                         <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Duration</Label>
-                        <Input
-                          value={block.programmedDuration ?? ''}
-                          onChange={(e) => onChange({ programmedDuration: e.target.value })}
-                          placeholder="e.g. 45 min"
-                          className="h-9"
-                        />
+                        <div className="flex gap-2">
+                          <Input
+                            type="number"
+                            value={block.programmedDurationVal ?? ''}
+                            onChange={(e) => onChange({ programmedDurationVal: parseFloat(e.target.value) || 0 })}
+                            placeholder="45"
+                            className="h-9"
+                          />
+                          <Select
+                            value={block.programmedDurationUnit ?? 'min'}
+                            onValueChange={(val) => onChange({ programmedDurationUnit: val })}
+                          >
+                            <SelectTrigger className="h-9 w-20">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="min">min</SelectItem>
+                              <SelectItem value="sec">sec</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                       {block.subtype !== 'Incline Treadmill' && (
                         <div>
                           <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Distance</Label>
-                          <Input
-                            value={block.programmedDistance ?? ''}
-                            onChange={(e) => onChange({ programmedDistance: e.target.value })}
-                            placeholder="e.g. 3 miles"
-                            className="h-9"
-                          />
+                          <div className="flex gap-2">
+                            <Input
+                              type="number"
+                              value={block.programmedDistanceVal ?? ''}
+                              onChange={(e) => onChange({ programmedDistanceVal: parseFloat(e.target.value) || 0 })}
+                              placeholder="3"
+                              className="h-9"
+                            />
+                            <Select
+                              value={block.programmedDistanceUnit ?? 'mi'}
+                              onValueChange={(val) => onChange({ programmedDistanceUnit: val })}
+                            >
+                              <SelectTrigger className="h-9 w-20">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="mi">mi</SelectItem>
+                                <SelectItem value="km">km</SelectItem>
+                                <SelectItem value="m">m</SelectItem>
+                                <SelectItem value="yd">yd</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </div>
                       )}
                       {block.subtype === 'Incline Treadmill' && (

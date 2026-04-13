@@ -4,7 +4,7 @@
  */
 
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { 
   getFirestore, 
   doc, 
@@ -93,4 +93,6 @@ testConnection();
 
 // Auth Helpers
 export const loginWithGoogle = () => signInWithPopup(auth, googleProvider);
+export const signUpWithEmail = (email: string, password: string) => createUserWithEmailAndPassword(auth, email, password);
+export const signInWithEmail = (email: string, password: string) => signInWithEmailAndPassword(auth, email, password);
 export const logout = () => signOut(auth);

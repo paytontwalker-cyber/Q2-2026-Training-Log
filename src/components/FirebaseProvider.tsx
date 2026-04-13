@@ -5,7 +5,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
-import { auth, db, loginWithGoogle, logout as firebaseLogout } from '../firebase';
+import { auth, db, loginWithGoogle, logout as firebaseLogout, signUpWithEmail, signInWithEmail } from '../firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { GuestUser } from '../types';
 
@@ -14,6 +14,8 @@ interface FirebaseContextType {
   loading: boolean;
   isAuthReady: boolean;
   login: () => Promise<any>;
+  signUpWithEmail: (email: string, password: string) => Promise<any>;
+  signInWithEmail: (email: string, password: string) => Promise<any>;
   loginAsGuest: () => void;
   logout: () => Promise<void>;
 }
@@ -85,6 +87,8 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
     loading,
     isAuthReady,
     login: loginWithGoogle,
+    signUpWithEmail,
+    signInWithEmail,
     loginAsGuest,
     logout,
   };

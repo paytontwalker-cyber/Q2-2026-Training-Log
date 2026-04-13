@@ -124,8 +124,12 @@ export interface CardioBlock extends BlockBase {
   subtype?: CardioSubtype;
   // Programmed
   programmedName?: string;
-  programmedDistance?: string;
-  programmedDuration?: string;
+  programmedDistance?: string; // Legacy
+  programmedDistanceVal?: number;
+  programmedDistanceUnit?: string;
+  programmedDuration?: string; // Legacy
+  programmedDurationVal?: number;
+  programmedDurationUnit?: string;
   programmedUnits?: string;
   programmedNotes?: string;
   // Logged
@@ -147,11 +151,17 @@ export interface HiitBlock extends BlockBase {
   // Programmed
   programmedName?: string;
   programmedReps?: number;
-  programmedWorkDistance?: string;
-  programmedWorkDuration?: string;
+  programmedWorkDistance?: string; // Legacy
+  programmedWorkDistanceVal?: number;
+  programmedWorkDistanceUnit?: string;
+  programmedWorkDuration?: string; // Legacy
+  programmedWorkDurationVal?: number;
+  programmedWorkDurationUnit?: string;
   programmedWorkUnits?: string;
   programmedRestType?: 'time' | 'distance' | 'none';
-  programmedRestValue?: string;
+  programmedRestValue?: string; // Legacy
+  programmedRestValueVal?: number;
+  programmedRestValueUnit?: string;
   programmedStructure?: string;
   programmedTargetSplit?: string;
   // Logged

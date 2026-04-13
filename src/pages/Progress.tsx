@@ -701,10 +701,9 @@ export default function Progress() {
               </p>
             </CardHeader>
             <CardContent>
-              {weeklyVolume && weeklyVolume.muscleGroupData.length > 0 ? (
-                <BodyMap muscleGroupData={weeklyVolume.muscleGroupData} heatMode={heatMode} />
-              ) : (
-                <p className="text-sm text-muted-foreground italic text-center py-8">
+              <BodyMap muscleGroupData={weeklyVolume?.muscleGroupData || []} heatMode={heatMode} />
+              {(!weeklyVolume || weeklyVolume.muscleGroupData.length === 0) && (
+                <p className="text-sm text-muted-foreground italic text-center py-4">
                   No workout data in this range yet. Log some workouts to see your body map.
                 </p>
               )}
@@ -959,10 +958,9 @@ export default function Progress() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {latestWorkoutSummary.muscleGroupData.length > 0 ? (
-                <BodyMap muscleGroupData={latestWorkoutSummary.muscleGroupData} heatMode={sessionHeatMode} />
-              ) : (
-                <p className="text-sm text-muted-foreground italic text-center py-8">
+              <BodyMap muscleGroupData={latestWorkoutSummary?.muscleGroupData || []} heatMode={sessionHeatMode} />
+              {(!latestWorkoutSummary || latestWorkoutSummary.muscleGroupData.length === 0) && (
+                <p className="text-sm text-muted-foreground italic text-center py-4">
                   No session data available yet. Select or log a workout to see the body map.
                 </p>
               )}
