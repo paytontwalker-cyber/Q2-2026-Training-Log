@@ -181,8 +181,8 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
   return (
     <div className="space-y-6">
       <header>
-        <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Workout History</h2>
-        <p className="text-slate-500">Review and manage your past training sessions</p>
+        <h2 className="text-3xl font-bold text-foreground tracking-tight">Workout History</h2>
+        <p className="text-muted-foreground">Review and manage your past training sessions</p>
       </header>
 
       <div className="flex gap-2 mb-4">
@@ -215,7 +215,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
         <div className="space-y-4">
           {history.length > 0 ? (
             history.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(workout => (
-              <Card key={workout.id} className="border-slate-200 shadow-sm hover:border-maroon/30 transition-colors group">
+              <Card key={workout.id} className="border-border shadow-sm hover:border-maroon/30 transition-colors group">
                 <CardHeader className="pb-3">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
@@ -225,7 +225,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
                       </div>
                       <div>
                         <CardTitle className="text-xl">{workout.workoutName}</CardTitle>
-                        <div className="flex items-center gap-3 mt-1 text-sm text-slate-500">
+                        <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1"><Calendar size={14} /> {format(new Date(workout.date), 'EEEE')}</span>
                           <span className="flex items-center gap-1"><Clock size={14} /> {format(new Date(workout.date), 'p')}</span>
                         </div>
@@ -237,7 +237,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
                         size="sm" 
                         onClick={() => editWorkout(workout)}
                         title="Edit workout"
-                        className="text-slate-400 hover:text-maroon"
+                        className="text-muted-foreground hover:text-maroon"
                       >
                         <Edit size={18} />
                       </Button>
@@ -246,7 +246,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
                         size="sm" 
                         onClick={() => copyWorkoutToClipboard(workout)}
                         title="Copy to clipboard"
-                        className="text-slate-400 hover:text-maroon"
+                        className="text-muted-foreground hover:text-maroon"
                       >
                         {copiedId === workout.id ? <Check size={18} className="text-green-500" /> : <Copy size={18} />}
                       </Button>
@@ -255,7 +255,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
                         size="sm" 
                         onClick={() => printWorkout(workout)}
                         title="Print workout"
-                        className="text-slate-400 hover:text-maroon"
+                        className="text-muted-foreground hover:text-maroon"
                       >
                         <Printer size={18} />
                       </Button>
@@ -266,7 +266,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
                         variant="ghost" 
                         size="sm" 
                         onClick={() => removeWorkout(workout.id)}
-                        className="text-slate-400 hover:text-red-500"
+                        className="text-muted-foreground hover:text-red-500"
                       >
                         <Trash2 size={18} />
                       </Button>
@@ -276,13 +276,13 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-3">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Exercises</h4>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Exercises</h4>
                       <div className="space-y-2">
                         {(workout.exercises || []).map(ex => (
-                          <div key={ex.id} className="space-y-1 border-b border-slate-50 pb-2 last:border-0">
+                          <div key={ex.id} className="space-y-1 border-b border-border pb-2 last:border-0">
                             <div className="flex items-center justify-between text-sm">
-                              <span className="font-medium text-slate-700">{ex.name}</span>
-                              <span className="text-slate-500">
+                              <span className="font-medium text-foreground">{ex.name}</span>
+                              <span className="text-muted-foreground">
                                 {ex.trackingMode === 'distance' 
                                   ? `${ex.sets} sets x ${ex.distance}${ex.distanceUnit} @ ${ex.weight} lbs`
                                   : ex.usePerSetWeights && ex.perSetWeights 
@@ -292,7 +292,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
                               </span>
                             </div>
                             {ex.notes && (
-                              <p className="text-[11px] text-slate-400 italic">{ex.notes}</p>
+                              <p className="text-[11px] text-muted-foreground italic">{ex.notes}</p>
                             )}
                             {ex.superset && (
                               <div className="flex items-center justify-between text-[11px] pl-3 border-l-2 border-maroon/20 text-maroon/70">
@@ -310,48 +310,48 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
                       </div>
                     </div>
                     <div className="space-y-3">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Conditioning & Notes</h4>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Conditioning & Notes</h4>
                       <div className="space-y-2">
                         {workout.conditioning && workout.conditioning.type ? (
-                          <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 space-y-2">
+                          <div className="bg-muted p-3 rounded-lg border border-border space-y-2">
                             <div className="flex items-center justify-between">
                               <Badge variant="outline" className="bg-maroon/5 text-maroon border-maroon/10 text-[10px] uppercase font-bold">
                                 {workout.conditioning.type}
                               </Badge>
-                              <span className="text-xs font-bold text-slate-700">{workout.conditioning.name}</span>
+                              <span className="text-xs font-bold text-foreground">{workout.conditioning.name}</span>
                             </div>
                             <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
                               {(workout.conditioning.workDistance || workout.conditioning.workDuration) && (
                                 <div className="flex justify-between">
-                                  <span className="text-slate-400">Work:</span>
-                                  <span className="text-slate-700 font-medium">{workout.conditioning.workDistance || workout.conditioning.workDuration} {workout.conditioning.workUnits}</span>
+                                  <span className="text-muted-foreground">Work:</span>
+                                  <span className="text-foreground font-medium">{workout.conditioning.workDistance || workout.conditioning.workDuration} {workout.conditioning.workUnits}</span>
                                 </div>
                               )}
                               {workout.conditioning.reps && (
                                 <div className="flex justify-between">
-                                  <span className="text-slate-400">Reps:</span>
-                                  <span className="text-slate-700 font-medium">{workout.conditioning.reps}</span>
+                                  <span className="text-muted-foreground">Reps:</span>
+                                  <span className="text-foreground font-medium">{workout.conditioning.reps}</span>
                                 </div>
                               )}
                               {workout.conditioning.restType !== 'none' && workout.conditioning.restValue && (
                                 <div className="flex justify-between">
-                                  <span className="text-slate-400">Rest:</span>
-                                  <span className="text-slate-700 font-medium">{workout.conditioning.restValue}</span>
+                                  <span className="text-muted-foreground">Rest:</span>
+                                  <span className="text-foreground font-medium">{workout.conditioning.restValue}</span>
                                 </div>
                               )}
                               {workout.conditioning.targetSplit && (
                                 <div className="flex justify-between">
-                                  <span className="text-slate-400">Target:</span>
-                                  <span className="text-slate-700 font-medium">{workout.conditioning.targetSplit}</span>
+                                  <span className="text-muted-foreground">Target:</span>
+                                  <span className="text-foreground font-medium">{workout.conditioning.targetSplit}</span>
                                 </div>
                               )}
                             </div>
                             {workout.conditioning.actualSplits && workout.conditioning.actualSplits.some(s => s) && (
-                              <div className="pt-2 border-t border-slate-200/50">
-                                <span className="text-[10px] text-slate-400 uppercase font-bold block mb-1">Splits</span>
+                              <div className="pt-2 border-t border-border/50">
+                                <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">Splits</span>
                                 <div className="flex flex-wrap gap-1">
                                   {workout.conditioning.actualSplits.map((split, i) => split && (
-                                    <span key={i} className="bg-white px-1.5 py-0.5 rounded border border-slate-200 text-[10px] text-slate-600">
+                                    <span key={i} className="bg-card px-1.5 py-0.5 rounded border border-border text-[10px] text-muted-foreground">
                                       {split}
                                     </span>
                                   ))}
@@ -359,17 +359,17 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
                               </div>
                             )}
                             {workout.conditioning.notes && (
-                              <p className="text-[11px] text-slate-500 italic pt-1 border-t border-slate-200/50">{workout.conditioning.notes}</p>
+                              <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-border/50">{workout.conditioning.notes}</p>
                             )}
                           </div>
                         ) : null}
                         
                         {!workout.conditioning?.type && (
-                          <p className="text-sm text-slate-600 italic">"{workout.runningStats}"</p>
+                          <p className="text-sm text-muted-foreground italic">"{workout.runningStats}"</p>
                         )}
                         
                         {workout.notes && (
-                          <p className="text-sm text-slate-500 line-clamp-2">{workout.notes}</p>
+                          <p className="text-sm text-muted-foreground line-clamp-2">{workout.notes}</p>
                         )}
                       </div>
                     </div>
@@ -378,11 +378,11 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
               </Card>
             ))
           ) : (
-            <Card className="border-slate-200 shadow-sm py-20 text-center">
+            <Card className="border-border shadow-sm py-20 text-center">
               <CardContent>
-                <HistoryIcon size={48} className="mx-auto text-slate-200 mb-4" />
-                <h3 className="text-xl font-semibold text-slate-900">No History Yet</h3>
-                <p className="text-slate-500">Your logged workouts will appear here.</p>
+                <HistoryIcon size={48} className="mx-auto text-muted mb-4" />
+                <h3 className="text-xl font-semibold text-foreground">No History Yet</h3>
+                <p className="text-muted-foreground">Your logged workouts will appear here.</p>
               </CardContent>
             </Card>
           )}
@@ -393,12 +393,12 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
         <div className="space-y-4">
           {deletedWorkouts.length > 0 ? (
             deletedWorkouts.map(workout => (
-              <Card key={workout.id} className="border-slate-200 shadow-sm bg-slate-50/50">
+              <Card key={workout.id} className="border-border shadow-sm bg-muted/50">
                 <CardHeader className="py-3">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                      <CardTitle className="text-base text-slate-700 line-through opacity-70">{workout.workoutName}</CardTitle>
-                      <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
+                      <CardTitle className="text-base text-foreground line-through opacity-70">{workout.workoutName}</CardTitle>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1"><Calendar size={12} /> {format(new Date(workout.date), 'MMM do, yyyy')}</span>
                         <span className="flex items-center gap-1 text-red-500/70">
                           <AlertTriangle size={12} /> Deleted {format(new Date(workout.deletedAt), 'MMM do')}
@@ -410,7 +410,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
                         variant="outline" 
                         size="sm" 
                         onClick={() => restoreWorkout(workout)}
-                        className="text-slate-600 hover:text-green-600 border-slate-200"
+                        className="text-muted-foreground hover:text-green-600 border-border"
                       >
                         <RotateCcw size={14} className="mr-1.5" /> Restore
                       </Button>
@@ -418,7 +418,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
                         variant="ghost" 
                         size="sm" 
                         onClick={() => permanentlyDeleteWorkout(workout.id)}
-                        className="text-slate-400 hover:text-red-600"
+                        className="text-muted-foreground hover:text-red-600"
                         title="Permanently Delete"
                       >
                         <Trash2 size={16} />
@@ -429,10 +429,10 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
               </Card>
             ))
           ) : (
-            <Card className="border-slate-200 shadow-sm py-20 text-center">
+            <Card className="border-border shadow-sm py-20 text-center">
               <CardContent>
-                <Trash2 size={48} className="mx-auto text-slate-200 mb-4" />
-                <h3 className="text-xl font-semibold text-slate-900">No recently deleted workouts.</h3>
+                <Trash2 size={48} className="mx-auto text-muted mb-4" />
+                <h3 className="text-xl font-semibold text-foreground">No recently deleted workouts.</h3>
               </CardContent>
             </Card>
           )}

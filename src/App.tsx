@@ -198,7 +198,7 @@ function AppContent() {
               {authError && <p className="text-destructive text-sm">{authError}</p>}
               <Button 
                 onClick={handleAuth}
-                className="w-full bg-slate-800 hover:bg-slate-700 text-white h-10"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground h-10"
               >
                 {isCreatingAccount ? 'Create Account' : 'Sign In'}
               </Button>
@@ -298,12 +298,12 @@ function AppContent() {
                 setIsMobileMenuOpen(false);
               }}
               className={cn(
-                "w-full flex items-center gap-3 py-2 text-sm font-medium transition-colors",
+                "w-full flex items-center gap-3 py-2 text-sm transition-colors relative",
                 "px-4 rounded-md md:px-6 md:rounded-none",
                 isSidebarCollapsed && "md:px-0 md:justify-center",
                 currentPage === 'home' 
-                  ? "text-maroon bg-maroon/5 md:border-r-4 border-maroon" 
-                  : "text-muted-foreground hover:text-maroon hover:bg-muted"
+                  ? "text-foreground font-semibold bg-accent before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-maroon" 
+                  : "text-muted-foreground font-medium hover:text-foreground hover:bg-muted"
               )}
             >
               <LayoutDashboard size={18} className={currentPage === 'home' ? "text-maroon" : "text-muted-foreground"} />
@@ -315,12 +315,12 @@ function AppContent() {
               </span>
             </button>
 
-            {navBuckets.map((bucket) => (
-              <div key={bucket.id}>
+            {navBuckets.map((bucket, index) => (
+              <div key={bucket.id} className={cn(index > 0 && "border-t border-border pt-4 mt-4")}>
                 {!isSidebarCollapsed && (
                   <button 
                     onClick={() => toggleBucket(bucket.id)}
-                    className="w-full flex items-center justify-between px-4 text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2 hover:text-maroon"
+                    className="w-full flex items-center justify-between px-4 label-micro mb-2 hover:text-foreground"
                   >
                     {bucket.label}
                     <ChevronDown size={12} className={cn("transition-transform", expandedBuckets[bucket.id] ? "" : "-rotate-90")} />
@@ -337,12 +337,12 @@ function AppContent() {
                         }}
                         title={isSidebarCollapsed ? item.label : undefined}
                         className={cn(
-                          "w-full flex items-center gap-3 py-2 text-sm font-medium transition-colors",
+                          "w-full flex items-center gap-3 py-2 text-sm transition-colors relative",
                           "px-4 rounded-md md:px-6 md:rounded-none",
                           isSidebarCollapsed && "md:px-0 md:justify-center",
                           currentPage === item.id 
-                            ? "text-maroon bg-maroon/5 md:border-r-4 border-maroon" 
-                            : "text-muted-foreground hover:text-maroon hover:bg-muted"
+                            ? "text-foreground font-semibold bg-accent before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-maroon" 
+                            : "text-muted-foreground font-medium hover:text-foreground hover:bg-muted"
                         )}
                       >
                         <item.icon size={18} className={currentPage === item.id ? "text-maroon" : "text-muted-foreground"} />

@@ -611,7 +611,7 @@ export default function Progress() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Calendar className="text-gold" size={20} />
-              <h3 className="text-xl font-bold text-slate-800">
+              <h3 className="text-xl font-bold text-foreground">
                 Volume ({
                   useCustomRange ? 'Custom Range' :
                   volumeRange === '24h' ? 'Last 24h' :
@@ -625,7 +625,7 @@ export default function Progress() {
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
-                <Label className="text-xs text-slate-500 uppercase font-bold">Time Range</Label>
+                <Label className="text-xs text-muted-foreground uppercase font-bold">Time Range</Label>
                 <Select value={volumeRange} onValueChange={(v: any) => { setVolumeRange(v); setUseCustomRange(false); }}>
                   <SelectTrigger className="w-[120px] h-8 text-xs">
                     <SelectValue />
@@ -640,17 +640,17 @@ export default function Progress() {
                   </SelectContent>
                 </Select>
               </div>
-              <label className="flex items-center gap-2 text-xs text-slate-500 cursor-pointer select-none">
+              <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={useCustomRange}
                   onChange={(e) => setUseCustomRange(e.target.checked)}
-                  className="h-3.5 w-3.5 rounded border-slate-300 accent-maroon"
+                  className="h-3.5 w-3.5 rounded border-border accent-maroon"
                 />
                 Use custom range
               </label>
               <div className="flex items-center gap-2">
-                <Label className="text-xs text-slate-500 uppercase font-bold">Heat Mode</Label>
+                <Label className="text-xs text-muted-foreground uppercase font-bold">Heat Mode</Label>
                 <Select value={heatMode} onValueChange={(v: any) => setHeatMode(v)}>
                   <SelectTrigger className="w-[130px] h-8 text-xs">
                     <SelectValue />
@@ -665,21 +665,21 @@ export default function Progress() {
           </div>
           
           {useCustomRange && (
-            <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200 mt-4">
+            <div className="flex items-center gap-4 p-4 bg-muted rounded-lg border border-border mt-4">
               <div className="flex items-center gap-2">
-                <Label className="text-xs text-slate-500 uppercase font-bold">Start</Label>
-                <input type="date" value={customStartDate} onChange={(e) => setCustomStartDate(e.target.value)} className="h-8 text-xs px-2 rounded-md border border-slate-200 bg-white" />
+                <Label className="text-xs text-muted-foreground uppercase font-bold">Start</Label>
+                <input type="date" value={customStartDate} onChange={(e) => setCustomStartDate(e.target.value)} className="h-8 text-xs px-2 rounded-md border border-border bg-card" />
               </div>
               <div className="flex items-center gap-2">
-                <Label className="text-xs text-slate-500 uppercase font-bold">End</Label>
-                <input type="date" value={customEndDate} onChange={(e) => setCustomEndDate(e.target.value)} className="h-8 text-xs px-2 rounded-md border border-slate-200 bg-white" />
+                <Label className="text-xs text-muted-foreground uppercase font-bold">End</Label>
+                <input type="date" value={customEndDate} onChange={(e) => setCustomEndDate(e.target.value)} className="h-8 text-xs px-2 rounded-md border border-border bg-card" />
               </div>
             </div>
           )}
 
-          <Card className="border-slate-200 shadow-sm mt-4">
-            <CardContent className="py-3 px-4 text-xs text-slate-500">
-              <span className="font-bold text-slate-700">Data Notes:</span> {
+          <Card className="border-border shadow-sm mt-4">
+            <CardContent className="py-3 px-4 text-xs text-muted-foreground">
+              <span className="font-bold text-foreground">Data Notes:</span> {
                 useCustomRange ? 'Data is calculated from your selected custom start and end dates.' :
                 volumeRange === '1w' ? 'Weekly data is currently grouped from Sunday through today.' :
                 'Data is calculated from the selected rolling time range.'
@@ -688,7 +688,7 @@ export default function Progress() {
           </Card>
           <Card className="border-border shadow-sm">
             <CardHeader>
-              <CardTitle className="text-sm uppercase tracking-wider text-slate-500">
+              <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">
                 Weekly Volume Heatmap
               </CardTitle>
               <CardDescription>
@@ -711,21 +711,21 @@ export default function Progress() {
           </Card>
           {weeklyVolume && weeklyVolume.totalBodyVolume > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <Card className="border-slate-200 shadow-sm lg:col-span-1">
+              <Card className="border-border shadow-sm lg:col-span-1">
                 <CardHeader>
-                  <CardTitle className="text-sm uppercase tracking-wider text-slate-500">Total Body Volume</CardTitle>
+                  <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">Total Body Volume</CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col items-center justify-center py-6">
                   <div className="text-4xl font-black text-maroon mb-2">
                     {weeklyVolume.totalBodyVolume.toLocaleString()}
                   </div>
-                  <p className="text-xs text-slate-400 font-bold uppercase">Total Lbs Moved</p>
+                  <p className="text-xs text-muted-foreground font-bold uppercase">Total Lbs Moved</p>
                 </CardContent>
               </Card>
 
-              <Card className="border-slate-200 shadow-sm lg:col-span-1">
+              <Card className="border-border shadow-sm lg:col-span-1">
                 <CardHeader>
-                  <CardTitle className="text-sm uppercase tracking-wider text-slate-500">Muscle Group Split</CardTitle>
+                  <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">Muscle Group Split</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="h-[220px] w-full">
@@ -759,29 +759,29 @@ export default function Progress() {
                     {weeklyVolume.muscleGroupData.slice(0, 6).map((entry, index) => (
                       <div key={entry.name} className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: HEATMAP_COLORS[HEATMAP_COLORS.length - 1 - (index % HEATMAP_COLORS.length)] }} />
-                        <span className="truncate text-slate-600">{entry.name}</span>
-                        <span className="ml-auto font-bold text-slate-900">{((entry.value / weeklyVolume.totalBodyVolume) * 100).toFixed(0)}%</span>
+                        <span className="truncate text-muted-foreground">{entry.name}</span>
+                        <span className="ml-auto font-bold text-foreground">{((entry.value / weeklyVolume.totalBodyVolume) * 100).toFixed(0)}%</span>
                       </div>
                     ))}
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-slate-200 shadow-sm lg:col-span-1">
+              <Card className="border-border shadow-sm lg:col-span-1">
                 <CardHeader>
-                  <CardTitle className="text-sm uppercase tracking-wider text-slate-500">Top Exercises</CardTitle>
+                  <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">Top Exercises</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     {weeklyVolume.exerciseData.slice(0, 4).map((ex, i) => (
                       <div key={i} className="space-y-1">
                         <div className="flex justify-between text-xs">
-                          <span className="text-slate-600 font-medium truncate w-32">{ex.name}</span>
-                          <span className="text-slate-400">{((ex.value / weeklyVolume.totalBodyVolume) * 100).toFixed(1)}%</span>
+                          <span className="text-muted-foreground font-medium truncate w-32">{ex.name}</span>
+                          <span className="text-muted-foreground">{((ex.value / weeklyVolume.totalBodyVolume) * 100).toFixed(1)}%</span>
                         </div>
-                        <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                        <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
                           <div 
-                            className="bg-maroon h-full" 
+                            className="progress-gradient h-full" 
                             style={{ width: `${(ex.value / weeklyVolume.totalBodyVolume) * 100}%` }}
                           />
                         </div>
@@ -792,7 +792,7 @@ export default function Progress() {
               </Card>
             </div>
           ) : (
-            <Card className="border-slate-200 shadow-sm p-8 text-center text-slate-400 italic">
+            <Card className="border-border shadow-sm p-8 text-center text-muted-foreground italic">
               Log workouts in the selected range to see volume breakdowns.
             </Card>
           )}
@@ -801,29 +801,29 @@ export default function Progress() {
           <section className="space-y-4 mt-8">
             <div className="flex items-center gap-2">
               <Trophy className="text-gold" size={20} />
-              <h3 className="text-xl font-bold text-slate-800">Volume Targets</h3>
+              <h3 className="text-xl font-bold text-foreground">Volume Targets</h3>
             </div>
-            <p className="text-sm text-slate-500">Compare weekly muscle-group volume against your maintenance target and slight-growth zone.</p>
+            <p className="text-sm text-muted-foreground">Compare weekly muscle-group volume against your maintenance target and slight-growth zone.</p>
             
             <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
               <div className="flex items-center gap-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Sort by</label>
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Sort by</label>
                 <select
                   value={targetsSortBy}
                   onChange={(e) => setTargetsSortBy(e.target.value as 'percent' | 'name' | 'volume')}
-                  className="h-8 text-xs px-2 rounded-md border border-slate-200 bg-white text-slate-700"
+                  className="h-8 text-xs px-2 rounded-md border border-border bg-card text-foreground"
                 >
                   <option value="percent">% of Target (low → high)</option>
                   <option value="name">Muscle Group (A → Z)</option>
                   <option value="volume">Volume (high → low)</option>
                 </select>
               </div>
-              <label className="flex items-center gap-2 text-xs text-slate-500 cursor-pointer select-none">
+              <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={hideUntouched}
                   onChange={(e) => setHideUntouched(e.target.checked)}
-                  className="h-3.5 w-3.5 rounded border-slate-300 accent-maroon"
+                  className="h-3.5 w-3.5 rounded border-border accent-maroon"
                 />
                 Hide untouched
               </label>
@@ -832,36 +832,36 @@ export default function Progress() {
             {volumeTargets && (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Card className="border-slate-200 shadow-sm">
-                    <CardHeader className="pb-2"><CardTitle className="text-xs uppercase tracking-wider text-slate-500">Groups On Target</CardTitle></CardHeader>
-                    <CardContent><div className="text-2xl font-black text-green-600">{volumeTargets.filter(t => t.status === 'On Target').length}</div></CardContent>
+                  <Card className="border-border card-hero">
+                    <CardHeader className="pb-2"><CardTitle className="label-micro">Groups On Target</CardTitle></CardHeader>
+                    <CardContent><div className="text-3xl font-black metric-display text-green-600">{volumeTargets.filter(t => t.status === 'On Target').length}</div></CardContent>
                   </Card>
-                  <Card className="border-slate-200 shadow-sm">
-                    <CardHeader className="pb-2"><CardTitle className="text-xs uppercase tracking-wider text-slate-500">In Growth Zone</CardTitle></CardHeader>
-                    <CardContent><div className="text-2xl font-black text-gold">{volumeTargets.filter(t => t.status === 'Above Zone').length}</div></CardContent>
+                  <Card className="border-border card-hero">
+                    <CardHeader className="pb-2"><CardTitle className="label-micro">In Growth Zone</CardTitle></CardHeader>
+                    <CardContent><div className="text-3xl font-black metric-display text-gold">{volumeTargets.filter(t => t.status === 'Above Zone').length}</div></CardContent>
                   </Card>
-                  <Card className="border-slate-200 shadow-sm">
-                    <CardHeader className="pb-2"><CardTitle className="text-xs uppercase tracking-wider text-slate-500">Lowest Coverage</CardTitle></CardHeader>
-                    <CardContent><div className="text-2xl font-black text-red-600">{volumeTargets.sort((a,b) => a.percentOfTarget - b.percentOfTarget)[0].muscleGroup}</div></CardContent>
+                  <Card className="border-border card-hero">
+                    <CardHeader className="pb-2"><CardTitle className="label-micro">Lowest Coverage</CardTitle></CardHeader>
+                    <CardContent><div className="text-3xl font-black metric-display text-red-600">{volumeTargets.sort((a,b) => a.percentOfTarget - b.percentOfTarget)[0].muscleGroup}</div></CardContent>
                   </Card>
-                  <Card className="border-slate-200 shadow-sm">
-                    <CardHeader className="pb-2"><CardTitle className="text-xs uppercase tracking-wider text-slate-500">Highest Overshoot</CardTitle></CardHeader>
-                    <CardContent><div className="text-2xl font-black text-maroon">{volumeTargets.sort((a,b) => b.percentOfTarget - a.percentOfTarget)[0].muscleGroup}</div></CardContent>
+                  <Card className="border-border card-hero">
+                    <CardHeader className="pb-2"><CardTitle className="label-micro">Highest Overshoot</CardTitle></CardHeader>
+                    <CardContent><div className="text-3xl font-black metric-display text-maroon">{volumeTargets.sort((a,b) => b.percentOfTarget - a.percentOfTarget)[0].muscleGroup}</div></CardContent>
                   </Card>
                 </div>
 
                 <div className="space-y-4">
                   {activeTargets.map((t) => (
-                    <div key={t.muscleGroup} className="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                    <div key={t.muscleGroup} className="bg-card p-4 rounded-lg border border-border shadow-sm">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="font-bold text-slate-700 flex items-center gap-2">
+                        <span className="font-bold text-foreground flex items-center gap-2">
                           {t.muscleGroup}
-                          <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded cursor-help" title={STATUS_EXPLANATIONS[t.status] || ''}>Why this group?</span>
+                          <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded cursor-help" title={STATUS_EXPLANATIONS[t.status] || ''}>Why this group?</span>
                         </span>
-                        <span className="text-xs font-bold text-slate-500">{t.actualVolume.toLocaleString()} / {t.targetVolume.toLocaleString()} lbs ({t.percentOfTarget.toFixed(0)}%)</span>
+                        <span className="text-xs font-bold text-muted-foreground">{t.actualVolume.toLocaleString()} / {t.targetVolume.toLocaleString()} lbs ({t.percentOfTarget.toFixed(0)}%)</span>
                       </div>
-                      <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden relative">
-                        <div className="bg-maroon h-full" style={{ width: `${Math.min(t.percentOfTarget, 100)}%` }} />
+                      <div className="w-full bg-muted h-3 rounded-full overflow-hidden relative">
+                        <div className="progress-gradient h-full" style={{ width: `${Math.min(t.percentOfTarget, 100)}%` }} />
                         {t.percentOfTarget >= 100 && <div className="absolute top-0 right-0 bg-gold h-full" style={{ width: `${Math.min(Math.max(t.percentOfTarget - 100, 0), 20)}%` }} />}
                       </div>
                     </div>
@@ -870,36 +870,36 @@ export default function Progress() {
                   {!hideUntouched && untouchedTargets.length > 0 && (
                     <>
                       <div className="flex items-center gap-2 mt-6">
-                        <div className="flex-grow h-px bg-slate-200" />
-                        <span className="text-xs font-bold text-slate-400 uppercase">Untouched Groups ({untouchedTargets.length})</span>
-                        <div className="flex-grow h-px bg-slate-200" />
+                        <div className="flex-grow h-px bg-border" />
+                        <span className="text-xs font-bold text-muted-foreground uppercase">Untouched Groups ({untouchedTargets.length})</span>
+                        <div className="flex-grow h-px bg-border" />
                       </div>
 
                       {untouchedTargets.map((t) => (
-                        <div key={t.muscleGroup} className="bg-slate-50 p-3 rounded-lg border border-slate-100 flex justify-between items-center">
-                          <span className="text-sm font-medium text-slate-500">{t.muscleGroup}</span>
-                          <span className="text-xs text-slate-400">0 / {t.targetVolume.toLocaleString()} lbs (0%)</span>
+                        <div key={t.muscleGroup} className="bg-muted p-3 rounded-lg border border-border flex justify-between items-center">
+                          <span className="text-sm font-medium text-muted-foreground">{t.muscleGroup}</span>
+                          <span className="text-xs text-muted-foreground">0 / {t.targetVolume.toLocaleString()} lbs (0%)</span>
                         </div>
                       ))}
                     </>
                   )}
                 </div>
 
-                <Card className="border-slate-200 shadow-sm">
+                <Card className="border-border shadow-sm">
                   <CardHeader><CardTitle>Detailed Breakdown</CardTitle></CardHeader>
                   <CardContent>
                     <div className="space-y-2">
                       {activeTargets.map(t => (
-                        <div key={t.muscleGroup} className="flex justify-between text-sm py-2 border-b border-slate-100 last:border-0">
-                          <span className="font-medium text-slate-700">{t.muscleGroup}</span>
-                          <span className="text-slate-500">{t.actualVolume.toLocaleString()} / {t.targetVolume.toLocaleString()} ({t.percentOfTarget.toFixed(0)}%) - <span className={cn("font-bold cursor-help", t.status === 'Low' ? 'text-red-500' : t.status === 'Near' ? 'text-gold' : 'text-green-600')} title={STATUS_EXPLANATIONS[t.status] || ''}>{t.status} ⓘ</span></span>
+                        <div key={t.muscleGroup} className="flex justify-between text-sm py-2 border-b border-border last:border-0">
+                          <span className="font-medium text-foreground">{t.muscleGroup}</span>
+                          <span className="text-muted-foreground">{t.actualVolume.toLocaleString()} / {t.targetVolume.toLocaleString()} ({t.percentOfTarget.toFixed(0)}%) - <span className={cn("font-bold cursor-help", t.status === 'Low' ? 'text-red-500' : t.status === 'Near' ? 'text-gold' : 'text-green-600')} title={STATUS_EXPLANATIONS[t.status] || ''}>{t.status} ⓘ</span></span>
                         </div>
                       ))}
                       {!hideUntouched && untouchedTargets.length > 0 && (
                         <>
-                          <div className="text-xs font-bold text-slate-400 uppercase pt-4 pb-2 border-t border-slate-200 mt-2">Untouched Groups ({untouchedTargets.length})</div>
+                          <div className="text-xs font-bold text-muted-foreground uppercase pt-4 pb-2 border-t border-border mt-2">Untouched Groups ({untouchedTargets.length})</div>
                           {untouchedTargets.map(t => (
-                            <div key={t.muscleGroup} className="flex justify-between text-sm py-2 border-b border-slate-100 last:border-0 text-slate-400">
+                            <div key={t.muscleGroup} className="flex justify-between text-sm py-2 border-b border-border last:border-0 text-muted-foreground">
                               <span className="font-medium">{t.muscleGroup}</span>
                               <span>0 / {t.targetVolume.toLocaleString()} (0%)</span>
                             </div>
@@ -919,11 +919,11 @@ export default function Progress() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Activity className="text-maroon" size={20} />
-              <h3 className="text-xl font-bold text-slate-800">Workout Volume</h3>
+              <h3 className="text-xl font-bold text-foreground">Workout Volume</h3>
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
-                <Label className="text-xs text-slate-500 uppercase font-bold">Heat Mode</Label>
+                <Label className="text-xs text-muted-foreground uppercase font-bold">Heat Mode</Label>
                 <Select value={sessionHeatMode} onValueChange={(v: any) => setSessionHeatMode(v)}>
                   <SelectTrigger className="w-[130px] h-8 text-xs">
                     <SelectValue />
@@ -950,7 +950,7 @@ export default function Progress() {
           </div>
           <Card className="border-border shadow-sm mb-6">
             <CardHeader>
-              <CardTitle className="text-sm uppercase tracking-wider text-slate-500">
+              <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">
                 Session Volume Heatmap
               </CardTitle>
               <CardDescription>
@@ -970,9 +970,9 @@ export default function Progress() {
             <div className="space-y-6">
               <div className="flex items-center gap-2 mt-6">
                 <Hash className="text-maroon" size={20} />
-                <h3 className="text-xl font-bold text-slate-800">Individual Exercise Volume</h3>
+                <h3 className="text-xl font-bold text-foreground">Individual Exercise Volume</h3>
               </div>
-              <Card className="border-slate-200 shadow-sm">
+              <Card className="border-border shadow-sm">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg">{latestWorkoutSummary.name}</CardTitle>
                   <CardDescription>{latestWorkoutSummary.date}</CardDescription>
@@ -980,16 +980,16 @@ export default function Progress() {
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {(latestWorkoutSummary.exercises || []).map((ex, i) => (
-                      <div key={i} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-100">
-                        <span className="font-medium text-slate-700 truncate mr-2">{ex.name}</span>
-                        <span className="text-maroon font-bold">{ex.volume.toLocaleString()} <span className="text-[10px] text-slate-400 font-normal uppercase">Vol</span></span>
+                      <div key={i} className="flex justify-between items-center p-3 bg-muted rounded-lg border border-border">
+                        <span className="font-medium text-foreground truncate mr-2">{ex.name}</span>
+                        <span className="text-maroon font-bold">{ex.volume.toLocaleString()} <span className="text-[10px] text-muted-foreground font-normal uppercase">Vol</span></span>
                       </div>
                     ))}
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-slate-200 shadow-sm">
+              <Card className="border-border shadow-sm">
                 <CardHeader>
                   <CardTitle>Session Volume Targets</CardTitle>
                   <CardDescription>
@@ -1002,9 +1002,9 @@ export default function Progress() {
                   <div className="space-y-2">
                     {sessionVolumeTargets && sessionVolumeTargets.length > 0 ? (
                       sessionVolumeTargets.map(t => (
-                        <div key={t.muscleGroup} className="flex justify-between text-sm py-2 border-b border-slate-100 last:border-0">
-                          <span className="font-medium text-slate-700">{t.muscleGroup}</span>
-                          <span className="text-slate-500">{t.actualVolume.toLocaleString()} / {t.targetVolume.toLocaleString()} ({t.percentOfTarget.toFixed(0)}%) - <span className={cn("font-bold", t.status === 'Low' ? 'text-red-500' : t.status === 'Near' ? 'text-gold' : 'text-green-600')}>{t.status}</span></span>
+                        <div key={t.muscleGroup} className="flex justify-between text-sm py-2 border-b border-border last:border-0">
+                          <span className="font-medium text-foreground">{t.muscleGroup}</span>
+                          <span className="text-muted-foreground">{t.actualVolume.toLocaleString()} / {t.targetVolume.toLocaleString()} ({t.percentOfTarget.toFixed(0)}%) - <span className={cn("font-bold", t.status === 'Low' ? 'text-red-500' : t.status === 'Near' ? 'text-gold' : 'text-green-600')}>{t.status}</span></span>
                         </div>
                       ))
                     ) : (
@@ -1015,21 +1015,21 @@ export default function Progress() {
               </Card>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <Card className="border-slate-200 shadow-sm lg:col-span-1">
+                <Card className="border-border shadow-sm lg:col-span-1">
                   <CardHeader>
-                    <CardTitle className="text-sm uppercase tracking-wider text-slate-500">Total Volume</CardTitle>
+                    <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">Total Volume</CardTitle>
                   </CardHeader>
                   <CardContent className="flex flex-col items-center justify-center py-6">
                     <div className="text-4xl font-black text-maroon mb-2">
                       {latestWorkoutSummary.totalVolume.toLocaleString()}
                     </div>
-                    <p className="text-xs text-slate-400 font-bold uppercase">Lbs Moved</p>
+                    <p className="text-xs text-muted-foreground font-bold uppercase">Lbs Moved</p>
                   </CardContent>
                 </Card>
 
-                <Card className="border-slate-200 shadow-sm lg:col-span-1">
+                <Card className="border-border shadow-sm lg:col-span-1">
                   <CardHeader>
-                    <CardTitle className="text-sm uppercase tracking-wider text-slate-500">Muscle Group Split</CardTitle>
+                    <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">Muscle Group Split</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="h-[220px] w-full">
@@ -1063,29 +1063,29 @@ export default function Progress() {
                       {latestWorkoutSummary.muscleGroupData.slice(0, 6).map((entry, index) => (
                         <div key={entry.name} className="flex items-center gap-2">
                           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: HEATMAP_COLORS[HEATMAP_COLORS.length - 1 - (index % HEATMAP_COLORS.length)] }} />
-                          <span className="truncate text-slate-600">{entry.name}</span>
-                          <span className="ml-auto font-bold text-slate-900">{((entry.value / latestWorkoutSummary.totalVolume) * 100).toFixed(0)}%</span>
+                          <span className="truncate text-muted-foreground">{entry.name}</span>
+                          <span className="ml-auto font-bold text-foreground">{((entry.value / latestWorkoutSummary.totalVolume) * 100).toFixed(0)}%</span>
                         </div>
                       ))}
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="border-slate-200 shadow-sm lg:col-span-1">
+                <Card className="border-border shadow-sm lg:col-span-1">
                   <CardHeader>
-                    <CardTitle className="text-sm uppercase tracking-wider text-slate-500">Top Exercises</CardTitle>
+                    <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">Top Exercises</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
                       {latestWorkoutSummary.exerciseData.slice(0, 4).map((ex, i) => (
                         <div key={i} className="space-y-1">
                           <div className="flex justify-between text-xs">
-                            <span className="text-slate-600 font-medium truncate w-32">{ex.name}</span>
-                            <span className="text-slate-400">{((ex.value / latestWorkoutSummary.totalVolume) * 100).toFixed(1)}%</span>
+                            <span className="text-muted-foreground font-medium truncate w-32">{ex.name}</span>
+                            <span className="text-muted-foreground">{((ex.value / latestWorkoutSummary.totalVolume) * 100).toFixed(1)}%</span>
                           </div>
-                          <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                          <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
                             <div 
-                              className="bg-maroon h-full" 
+                              className="progress-gradient h-full" 
                               style={{ width: `${(ex.value / latestWorkoutSummary.totalVolume) * 100}%` }}
                             />
                           </div>
@@ -1098,7 +1098,7 @@ export default function Progress() {
 
             </div>
           ) : (
-            <Card className="border-slate-200 shadow-sm p-8 text-center text-slate-400 italic">
+            <Card className="border-border shadow-sm p-8 text-center text-muted-foreground italic">
               No workouts logged yet.
             </Card>
           )}
@@ -1107,8 +1107,8 @@ export default function Progress() {
       {view === 'strength' && (
           <section className="space-y-6">
             <div className="flex items-center gap-2">
-              <Dumbbell className="text-slate-700" size={20} />
-              <h3 className="text-xl font-bold text-slate-800">Strength Analysis</h3>
+              <Dumbbell className="text-foreground" size={20} />
+              <h3 className="text-xl font-bold text-foreground">Strength Analysis</h3>
             </div>
 
             <div className="flex flex-col gap-4">
@@ -1138,9 +1138,9 @@ export default function Progress() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <Card className="border-slate-200 shadow-sm lg:col-span-1">
+              <Card className="border-border shadow-sm lg:col-span-1">
                 <CardHeader>
-                  <CardTitle className="text-sm uppercase tracking-wider text-slate-500">Latest Strength Summary</CardTitle>
+                  <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">Latest Strength Summary</CardTitle>
                   {latestStrengthSummary && <CardDescription>{latestStrengthSummary.date}</CardDescription>}
                 </CardHeader>
                 <CardContent>
@@ -1148,18 +1148,18 @@ export default function Progress() {
                     <div className="space-y-3">
                       {(latestStrengthSummary.exercises || []).map((ex, i) => (
                         <div key={i} className="flex justify-between items-center text-sm">
-                          <span className="text-slate-600 font-medium truncate mr-2">{ex.name}</span>
-                          <span className="text-slate-900 font-bold">{ex.weight} <span className="text-[10px] text-slate-400 font-normal uppercase">lbs</span></span>
+                          <span className="text-muted-foreground font-medium truncate mr-2">{ex.name}</span>
+                          <span className="text-foreground font-bold">{ex.weight} <span className="text-[10px] text-muted-foreground font-normal uppercase">lbs</span></span>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-slate-400 italic text-center py-4">No data available.</p>
+                    <p className="text-muted-foreground italic text-center py-4">No data available.</p>
                   )}
                 </CardContent>
               </Card>
 
-              <Card className="border-slate-200 shadow-sm lg:col-span-2">
+              <Card className="border-border shadow-sm lg:col-span-2">
                 <CardHeader>
                   <CardTitle className="text-lg">Strength Progress</CardTitle>
                   <CardDescription>Actual logged weight for {selectedExercise}</CardDescription>
@@ -1198,7 +1198,7 @@ export default function Progress() {
                       </RechartsLineChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="h-full flex items-center justify-center text-slate-400 italic">
+                    <div className="h-full flex items-center justify-center text-muted-foreground italic">
                       No data for this exercise yet.
                     </div>
                   )}
@@ -1213,47 +1213,47 @@ export default function Progress() {
           <section className="space-y-6">
             <div className="flex items-center gap-2">
               <Zap className="text-gold" size={20} />
-              <h3 className="text-xl font-bold text-slate-800">Conditioning Overview</h3>
+              <h3 className="text-xl font-bold text-foreground">Conditioning Overview</h3>
             </div>
 
             {runningAnalytics ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="border-slate-200 shadow-sm">
+                <Card className="border-border shadow-sm">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Total Distance</CardTitle>
+                    <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Total Distance</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-baseline gap-1">
                       <span className="text-2xl font-black text-maroon">{runningAnalytics.totalMiles.toFixed(1)}</span>
-                      <span className="text-xs text-slate-400 font-bold uppercase">Miles</span>
+                      <span className="text-xs text-muted-foreground font-bold uppercase">Miles</span>
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="border-slate-200 shadow-sm">
+                <Card className="border-border shadow-sm">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Total Duration</CardTitle>
+                    <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Total Duration</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-baseline gap-1">
                       <span className="text-2xl font-black text-maroon">{Math.floor(runningAnalytics.totalDurationSeconds / 60)}</span>
-                      <span className="text-xs text-slate-400 font-bold uppercase">Min</span>
+                      <span className="text-xs text-muted-foreground font-bold uppercase">Min</span>
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="border-slate-200 shadow-sm">
+                <Card className="border-border shadow-sm">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Total Sessions</CardTitle>
+                    <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Total Sessions</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-baseline gap-1">
                       <span className="text-2xl font-black text-maroon">{runningAnalytics.totalSessions}</span>
-                      <span className="text-xs text-slate-400 font-bold uppercase">Runs</span>
+                      <span className="text-xs text-muted-foreground font-bold uppercase">Runs</span>
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="border-slate-200 shadow-sm">
+                <Card className="border-border shadow-sm">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Avg Pace</CardTitle>
+                    <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Avg Pace</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-baseline gap-1">
@@ -1264,13 +1264,13 @@ export default function Progress() {
                           return secondsToTime(avgPaceSec);
                         })()}
                       </span>
-                      <span className="text-xs text-slate-400 font-bold uppercase">/mi</span>
+                      <span className="text-xs text-muted-foreground font-bold uppercase">/mi</span>
                     </div>
                   </CardContent>
                 </Card>
               </div>
             ) : (
-              <Card className="border-slate-200 shadow-sm p-8 text-center text-slate-400 italic">
+              <Card className="border-border shadow-sm p-8 text-center text-muted-foreground italic">
                 No conditioning data logged yet.
               </Card>
             )}
@@ -1278,7 +1278,7 @@ export default function Progress() {
 
           {runningAnalytics && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="border-slate-200 shadow-sm">
+              <Card className="border-border shadow-sm">
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <Timer size={16} className="text-maroon" />
@@ -1320,7 +1320,7 @@ export default function Progress() {
                 </CardContent>
               </Card>
 
-              <Card className="border-slate-200 shadow-sm">
+              <Card className="border-border shadow-sm">
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <PieChartIcon size={16} className="text-gold" />
@@ -1352,7 +1352,7 @@ export default function Progress() {
               </Card>
 
               {runningAnalytics.repeatHistory.length > 0 && (
-                <Card className="border-slate-200 shadow-sm lg:col-span-2">
+                <Card className="border-border shadow-sm lg:col-span-2">
                   <CardHeader>
                     <div className="flex items-center gap-2">
                       <TrendingUp size={16} className="text-blue-500" />
@@ -1405,10 +1405,10 @@ export default function Progress() {
                 </Card>
               )}
 
-              <Card className="border-slate-200 shadow-sm lg:col-span-2">
+              <Card className="border-border shadow-sm lg:col-span-2">
                 <CardHeader>
                   <div className="flex items-center gap-2">
-                    <MapPin size={16} className="text-slate-600" />
+                    <MapPin size={16} className="text-muted-foreground" />
                     <CardTitle className="text-lg">Volume Trends</CardTitle>
                   </div>
                   <CardDescription>Distance and Duration per session</CardDescription>
@@ -1467,14 +1467,14 @@ export default function Progress() {
         <section className="space-y-8">
           <div className="flex items-center gap-2">
             <Zap className="text-maroon" size={20} />
-            <h3 className="text-xl font-bold text-slate-800">Body Battery & Readiness</h3>
+            <h3 className="text-xl font-bold text-foreground">Body Battery & Readiness</h3>
           </div>
 
           {bodyBattery ? (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Main Score Card */}
-              <Card className="border-slate-200 shadow-sm lg:col-span-1 overflow-hidden">
-                <div className="h-2 bg-slate-100 w-full">
+              <Card className="border-border shadow-sm lg:col-span-1 overflow-hidden">
+                <div className="h-2 bg-muted w-full">
                   <div 
                     className={cn(
                       "h-full transition-all duration-1000",
@@ -1493,7 +1493,7 @@ export default function Progress() {
                         stroke="currentColor"
                         strokeWidth="8"
                         fill="transparent"
-                        className="text-slate-100"
+                        className="text-muted"
                       />
                       <circle
                         cx="80"
@@ -1512,8 +1512,8 @@ export default function Progress() {
                       />
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-5xl font-black text-slate-900">{bodyBattery.score}</span>
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Readiness</span>
+                      <span className="text-5xl font-black text-foreground">{bodyBattery.score}</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Readiness</span>
                     </div>
                   </div>
                   
@@ -1528,7 +1528,7 @@ export default function Progress() {
                     {bodyBattery.status} Readiness
                   </Badge>
                   
-                  <p className="text-sm text-slate-500 max-w-[200px]">
+                  <p className="text-sm text-muted-foreground max-w-[200px]">
                     {bodyBattery.status === 'High' ? "You're well recovered and ready for a high-intensity session." : 
                      bodyBattery.status === 'Moderate' ? "Moderate fatigue detected. Consider a standard or technique-focused session." : 
                      "High fatigue detected. A deload or rest day is highly recommended."}
@@ -1538,55 +1538,55 @@ export default function Progress() {
 
               {/* Contributors Grid */}
               <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card className="border-slate-200 shadow-sm">
+                <Card className="border-border shadow-sm">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-xs uppercase tracking-wider text-slate-400 font-bold">Training Load (7d)</CardTitle>
+                    <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground font-bold">Training Load (7d)</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex justify-between items-end">
                       <div>
                         <div className="text-lg font-bold text-maroon">{bodyBattery.liftingLoad}</div>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase">Lifting Load</p>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase">Lifting Load</p>
                       </div>
                       <div className="text-right">
                         <div className="text-lg font-bold text-gold">{bodyBattery.conditioningLoad}</div>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase">Conditioning Load</p>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase">Conditioning Load</p>
                       </div>
                     </div>
-                    <div className="pt-2 border-t border-slate-50">
-                      <div className="text-[10px] text-slate-400 font-bold uppercase mb-2">Top Fatigue Drivers</div>
+                    <div className="pt-2 border-t border-border">
+                      <div className="text-[10px] text-muted-foreground font-bold uppercase mb-2">Top Fatigue Drivers</div>
                       <div className="flex flex-wrap gap-2">
                         {bodyBattery.topDrivers.length > 0 ? bodyBattery.topDrivers.map(driver => (
                           <Badge key={driver} variant="secondary" className="text-[10px]">{driver}</Badge>
-                        )) : <span className="text-xs text-slate-500 italic">None</span>}
+                        )) : <span className="text-xs text-muted-foreground italic">None</span>}
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="border-slate-200 shadow-sm">
+                <Card className="border-border shadow-sm">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-xs uppercase tracking-wider text-slate-400 font-bold">Intensity & Energy</CardTitle>
+                    <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground font-bold">Intensity & Energy</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex justify-between items-end">
                       <div>
-                        <div className="text-2xl font-black text-slate-900">{bodyBattery.avgRPE}</div>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase">Avg RPE (Effort)</p>
+                        <div className="text-2xl font-black text-foreground">{bodyBattery.avgRPE}</div>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase">Avg RPE (Effort)</p>
                       </div>
                       <div className="text-right">
                         <div className="text-lg font-bold text-green-600">{bodyBattery.avgEnergy}/10</div>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase">Avg Energy Level</p>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase">Avg Energy Level</p>
                       </div>
                     </div>
-                    <div className="pt-2 border-t border-slate-50">
+                    <div className="pt-2 border-t border-border">
                       <div className="flex justify-between text-xs mb-1">
-                        <span className="text-slate-500">Recent Strain (48h)</span>
+                        <span className="text-muted-foreground">Recent Strain (48h)</span>
                         <span className={cn("font-bold", bodyBattery.recentImpact === 'High' ? "text-red-500" : "text-green-500")}>
                           {bodyBattery.recentImpact}
                         </span>
                       </div>
-                      <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                      <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
                         <div 
                           className={cn("h-full", bodyBattery.recentImpact === 'High' ? "bg-red-500" : "bg-green-500")} 
                           style={{ width: bodyBattery.recentImpact === 'High' ? '85%' : '20%' }} 
@@ -1596,7 +1596,7 @@ export default function Progress() {
                   </CardContent>
                 </Card>
 
-                <Card className="border-slate-200 shadow-sm md:col-span-2 bg-slate-900 text-white">
+                <Card className="border-border shadow-sm md:col-span-2 bg-primary text-primary-foreground">
                   <CardHeader>
                     <CardTitle className="text-sm font-bold flex items-center gap-2">
                       <Info size={16} className="text-gold" />
@@ -1604,7 +1604,7 @@ export default function Progress() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-xs text-slate-400 leading-relaxed">
+                    <p className="text-xs text-muted-foreground leading-relaxed">
                       Your Readiness score is a heuristic estimate based on your last 7 days of activity. 
                       It is calculated by balancing training load against recovery indicators. 
                       <span className="text-white font-medium">Higher lifting volume, higher RPE (effort), and frequent conditioning</span> increase fatigue load and reduce your score. 
@@ -1617,7 +1617,7 @@ export default function Progress() {
               </div>
             </div>
           ) : (
-            <Card className="border-slate-200 shadow-sm p-12 text-center text-slate-400 italic">
+            <Card className="border-border shadow-sm p-12 text-center text-muted-foreground italic">
               Log at least one workout to see your readiness estimate.
             </Card>
           )}

@@ -206,13 +206,13 @@ export default function Export({ embedded = false }: { embedded?: boolean } = {}
     <div className="space-y-6">
       {!embedded && (
         <header>
-          <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Export Data</h2>
-          <p className="text-slate-500">Take your training data with you</p>
+          <h2 className="text-3xl font-bold text-foreground tracking-tight">Export Data</h2>
+          <p className="text-muted-foreground">Take your training data with you</p>
         </header>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 no-print">
-        <Card className="border-slate-200 shadow-sm">
+        <Card className="border-border shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="text-maroon" />
@@ -223,7 +223,7 @@ export default function Export({ embedded = false }: { embedded?: boolean } = {}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-muted-foreground">
               Includes all exercise data, running stats, energy levels, and notes. Perfect for custom analysis in Excel or Google Sheets.
             </p>
             <Button 
@@ -246,7 +246,7 @@ export default function Export({ embedded = false }: { embedded?: boolean } = {}
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 shadow-sm">
+        <Card className="border-border shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Printer className="text-gold" />
@@ -257,7 +257,7 @@ export default function Export({ embedded = false }: { embedded?: boolean } = {}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-muted-foreground">
               Opens a formatted view optimized for printing or saving as a PDF. Great for physical backups or sharing with a coach.
             </p>
             <Button 
@@ -273,12 +273,12 @@ export default function Export({ embedded = false }: { embedded?: boolean } = {}
         </Card>
       </div>
 
-      <Card className="border-slate-200 shadow-sm no-print">
+      <Card className="border-border shadow-sm no-print">
         <CardHeader>
           <CardTitle>Data Privacy</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-muted-foreground">
             Your training data is stored securely in your personal account. We do not share your workout logs with third parties. Exporting your data allows you to keep a local copy for your own records.
           </p>
         </CardContent>
@@ -286,46 +286,46 @@ export default function Export({ embedded = false }: { embedded?: boolean } = {}
 
       {/* Printable Content */}
       <div className="hidden print:block space-y-8">
-        <div className="border-b-2 border-slate-900 pb-4 mb-8">
-          <h1 className="text-4xl font-bold text-slate-900">Training Log History</h1>
-          <p className="text-slate-500 mt-2">Exported on {format(new Date(), 'PPP')}</p>
+        <div className="border-b-2 border-foreground pb-4 mb-8">
+          <h1 className="text-4xl font-bold text-foreground">Training Log History</h1>
+          <p className="text-muted-foreground mt-2">Exported on {format(new Date(), 'PPP')}</p>
         </div>
 
         {history.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(workout => (
-          <div key={workout.id} className="border border-slate-200 rounded-lg p-6 space-y-4 break-inside-avoid mb-6">
-            <div className="flex justify-between items-start border-b border-slate-100 pb-4">
+          <div key={workout.id} className="border border-border rounded-lg p-6 space-y-4 break-inside-avoid mb-6">
+            <div className="flex justify-between items-start border-b border-border pb-4">
               <div>
-                <h2 className="text-2xl font-bold text-slate-900">{workout.workoutName}</h2>
-                <div className="flex items-center gap-4 mt-1 text-slate-500 text-sm">
+                <h2 className="text-2xl font-bold text-foreground">{workout.workoutName}</h2>
+                <div className="flex items-center gap-4 mt-1 text-muted-foreground text-sm">
                   <span className="flex items-center gap-1"><Calendar size={14} /> {format(new Date(workout.date), 'PPPP')}</span>
                   <span className="flex items-center gap-1"><Clock size={14} /> {format(new Date(workout.date), 'p')}</span>
                 </div>
               </div>
               <div className="text-right">
                 <div className="text-sm font-bold text-maroon uppercase tracking-wider">Energy Level</div>
-                <div className="text-xl font-bold text-slate-900">{workout.postWorkoutEnergy}/10</div>
+                <div className="text-xl font-bold text-foreground">{workout.postWorkoutEnergy}/10</div>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-8">
               <div className="space-y-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-50 pb-1">Exercises</h3>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground border-b border-border pb-1">Exercises</h3>
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-slate-400">
+                    <tr className="text-left text-muted-foreground">
                       <th className="pb-2 font-bold">Exercise</th>
                       <th className="pb-2 font-bold">Sets</th>
                       <th className="pb-2 font-bold">Reps</th>
                       <th className="pb-2 font-bold">Weight (lbs)</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50">
+                  <tbody className="divide-y divide-border">
                     {(workout.exercises || []).map(ex => (
                       <tr key={ex.id}>
-                        <td className="py-2 font-medium text-slate-700">{ex.name}</td>
-                        <td className="py-2 text-slate-600">{ex.sets}</td>
-                        <td className="py-2 text-slate-600">{ex.reps}</td>
-                        <td className="py-2 text-slate-600">
+                        <td className="py-2 font-medium text-foreground">{ex.name}</td>
+                        <td className="py-2 text-muted-foreground">{ex.sets}</td>
+                        <td className="py-2 text-muted-foreground">{ex.reps}</td>
+                        <td className="py-2 text-muted-foreground">
                           {ex.usePerSetWeights && ex.perSetWeights 
                             ? ex.perSetWeights.join(', ') 
                             : ex.weight
@@ -337,16 +337,16 @@ export default function Export({ embedded = false }: { embedded?: boolean } = {}
                 </table>
               </div>
               <div className="space-y-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-50 pb-1">Conditioning & Notes</h3>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground border-b border-border pb-1">Conditioning & Notes</h3>
                 <div className="space-y-4">
                   <div>
-                    <h4 className="text-[10px] font-bold uppercase text-slate-400 mb-1">Conditioning</h4>
-                    <p className="text-sm text-slate-700 leading-relaxed">{workout.runningStats || "None logged"}</p>
+                    <h4 className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Conditioning</h4>
+                    <p className="text-sm text-foreground leading-relaxed">{workout.runningStats || "None logged"}</p>
                   </div>
                   {workout.notes && (
                     <div>
-                      <h4 className="text-[10px] font-bold uppercase text-slate-400 mb-1">Workout Notes</h4>
-                      <p className="text-sm text-slate-600 italic leading-relaxed">"{workout.notes}"</p>
+                      <h4 className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Workout Notes</h4>
+                      <p className="text-sm text-muted-foreground italic leading-relaxed">"{workout.notes}"</p>
                     </div>
                   )}
                 </div>

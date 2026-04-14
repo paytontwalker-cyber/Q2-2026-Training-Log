@@ -73,17 +73,17 @@ const SortableExerciseBadge = ({ exercise, onRemove }: SortableExerciseBadgeProp
     <div 
       ref={setNodeRef}
       style={style}
-      className="bg-white border border-slate-200 rounded-md p-3 flex items-center justify-between shadow-sm group"
+      className="bg-card border border-border rounded-md p-3 flex items-center justify-between shadow-sm group"
     >
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-3">
-          <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600">
+          <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-muted-foreground">
             <GripVertical size={16} />
           </div>
-          <span className="font-medium text-slate-700">{id}</span>
+          <span className="font-medium text-foreground">{id}</span>
         </div>
         {isProgrammed && (
-          <div className="pl-9 text-xs text-slate-500 space-y-0.5">
+          <div className="pl-9 text-xs text-muted-foreground space-y-0.5">
             {exercise.sets && exercise.reps && <div>{exercise.sets}x{exercise.reps}</div>}
             {exercise.targetNotes && <div>{exercise.targetNotes}</div>}
           </div>
@@ -94,7 +94,7 @@ const SortableExerciseBadge = ({ exercise, onRemove }: SortableExerciseBadgeProp
           e.stopPropagation();
           onRemove();
         }}
-        className="text-slate-400 hover:text-red-500 transition-colors"
+        className="text-muted-foreground hover:text-red-500 transition-colors"
       >
         <Trash2 size={16} />
       </button>
@@ -398,19 +398,19 @@ export default function Split() {
     return (
       <div className="space-y-6">
         <header>
-          <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Weekly Program</h2>
-          <p className="text-slate-500">Choose a starting point for your training structure</p>
+          <h2 className="text-3xl font-bold text-foreground tracking-tight">Weekly Program</h2>
+          <p className="text-muted-foreground">Choose a starting point for your training structure</p>
         </header>
 
         <div className="max-w-2xl mx-auto space-y-8 pt-4">
           <div className="space-y-4">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400">New Program</h3>
+            <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">New Program</h3>
             <Card 
-              className="border-slate-200 shadow-sm hover:border-maroon/50 cursor-pointer transition-all group"
+              className="border-border shadow-sm hover:border-maroon/50 cursor-pointer transition-all group"
               onClick={startFromScratch}
             >
               <CardHeader className="flex flex-row items-center gap-4 py-6">
-                <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 group-hover:bg-maroon/5 group-hover:text-maroon transition-colors">
+                <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center text-muted-foreground group-hover:bg-maroon/5 group-hover:text-maroon transition-colors">
                   <Plus size={24} />
                 </div>
                 <div>
@@ -422,16 +422,16 @@ export default function Split() {
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400">Preset Templates</h3>
+            <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Preset Templates</h3>
             <div className="grid grid-cols-1 gap-4">
               {SPLIT_TEMPLATES.map((template) => (
                 <Card 
                   key={template.id}
-                  className="border-slate-200 shadow-sm hover:border-maroon/50 cursor-pointer transition-all group"
+                  className="border-border shadow-sm hover:border-maroon/50 cursor-pointer transition-all group"
                   onClick={() => stageTemplateSplit(template.days)}
                 >
                   <CardHeader className="flex flex-row items-center gap-4 py-6">
-                    <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 group-hover:bg-maroon/5 group-hover:text-maroon transition-colors">
+                    <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center text-muted-foreground group-hover:bg-maroon/5 group-hover:text-maroon transition-colors">
                       <LayoutGrid size={24} />
                     </div>
                     <div>
@@ -446,17 +446,17 @@ export default function Split() {
 
           {savedSplits.length > 0 && (
             <div className="space-y-4">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400">Your Saved Programs</h3>
+              <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Your Saved Programs</h3>
               <div className="grid grid-cols-1 gap-4">
                 {savedSplits.map((saved) => (
                   <Card 
                     key={saved.id}
-                    className="border-slate-200 shadow-sm hover:border-maroon/50 cursor-pointer transition-all group"
+                    className="border-border shadow-sm hover:border-maroon/50 cursor-pointer transition-all group"
                     onClick={() => stageSavedSplit(saved)}
                   >
                     <CardHeader className="flex flex-row items-center justify-between py-6">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 group-hover:bg-maroon/5 group-hover:text-maroon transition-colors">
+                        <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center text-muted-foreground group-hover:bg-maroon/5 group-hover:text-maroon transition-colors">
                           <Calendar size={24} />
                         </div>
                         <div>
@@ -477,7 +477,7 @@ export default function Split() {
                         variant="ghost" 
                         size="sm" 
                         onClick={(e) => deleteSavedSplit(e, saved.id)}
-                        className="text-slate-400 hover:text-red-500"
+                        className="text-muted-foreground hover:text-red-500"
                       >
                         <Trash2 size={18} />
                       </Button>
@@ -499,8 +499,8 @@ export default function Split() {
     <div className="space-y-6">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Weekly Program</h2>
-          <p className="text-slate-500">Customize your hybrid training structure</p>
+          <h2 className="text-3xl font-bold text-foreground tracking-tight">Weekly Program</h2>
+          <p className="text-muted-foreground">Customize your hybrid training structure</p>
         </div>
         <div className="flex flex-wrap gap-2">
           {showAssignButton && (
@@ -523,7 +523,7 @@ export default function Split() {
           <Button 
             variant="outline" 
             onClick={() => setIsSelecting(true)}
-            className="border-slate-200 text-slate-600"
+            className="border-border text-muted-foreground"
           >
             Go to Other Programs
           </Button>
@@ -575,14 +575,14 @@ export default function Split() {
           if (!split) return null;
 
           return (
-            <Card key={dayName} className="border-slate-200 shadow-sm overflow-hidden">
+            <Card key={dayName} className="border-border shadow-sm overflow-hidden">
               <div className="grid grid-cols-1 md:grid-cols-4">
-                <div className="bg-slate-50 p-6 border-b md:border-b-0 md:border-r border-slate-200 flex flex-col justify-center">
+                <div className="bg-muted p-6 border-b md:border-b-0 md:border-r border-border flex flex-col justify-center">
                   <h3 className="text-xl font-bold text-maroon">{dayName}</h3>
                   <Textarea 
                     value={split.name}
                     onChange={e => updateSplit(split.id, { name: e.target.value })}
-                    className="mt-2 font-medium text-slate-700 bg-white min-h-[40px] py-2"
+                    className="mt-2 font-medium text-foreground bg-card min-h-[40px] py-2"
                     placeholder="Program Name (e.g. Push)"
                     rows={2}
                   />
@@ -610,7 +610,7 @@ export default function Split() {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+                          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
                             <LayoutGrid size={14} className="text-maroon" />
                             Workout Snapshot
                           </div>
@@ -618,12 +618,12 @@ export default function Split() {
                         <Textarea 
                           value={split.summary || ''}
                           onChange={e => updateSplit(split.id, { summary: e.target.value })}
-                          className="min-h-[250px] text-[11px] leading-relaxed font-mono bg-white border-slate-200"
+                          className="min-h-[250px] text-[11px] leading-relaxed font-mono bg-card border-border"
                           placeholder="Enter workout snapshot/summary..."
                         />
                       </div>
                     <div className="space-y-3">
-                      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+                      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
                         <Info size={14} className="text-maroon" />
                         Main Exercises
                       </div>
@@ -648,7 +648,7 @@ export default function Split() {
                               );
                             })}
                             {split.exercises.length === 0 && (
-                              <span className="text-slate-400 italic text-sm">No exercises added</span>
+                              <span className="text-muted-foreground italic text-sm">No exercises added</span>
                             )}
                           </div>
                         </SortableContext>

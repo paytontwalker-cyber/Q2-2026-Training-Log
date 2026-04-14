@@ -11,8 +11,8 @@ export default function Programming() {
   return (
     <div className="space-y-6">
       <header>
-        <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Programming</h2>
-        <p className="text-slate-500">Manage your workout splits and exercise library.</p>
+        <h2 className="text-3xl font-bold text-foreground tracking-tight">Programming</h2>
+        <p className="text-muted-foreground">Manage your workout splits and exercise library.</p>
       </header>
 
       <div className="flex gap-2">
@@ -21,7 +21,7 @@ export default function Programming() {
           onClick={() => setActiveTab('exercises')}
           className={cn(
             "rounded-full px-6",
-            activeTab === 'exercises' ? "bg-maroon hover:bg-maroon-light text-white" : "text-slate-600"
+            activeTab === 'exercises' ? "bg-maroon hover:bg-maroon-light text-white" : "text-muted-foreground"
           )}
         >
           Exercises
@@ -31,7 +31,7 @@ export default function Programming() {
           onClick={() => setActiveTab('programs')}
           className={cn(
             "rounded-full px-6",
-            activeTab === 'programs' ? "bg-maroon hover:bg-maroon-light text-white" : "text-slate-600"
+            activeTab === 'programs' ? "bg-maroon hover:bg-maroon-light text-white" : "text-muted-foreground"
           )}
         >
           Programs
@@ -41,7 +41,7 @@ export default function Programming() {
           onClick={() => setActiveTab('ai')}
           className={cn(
             "rounded-full px-6",
-            activeTab === 'ai' ? "bg-maroon hover:bg-maroon-light text-white" : "text-slate-600"
+            activeTab === 'ai' ? "bg-maroon hover:bg-maroon-light text-white" : "text-muted-foreground"
           )}
         >
           AI Program Builder

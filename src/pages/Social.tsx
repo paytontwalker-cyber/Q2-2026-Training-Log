@@ -28,23 +28,23 @@ import { db } from '../firebase';
 type Tab = 'friends' | 'posts' | 'profile' | 'activity' | 'shared-splits';
 
 const ComingSoonCard = ({ title, description, icon: Icon }: { title: string, description: string, icon: any }) => (
-  <Card className="border-slate-200 shadow-sm bg-slate-50/50">
+  <Card className="border-border shadow-sm bg-muted/50">
     <CardHeader className="pb-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Icon className="text-slate-400" size={20} />
-          <CardTitle className="text-lg text-slate-700">{title}</CardTitle>
+          <Icon className="text-muted-foreground" size={20} />
+          <CardTitle className="text-lg text-foreground">{title}</CardTitle>
         </div>
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-maroon/10 text-maroon border border-maroon/20">
           <Clock size={12} />
           Coming Soon
         </span>
       </div>
-      <CardDescription className="text-slate-500 mt-2">{description}</CardDescription>
+      <CardDescription className="text-muted-foreground mt-2">{description}</CardDescription>
     </CardHeader>
     <CardContent>
-      <div className="h-32 flex items-center justify-center border-2 border-dashed border-slate-200 rounded-lg bg-white">
-        <p className="text-sm text-slate-400 text-center px-4">
+      <div className="h-32 flex items-center justify-center border-2 border-dashed border-border rounded-lg bg-card">
+        <p className="text-sm text-muted-foreground text-center px-4">
           We're actively building this feature. Check back in a future update!
         </p>
       </div>
@@ -55,7 +55,7 @@ const ComingSoonCard = ({ title, description, icon: Icon }: { title: string, des
 const SharedBadge = ({ type }: { type: 'AI' | 'Custom' }) => (
   <span className={cn(
     "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
-    type === 'AI' ? "bg-purple-100 text-purple-700" : "bg-slate-100 text-slate-700"
+    type === 'AI' ? "bg-purple-100 text-purple-700" : "bg-muted text-foreground"
   )}>
     {type === 'AI' ? 'AI Program · Gemini' : 'Custom Program'}
   </span>
@@ -170,7 +170,7 @@ export default function Social() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
               <Input 
                 placeholder="Search athletes or friends..." 
-                className="pl-10 bg-white"
+                className="pl-10 bg-card"
                 value={searchQuery}
                 onChange={(e) => {
                   const val = e.target.value;
@@ -205,7 +205,7 @@ export default function Social() {
               <div className="space-y-6">
                 {recentSearches.length > 0 && (
                   <div className="space-y-2">
-                    <h3 className="text-sm font-bold text-slate-500">Recent Searches</h3>
+                    <h3 className="text-sm font-bold text-muted-foreground">Recent Searches</h3>
                     <div className="flex flex-wrap gap-2">
                       {recentSearches.map(s => (
                         <Button key={s} variant="outline" size="sm" onClick={() => setSearchQuery(s)}>{s}</Button>
@@ -215,11 +215,11 @@ export default function Social() {
                 )}
                 <div className="grid gap-6 md:grid-cols-2">
                   <div className="space-y-6">
-                    <Card><CardHeader><CardTitle className="text-lg">Pending Requests</CardTitle></CardHeader><CardContent className="text-sm text-slate-500">No pending requests.</CardContent></Card>
-                    <Card><CardHeader><CardTitle className="text-lg">Sent Requests</CardTitle></CardHeader><CardContent className="text-sm text-slate-500">No sent requests.</CardContent></Card>
+                    <Card><CardHeader><CardTitle className="text-lg">Pending Requests</CardTitle></CardHeader><CardContent className="text-sm text-muted-foreground">No pending requests.</CardContent></Card>
+                    <Card><CardHeader><CardTitle className="text-lg">Sent Requests</CardTitle></CardHeader><CardContent className="text-sm text-muted-foreground">No sent requests.</CardContent></Card>
                   </div>
                   <div className="space-y-6">
-                    <Card><CardHeader><CardTitle className="text-lg">Suggested Athletes</CardTitle></CardHeader><CardContent className="text-sm text-slate-500">No suggested athletes yet.</CardContent></Card>
+                    <Card><CardHeader><CardTitle className="text-lg">Suggested Athletes</CardTitle></CardHeader><CardContent className="text-sm text-muted-foreground">No suggested athletes yet.</CardContent></Card>
                   </div>
                 </div>
               </div>
@@ -227,19 +227,19 @@ export default function Social() {
 
             {searchQuery && (
               <div className="space-y-4">
-                <h3 className="text-sm font-bold text-slate-500">Results</h3>
+                <h3 className="text-sm font-bold text-muted-foreground">Results</h3>
                 {searchResults.length === 0 ? (
-                  <div className="py-12 text-center border-2 border-dashed border-slate-100 rounded-lg bg-slate-50/50">
-                    <p className="text-sm text-slate-500">No users found</p>
+                  <div className="py-12 text-center border-2 border-dashed border-border rounded-lg bg-muted/50">
+                    <p className="text-sm text-muted-foreground">No users found</p>
                   </div>
                 ) : (
                       searchResults.map(u => (
                         <Card key={u.id}><CardContent className="p-4 flex items-center justify-between gap-4">
                           <div className="flex items-center gap-4">
-                            <UserCircle className="text-slate-400" size={32} />
+                            <UserCircle className="text-muted-foreground" size={32} />
                             <div>
                               <p className="font-medium">{u.displayName}</p>
-                              <p className="text-sm text-slate-500">@{u.username}</p>
+                              <p className="text-sm text-muted-foreground">@{u.username}</p>
                             </div>
                           </div>
                           {u.id === user?.uid && <Badge variant="secondary">You</Badge>}
@@ -261,7 +261,7 @@ export default function Social() {
 
         {activeTab === 'profile' && (
           <div className="space-y-6">
-            <Card className="border-slate-200 shadow-sm">
+            <Card className="border-border shadow-sm">
               <CardHeader className="pb-4 flex flex-col md:flex-row items-center justify-between gap-4">
                 <div>
                   <CardTitle className="text-2xl">{isPreviewMode ? 'Public Profile Preview' : 'Profile'}</CardTitle>
@@ -272,7 +272,7 @@ export default function Social() {
                     <Eye className="mr-2" size={16} />
                     {isPreviewMode ? 'Edit Profile' : 'Preview as Others'}
                   </Button>
-                  <Button variant="ghost" className="text-slate-500">
+                  <Button variant="ghost" className="text-muted-foreground">
                      View Public Profile
                   </Button>
                 </div>
@@ -280,7 +280,7 @@ export default function Social() {
               <CardContent>
                   <div className="flex flex-col md:flex-row items-center md:items-start gap-6 mb-8">
                     <div className="relative group">
-                      <div className="h-24 w-24 rounded-full bg-slate-100 border-4 border-white shadow-sm flex items-center justify-center flex-shrink-0 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity" onClick={() => !isPreviewMode && document.getElementById('photo-upload')?.click()}>
+                      <div className="h-24 w-24 rounded-full bg-muted border-4 border-white shadow-sm flex items-center justify-center flex-shrink-0 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity" onClick={() => !isPreviewMode && document.getElementById('photo-upload')?.click()}>
                         {profile.photoURL ? (
                           <img 
                             src={profile.photoURL} 
@@ -288,7 +288,7 @@ export default function Social() {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <UserCircle className="h-12 w-12 text-slate-300" />
+                          <UserCircle className="h-12 w-12 text-muted-foreground" />
                         )}
                       </div>
                       {!isPreviewMode && <input 
@@ -310,17 +310,17 @@ export default function Social() {
                     </div>
                     <div className="text-center md:text-left space-y-2 flex-1">
                       <div>
-                        <h3 className="text-xl font-bold text-slate-800">{profile.displayName || 'Your Name'}</h3>
+                        <h3 className="text-xl font-bold text-foreground">{profile.displayName || 'Your Name'}</h3>
                         <p className="text-sm font-medium text-maroon">@{profile.username || 'username'}</p>
                       </div>
-                      <p className="text-sm text-slate-600 max-w-md">
+                      <p className="text-sm text-muted-foreground max-w-md">
                         {profile.bio || 'Training, discipline, and progress.'}
                       </p>
                     </div>
                   </div>
 
                 {!isPreviewMode && (
-                  <div className="space-y-4 pt-6 border-t border-slate-100">
+                  <div className="space-y-4 pt-6 border-t border-border">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="displayName">Display Name</Label>
@@ -355,18 +355,18 @@ export default function Social() {
                   </div>
                 )}
                 {isPreviewMode && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-slate-100">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-border">
                     {[
                       { label: 'Programs Created', value: '—', icon: Trophy },
                       { label: 'Logs Shared', value: '—', icon: BarChart2 },
                       { label: 'Current Streak', value: '—', icon: Flame },
                       { label: 'Training Focus', value: '—', icon: Target },
                     ].map(stat => (
-                      <Card key={stat.label} className="bg-slate-50 border-slate-200">
+                      <Card key={stat.label} className="bg-muted border-border">
                         <CardContent className="p-4 flex flex-col items-center text-center gap-2">
                           <stat.icon className="text-maroon" size={20} />
-                          <p className="text-xs text-slate-500">{stat.label}</p>
-                          <p className="font-bold text-slate-800">{stat.value}</p>
+                          <p className="text-xs text-muted-foreground">{stat.label}</p>
+                          <p className="font-bold text-foreground">{stat.value}</p>
                         </CardContent>
                       </Card>
                     ))}

@@ -155,8 +155,8 @@ export default function Exercises() {
     <div className="space-y-6">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Exercise Library</h2>
-          <p className="text-slate-500">Manage your custom exercises and muscle groups</p>
+          <h2 className="text-3xl font-bold text-foreground tracking-tight">Exercise Library</h2>
+          <p className="text-muted-foreground">Manage your custom exercises and muscle groups</p>
         </div>
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger
@@ -221,9 +221,9 @@ export default function Exercises() {
                 </Select>
               </div>
 
-              <div className="space-y-3 pt-2 border-t border-slate-100">
+              <div className="space-y-3 pt-2 border-t border-border">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Muscle Breakdown (%)</Label>
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Muscle Breakdown (%)</Label>
                   <Button 
                     variant="ghost" 
                     size="sm" 
@@ -265,7 +265,7 @@ export default function Exercises() {
                         size="sm" 
                         onClick={() => handleRemoveContribution(idx, false)}
                         disabled={newExercise.muscleDistribution.length <= 1}
-                        className="h-9 w-9 p-0 text-slate-400 hover:text-red-500"
+                        className="h-9 w-9 p-0 text-muted-foreground hover:text-red-500"
                       >
                         <X size={16} />
                       </Button>
@@ -351,9 +351,9 @@ export default function Exercises() {
                   </Select>
                 </div>
 
-                <div className="space-y-3 pt-2 border-t border-slate-100">
+                <div className="space-y-3 pt-2 border-t border-border">
                   <div className="flex items-center justify-between">
-                    <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Muscle Breakdown (%)</Label>
+                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Muscle Breakdown (%)</Label>
                     <Button 
                       variant="ghost" 
                       size="sm" 
@@ -395,7 +395,7 @@ export default function Exercises() {
                           size="sm" 
                           onClick={() => handleRemoveContribution(idx, true)}
                           disabled={(editingExercise.muscleDistribution || []).length <= 1}
-                          className="h-9 w-9 p-0 text-slate-400 hover:text-red-500"
+                          className="h-9 w-9 p-0 text-muted-foreground hover:text-red-500"
                         >
                           <X size={16} />
                         </Button>
@@ -431,10 +431,10 @@ export default function Exercises() {
       </header>
 
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
         <Input 
           placeholder="Search exercises or muscle groups..." 
-          className="pl-10 h-12 text-lg border-slate-200 shadow-sm"
+          className="pl-10 h-12 text-lg border-border shadow-sm"
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
@@ -442,8 +442,8 @@ export default function Exercises() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {(Object.entries(groupedExercises) as [string, ExerciseLibraryEntry[]][]).map(([group, exercises]) => (
-          <Card key={group} className="border-slate-200 shadow-sm">
-            <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-3">
+          <Card key={group} className="border-border shadow-sm">
+            <CardHeader className="bg-muted/50 border-b border-border py-3">
               <CardTitle className="text-sm font-bold uppercase tracking-wider text-maroon flex items-center justify-between">
                 {group}
                 <span className="text-xs bg-maroon/10 text-maroon px-2 py-0.5 rounded-full font-medium">
@@ -452,13 +452,13 @@ export default function Exercises() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-border">
                 {exercises.map(ex => (
-                  <div key={ex.id} className="flex items-center justify-between p-3 hover:bg-slate-50 transition-colors group">
+                  <div key={ex.id} className="flex items-center justify-between p-3 hover:bg-muted transition-colors group">
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium text-slate-700">{ex.name}</span>
+                      <span className="text-sm font-medium text-foreground">{ex.name}</span>
                       {ex.muscleDistribution && ex.muscleDistribution.length > 0 && (
-                        <div className="text-[10px] text-slate-400 mt-0.5">
+                        <div className="text-[10px] text-muted-foreground mt-0.5">
                           {ex.muscleDistribution.map((dist, i) => (
                             <span key={i}>
                               {dist.group} {dist.percent}%
@@ -479,7 +479,7 @@ export default function Exercises() {
                           });
                           setIsEditOpen(true);
                         }}
-                        className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-maroon h-8 w-8 p-0"
+                        className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-maroon h-8 w-8 p-0"
                       >
                         <Edit2 size={14} />
                       </Button>
@@ -487,7 +487,7 @@ export default function Exercises() {
                         variant="ghost" 
                         size="sm" 
                         onClick={() => removeExercise(ex.id)}
-                        className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 h-8 w-8 p-0"
+                        className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 h-8 w-8 p-0"
                       >
                         <Trash2 size={14} />
                       </Button>

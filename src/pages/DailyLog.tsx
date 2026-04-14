@@ -465,14 +465,14 @@ const SortableExerciseCard = ({
           <div 
             ref={setDropRef}
             className={cn(
-              "mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4 transition-all duration-200",
-              isOver && "bg-slate-100 border-slate-300 ring-2 ring-slate-200 scale-[1.01]"
+              "mt-4 p-4 bg-muted rounded-xl border border-border space-y-4 transition-all duration-200",
+              isOver && "bg-muted border-border ring-2 ring-border scale-[1.01]"
             )}
           >
             <div className="flex items-center justify-between">
               <Label className={cn(
                 "text-[10px] uppercase font-bold transition-colors",
-                isOver ? "text-slate-600" : "text-slate-400"
+                isOver ? "text-muted-foreground" : "text-muted-foreground"
               )}>
                 {isOver ? "Drop to Superset" : "Superset Exercise"}
               </Label>
@@ -480,7 +480,7 @@ const SortableExerciseCard = ({
                 variant="ghost" 
                 size="icon" 
                 onClick={() => updateSuperset(ex.id, null)}
-                className="h-6 w-6 text-slate-300 hover:text-red-500"
+                className="h-6 w-6 text-muted-foreground hover:text-red-500"
               >
                 <Trash2 size={12} />
               </Button>
@@ -505,7 +505,7 @@ const SortableExerciseCard = ({
               
               <div className="w-full md:flex-1 grid grid-cols-3 md:grid-cols-5 gap-2">
                 <div>
-                  <Label className="text-[9px] uppercase font-bold text-slate-400 mb-1 block">Sets</Label>
+                  <Label className="text-[9px] uppercase font-bold text-muted-foreground mb-1 block">Sets</Label>
                   <Input 
                     type="number" 
                     value={ex.superset.sets || ''} 
@@ -514,7 +514,7 @@ const SortableExerciseCard = ({
                   />
                 </div>
                 <div>
-                  <Label className="text-[9px] uppercase font-bold text-slate-400 mb-1 block">Reps</Label>
+                  <Label className="text-[9px] uppercase font-bold text-muted-foreground mb-1 block">Reps</Label>
                   <Input 
                     type="number" 
                     value={ex.superset.reps || ''} 
@@ -523,7 +523,7 @@ const SortableExerciseCard = ({
                   />
                 </div>
                 <div>
-                  <Label className="text-[9px] uppercase font-bold text-slate-400 mb-1 block">Weight</Label>
+                  <Label className="text-[9px] uppercase font-bold text-muted-foreground mb-1 block">Weight</Label>
                   <Input 
                     type="number" 
                     value={ex.superset.weight || ''} 
@@ -532,7 +532,7 @@ const SortableExerciseCard = ({
                   />
                 </div>
                 <div>
-                  <Label className="text-[9px] uppercase font-bold text-slate-400 mb-1 block">RPE</Label>
+                  <Label className="text-[9px] uppercase font-bold text-muted-foreground mb-1 block">RPE</Label>
                   <Input 
                     type="number" 
                     step="0.5"
@@ -542,7 +542,7 @@ const SortableExerciseCard = ({
                   />
                 </div>
                 <div>
-                  <Label className="text-[9px] uppercase font-bold text-slate-400 mb-1 block">RIR</Label>
+                  <Label className="text-[9px] uppercase font-bold text-muted-foreground mb-1 block">RIR</Label>
                   <Input 
                     type="number" 
                     value={ex.superset.rir || ''} 
@@ -557,7 +557,7 @@ const SortableExerciseCard = ({
               onChange={e => updateSuperset(ex.id, { ...ex.superset, notes: e.target.value })}
               placeholder="Superset notes..."
               className={cn(
-                "text-xs min-h-[40px] bg-white/50 transition-opacity",
+                "text-xs min-h-[40px] bg-card/50 transition-opacity",
                 isOver && "opacity-50"
               )}
             />
@@ -623,14 +623,14 @@ const SortableConditioningBlock: React.FC<SortableConditioningBlockProps> = ({
           </div>
           <div className="flex-1 min-w-0 space-y-4" onPointerDown={e => e.stopPropagation()}>
             <div className="flex items-center justify-between">
-              <Label className="text-xs uppercase tracking-wider text-slate-500">
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground">
                 {block.kind === 'hiit' ? 'HIIT Block' : 'Cardio Block'}
               </Label>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onDelete}
-                className="h-6 text-[10px] text-slate-400 hover:text-red-500"
+                className="h-6 text-[10px] text-muted-foreground hover:text-red-500"
               >
                 Remove
               </Button>
@@ -659,7 +659,7 @@ const SortableConditioningBlock: React.FC<SortableConditioningBlockProps> = ({
                 {block.subtype && (
                   <div className="space-y-4">
                     {block.subtype === 'Repeats' ? (
-                      <div className="space-y-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="space-y-4 p-4 bg-muted rounded-lg border border-border">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                           <div>
                             <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Splits</Label>
@@ -688,8 +688,8 @@ const SortableConditioningBlock: React.FC<SortableConditioningBlockProps> = ({
                         <div className="space-y-2">
                           <Label className="text-[10px] uppercase font-bold text-muted-foreground block">Splits</Label>
                           {block.splits?.map((split, i) => (
-                            <div key={i} className="grid grid-cols-2 md:grid-cols-4 gap-2 items-center bg-white p-2 rounded border border-slate-200">
-                              <div className="text-xs font-bold text-slate-500">Split {i + 1}</div>
+                            <div key={i} className="grid grid-cols-2 md:grid-cols-4 gap-2 items-center bg-card p-2 rounded border border-border">
+                              <div className="text-xs font-bold text-muted-foreground">Split {i + 1}</div>
                               <div className="flex gap-1">
                                 <Input type="number" value={split.distanceVal} onChange={(e) => {
                                   const newSplits = [...(block.splits || [])];
@@ -714,7 +714,7 @@ const SortableConditioningBlock: React.FC<SortableConditioningBlockProps> = ({
                           ))}
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-slate-200">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-border">
                           <div>
                             <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Total Dist</Label>
                             <div className="h-9 flex items-center font-mono text-sm">{block.splits?.reduce((sum, s) => sum + s.distanceVal, 0) || 0} {block.splits?.[0]?.distanceUnit || 'm'}</div>
@@ -753,7 +753,7 @@ const SortableConditioningBlock: React.FC<SortableConditioningBlockProps> = ({
                         </div>
                       </div>
                     ) : block.subtype === 'Zone 2' ? (
-                      <div className="space-y-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="space-y-4 p-4 bg-muted rounded-lg border border-border">
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                           <div>
                             <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Distance</Label>
@@ -777,7 +777,7 @@ const SortableConditioningBlock: React.FC<SortableConditioningBlockProps> = ({
                             <Input type="number" value={block.zone2AverageHeartRate ?? ''} onChange={(e) => onChange({ zone2AverageHeartRate: parseInt(e.target.value) || 0 })} className="h-9" />
                           </div>
                         </div>
-                        <div className="pt-4 border-t border-slate-200">
+                        <div className="pt-4 border-t border-border">
                           <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Avg Pace</Label>
                           <div className="h-9 flex items-center font-mono text-sm">
                             {calculateZone2Pace(block.programmedDistanceVal || 0, block.programmedDistanceUnit || 'mi', block.zone2TimeStr || '0:00')}
@@ -908,7 +908,7 @@ const SortableConditioningBlock: React.FC<SortableConditioningBlockProps> = ({
                 <div className="space-y-3">
                   <Label className="text-[10px] uppercase font-bold text-muted-foreground">Exercises</Label>
                   {(block.exercises || []).map((ex) => (
-                    <div key={ex.id} className="flex flex-col md:flex-row gap-3 items-start bg-slate-50 p-3 rounded-md border border-slate-100">
+                    <div key={ex.id} className="flex flex-col md:flex-row gap-3 items-start bg-muted p-3 rounded-md border border-border">
                       <div className="w-full md:w-[40%]">
                         <ExerciseSelector 
                           exercises={library}
@@ -924,7 +924,7 @@ const SortableConditioningBlock: React.FC<SortableConditioningBlockProps> = ({
                       </div>
                       <div className="w-full md:flex-1 grid grid-cols-3 gap-2">
                         <div>
-                          <Label className="text-[9px] uppercase font-bold text-slate-400 mb-1 block">Sets</Label>
+                          <Label className="text-[9px] uppercase font-bold text-muted-foreground mb-1 block">Sets</Label>
                           <Input 
                             type="number" 
                             value={ex.sets !== undefined && ex.sets !== null ? ex.sets : ''} 
@@ -933,7 +933,7 @@ const SortableConditioningBlock: React.FC<SortableConditioningBlockProps> = ({
                           />
                         </div>
                         <div>
-                          <Label className="text-[9px] uppercase font-bold text-slate-400 mb-1 block">Reps</Label>
+                          <Label className="text-[9px] uppercase font-bold text-muted-foreground mb-1 block">Reps</Label>
                           <Input 
                             type="number" 
                             value={ex.reps !== undefined && ex.reps !== null ? ex.reps : ''} 
@@ -942,7 +942,7 @@ const SortableConditioningBlock: React.FC<SortableConditioningBlockProps> = ({
                           />
                         </div>
                         <div>
-                          <Label className="text-[9px] uppercase font-bold text-slate-400 mb-1 block">Weight</Label>
+                          <Label className="text-[9px] uppercase font-bold text-muted-foreground mb-1 block">Weight</Label>
                           <Input 
                             type="number" 
                             value={ex.weight !== undefined && ex.weight !== null ? ex.weight : ''} 
@@ -955,13 +955,13 @@ const SortableConditioningBlock: React.FC<SortableConditioningBlockProps> = ({
                         variant="ghost" 
                         size="icon" 
                         onClick={() => removeHiitExercise(block.id, ex.id)}
-                        className="h-8 w-8 text-slate-300 hover:text-red-500 flex-shrink-0"
+                        className="h-8 w-8 text-muted-foreground hover:text-red-500 flex-shrink-0"
                       >
                         <Trash2 size={14} />
                       </Button>
                     </div>
                   ))}
-                  <Button variant="outline" size="sm" onClick={() => addHiitExercise(block.id)} className="border-dashed border-slate-300 text-xs">
+                  <Button variant="outline" size="sm" onClick={() => addHiitExercise(block.id)} className="border-dashed border-border text-xs">
                     <Plus size={14} className="mr-1" /> Add HIIT Exercise
                   </Button>
                 </div>
@@ -1018,7 +1018,7 @@ const SortableLiftBlock: React.FC<SortableLiftBlockProps> = ({
       <div 
         {...attributes} 
         {...listeners}
-        className="absolute -left-8 top-1/2 -translate-y-1/2 p-2 cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-500 hidden md:block"
+        className="absolute -left-8 top-1/2 -translate-y-1/2 p-2 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-muted-foreground hidden md:block"
       >
         <GripVertical size={20} />
       </div>
@@ -1709,7 +1709,7 @@ export default function DailyLog() {
                 variant="outline" 
                 size="sm" 
                 onClick={() => setSaveStatus('idle')}
-                className="text-[10px] h-8 border-slate-200 text-slate-500 hover:bg-slate-50"
+                className="text-[10px] h-8 border-border text-muted-foreground hover:bg-muted"
               >
                 Reset Save
               </Button>
@@ -1751,14 +1751,14 @@ export default function DailyLog() {
       <div className="grid grid-cols-1 gap-6">
         <div className="space-y-6">
           {/* Workout Header Card */}
-          <Card className="border-slate-200 shadow-sm overflow-hidden">
+          <Card className="border-border shadow-sm overflow-hidden">
             <div className="h-2 bg-maroon" />
             <CardHeader>
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col md:flex-row md:items-end gap-3">
                   {/* Workout Name */}
                   <div className="flex-1 space-y-1">
-                    <Label className="text-xs uppercase tracking-wider text-slate-500">Workout Name</Label>
+                    <Label className="label-micro">Workout Name</Label>
                     <Input 
                       value={workoutMeta.workoutName} 
                       onChange={e => {
@@ -1772,7 +1772,7 @@ export default function DailyLog() {
 
                   {/* Change Program */}
                   <div className="w-full md:w-48 space-y-1">
-                    <Label className="text-xs uppercase tracking-wider text-slate-500">Program</Label>
+                    <Label className="label-micro">Program</Label>
                     <Select 
                       value={manualSplit ?? ""} 
                       onValueChange={(val) => {
@@ -1804,14 +1804,14 @@ export default function DailyLog() {
                 </div>
 
                 {/* Action row: Reset / Clear Program / Undo */}
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 mt-2">
                   <Dialog>
                     <DialogTrigger 
                       render={
                         <Button 
                           variant="outline" 
                           size="sm" 
-                          className="h-8 text-xs border-slate-200 text-slate-600 hover:text-maroon hover:border-maroon/50"
+                          className="h-8 text-xs border-border text-muted-foreground hover:text-maroon hover:border-maroon/50"
                         >
                           Reset Workout
                         </Button>
@@ -1837,7 +1837,7 @@ export default function DailyLog() {
                         <Button 
                           variant="outline" 
                           size="sm" 
-                          className="h-8 text-xs border-slate-200 text-slate-600 hover:text-maroon hover:border-maroon/50"
+                          className="h-8 text-xs border-border text-muted-foreground hover:text-maroon hover:border-maroon/50"
                         >
                           Clear Exercises
                         </Button>
@@ -1867,7 +1867,7 @@ export default function DailyLog() {
                       >
                         Undo
                       </Button>
-                      <span className="text-xs text-slate-500 italic">Undo is available for your last reset/clear action.</span>
+                      <span className="text-xs text-muted-foreground italic">Undo is available for your last reset/clear action.</span>
                     </div>
                   )}
                 </div>
@@ -1878,13 +1878,13 @@ export default function DailyLog() {
                   if (!currentSplit) return null;
                   
                   return (
-                    <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-3">
-                      <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    <div className="p-4 bg-muted rounded-lg border border-border space-y-3">
+                      <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                         <LayoutGrid size={12} className="text-maroon" />
                         Session Snapshot (Programmed)
                       </div>
                       
-                      <div className="whitespace-pre-wrap text-[11px] leading-relaxed text-slate-700 font-mono">
+                      <div className="whitespace-pre-wrap text-[11px] leading-relaxed text-foreground font-mono">
                         {currentSplit?.summary?.trim() || (currentSplit ? generateWorkoutSnapshot(currentSplit) : '')}
                       </div>
                     </div>
@@ -1900,7 +1900,7 @@ export default function DailyLog() {
           {/* Exercises List */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-800">Exercises</h3>
+              <h3 className="text-lg font-semibold text-foreground">Exercises</h3>
             </div>
 
             <DndContext 
@@ -1959,13 +1959,13 @@ export default function DailyLog() {
             </DndContext>
 
             <div className="grid grid-cols-3 gap-2 mt-4">
-              <Button variant="outline" onClick={addLiftBlock} className="border-dashed border-slate-300">
+              <Button variant="outline" onClick={addLiftBlock} className="border-dashed border-border">
                 <Plus size={16} className="mr-1" /> Add Lift
               </Button>
-              <Button variant="outline" onClick={addCardioBlock} className="border-dashed border-slate-300">
+              <Button variant="outline" onClick={addCardioBlock} className="border-dashed border-border">
                 <Plus size={16} className="mr-1" /> Add Cardio
               </Button>
-              <Button variant="outline" onClick={addHiitBlock} className="border-dashed border-slate-300">
+              <Button variant="outline" onClick={addHiitBlock} className="border-dashed border-border">
                 <Plus size={16} className="mr-1" /> Add HIIT
               </Button>
             </div>
@@ -1974,15 +1974,15 @@ export default function DailyLog() {
 
         <div className="space-y-6">
           {/* Post-Workout Energy */}
-          <Card className="border-slate-200 shadow-sm">
+          <Card className="border-border shadow-sm">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg">Post-Workout Energy</CardTitle>
               <CardDescription>How do you feel right now?</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex justify-between items-center">
-                <span className="text-2xl font-bold text-maroon">{workoutMeta.postWorkoutEnergy}</span>
-                <span className="text-xs text-slate-400 uppercase font-bold">Scale 1-10</span>
+                <span className="text-4xl font-bold metric-display text-primary">{workoutMeta.postWorkoutEnergy}</span>
+                <span className="text-xs text-muted-foreground uppercase font-bold">Scale 1-10</span>
               </div>
               <Slider 
                 value={workoutMeta.postWorkoutEnergy ? (workoutMeta.postWorkoutEnergy - 1) * (10 / 9) : 4.44} 
@@ -1996,7 +1996,7 @@ export default function DailyLog() {
                   setWorkoutMeta(prev => ({ ...prev, postWorkoutEnergy: Math.max(1, Math.min(10, energy)) }));
                 }}
               />
-              <div className="flex justify-between text-[10px] text-slate-400 uppercase font-bold">
+              <div className="flex justify-between text-[10px] text-muted-foreground uppercase font-bold">
                 <span>Drained</span>
                 <span>Average</span>
                 <span>Elite</span>
@@ -2005,7 +2005,7 @@ export default function DailyLog() {
           </Card>
 
           {/* General Notes */}
-          <Card className="border-slate-200 shadow-sm">
+          <Card className="border-border shadow-sm">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg">General Notes</CardTitle>
             </CardHeader>

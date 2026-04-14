@@ -263,13 +263,13 @@ export default function ProfileSettings() {
   return (
     <div className="space-y-6">
       <header className="no-print">
-        <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Profile & Settings</h2>
-        <p className="text-slate-500">Manage your account and app preferences</p>
+        <h2 className="text-3xl font-bold text-foreground tracking-tight">Profile & Settings</h2>
+        <p className="text-muted-foreground">Manage your account and app preferences</p>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* 1. Account / Session */}
-        <Card className="border-border shadow-sm md:col-span-2 no-print">
+        <Card className="border-border card-hero md:col-span-2 no-print">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="text-maroon" size={20} />
