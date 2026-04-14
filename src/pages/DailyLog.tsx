@@ -78,7 +78,7 @@ import {
   CardioSubtype
 } from '@/src/types';
 import { INITIAL_EXERCISES, DEFAULT_SPLIT } from '@/src/constants';
-import { generateWorkoutSnapshot, cleanSummary, sanitizeData, deriveBlocksFromLegacy, projectBlocksToLegacy } from '@/src/lib/workoutUtils';
+import { generateWorkoutSnapshot, cleanSummary, sanitizeData, deriveBlocksFromLegacy, projectBlocksToLegacy, calculateRepeatsTotals, parseTime, calculateZone2Pace } from '@/src/lib/workoutUtils';
 
 const NO_SPLIT_SENTINEL = '__none__';
 
@@ -658,81 +658,214 @@ const SortableConditioningBlock: React.FC<SortableConditioningBlockProps> = ({
 
                 {block.subtype && (
                   <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Name</Label>
-                        <Input
-                          value={block.programmedName ?? ''}
-                          onChange={(e) => onChange({ programmedName: e.target.value })}
-                          placeholder="e.g. Zone 2 Run"
-                          className="h-9"
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Duration</Label>
-                        <div className="flex gap-2">
-                          <Input
-                            type="number"
-                            value={block.programmedDurationVal ?? ''}
-                            onChange={(e) => onChange({ programmedDurationVal: parseFloat(e.target.value) || 0 })}
-                            placeholder="45"
-                            className="h-9"
-                          />
-                          <Select
-                            value={block.programmedDurationUnit ?? 'min'}
-                            onValueChange={(val) => onChange({ programmedDurationUnit: val })}
-                          >
-                            <SelectTrigger className="h-9 w-20">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="min">min</SelectItem>
-                              <SelectItem value="sec">sec</SelectItem>
-                            </SelectContent>
-                          </Select>
+                    {block.subtype === 'Repeats' ? (
+                      <div className="space-y-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div>
+                            <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Splits</Label>
+                            <Input type="number" value={block.splitCount ?? ''} onChange={(e) => {
+                              const count = parseInt(e.target.value) || 0;
+                              const newSplits = Array(count).fill(0).map((_, i) => block.splits?.[i] || { distanceVal: 0, distanceUnit: 'm', timeStr: '0:00' });
+                              onChange({ splitCount: count, splits: newSplits });
+                            }} className="h-9" />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Rest</Label>
+                            <div className="flex gap-2">
+                              <Input type="number" value={block.restValue ?? ''} onChange={(e) => onChange({ restValue: parseFloat(e.target.value) || 0 })} className="h-9" />
+                              <Select value={block.restUnit ?? 'sec'} onValueChange={(val) => onChange({ restUnit: val })}>
+                                <SelectTrigger className="h-9 w-20"><SelectValue /></SelectTrigger>
+                                <SelectContent><SelectItem value="sec">sec</SelectItem><SelectItem value="min">min</SelectItem><SelectItem value="m">m</SelectItem><SelectItem value="yd">yd</SelectItem><SelectItem value="mi">mi</SelectItem></SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          <div>
+                            <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Avg HR</Label>
+                            <Input type="number" value={block.averageHeartRate ?? ''} onChange={(e) => onChange({ averageHeartRate: parseInt(e.target.value) || 0 })} className="h-9" />
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label className="text-[10px] uppercase font-bold text-muted-foreground block">Splits</Label>
+                          {block.splits?.map((split, i) => (
+                            <div key={i} className="grid grid-cols-2 md:grid-cols-4 gap-2 items-center bg-white p-2 rounded border border-slate-200">
+                              <div className="text-xs font-bold text-slate-500">Split {i + 1}</div>
+                              <div className="flex gap-1">
+                                <Input type="number" value={split.distanceVal} onChange={(e) => {
+                                  const newSplits = [...(block.splits || [])];
+                                  newSplits[i] = { ...split, distanceVal: parseFloat(e.target.value) || 0 };
+                                  onChange({ splits: newSplits });
+                                }} className="h-8" />
+                                <Select value={split.distanceUnit} onValueChange={(val) => {
+                                  const newSplits = [...(block.splits || [])];
+                                  newSplits[i] = { ...split, distanceUnit: val };
+                                  onChange({ splits: newSplits });
+                                }}>
+                                  <SelectTrigger className="h-8 w-16"><SelectValue /></SelectTrigger>
+                                  <SelectContent><SelectItem value="m">m</SelectItem><SelectItem value="yd">yd</SelectItem><SelectItem value="km">km</SelectItem><SelectItem value="mi">mi</SelectItem></SelectContent>
+                                </Select>
+                              </div>
+                              <Input value={split.timeStr} onChange={(e) => {
+                                const newSplits = [...(block.splits || [])];
+                                newSplits[i] = { ...split, timeStr: e.target.value };
+                                onChange({ splits: newSplits });
+                              }} placeholder="3:35" className="h-8" />
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-slate-200">
+                          <div>
+                            <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Total Dist</Label>
+                            <div className="h-9 flex items-center font-mono text-sm">{block.splits?.reduce((sum, s) => sum + s.distanceVal, 0) || 0} {block.splits?.[0]?.distanceUnit || 'm'}</div>
+                          </div>
+                          <div>
+                            <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Total Time</Label>
+                            <div className="h-9 flex items-center font-mono text-sm">
+                              {(() => {
+                                const totals = calculateRepeatsTotals(block.splits || []);
+                                return totals.totalTimeStr;
+                              })()}
+                            </div>
+                          </div>
+                          <div>
+                            <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Avg Time/Split</Label>
+                            <div className="h-9 flex items-center font-mono text-sm">
+                              {(() => {
+                                const totals = calculateRepeatsTotals(block.splits || []);
+                                return totals.avgTimePerSplitStr;
+                              })()}
+                            </div>
+                          </div>
+                          <div>
+                            <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Avg Pace</Label>
+                            <div className="h-9 flex items-center font-mono text-sm">
+                              {(() => {
+                                const totals = calculateRepeatsTotals(block.splits || []);
+                                return `${totals.paceStr} / ${block.splits?.[0]?.distanceUnit || 'm'}`;
+                              })()}
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Notes</Label>
+                          <Textarea value={block.programmedNotes ?? ''} onChange={(e) => onChange({ programmedNotes: e.target.value })} placeholder="Repeats notes..." className="min-h-[60px] text-xs" />
                         </div>
                       </div>
-                      {block.subtype !== 'Incline Treadmill' && (
+                    ) : block.subtype === 'Zone 2' ? (
+                      <div className="space-y-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                          <div>
+                            <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Distance</Label>
+                            <div className="flex gap-2">
+                              <Input type="number" value={block.programmedDistanceVal ?? ''} onChange={(e) => onChange({ programmedDistanceVal: parseFloat(e.target.value) || 0 })} className="h-9" />
+                              <Select value={block.programmedDistanceUnit ?? 'mi'} onValueChange={(val) => onChange({ programmedDistanceUnit: val })}>
+                                <SelectTrigger className="h-9 w-20"><SelectValue /></SelectTrigger>
+                                <SelectContent><SelectItem value="m">m</SelectItem><SelectItem value="yd">yd</SelectItem><SelectItem value="km">km</SelectItem><SelectItem value="mi">mi</SelectItem></SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          <div>
+                            <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Time</Label>
+                            <div className="flex gap-2">
+                              <Input value={block.zone2TimeStr ?? ''} onChange={(e) => onChange({ zone2TimeStr: e.target.value })} placeholder="30:00" className="h-9" />
+                              <div className="h-9 flex items-center text-xs text-muted-foreground">min</div>
+                            </div>
+                          </div>
+                          <div>
+                            <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Avg HR</Label>
+                            <Input type="number" value={block.zone2AverageHeartRate ?? ''} onChange={(e) => onChange({ zone2AverageHeartRate: parseInt(e.target.value) || 0 })} className="h-9" />
+                          </div>
+                        </div>
+                        <div className="pt-4 border-t border-slate-200">
+                          <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Avg Pace</Label>
+                          <div className="h-9 flex items-center font-mono text-sm">
+                            {calculateZone2Pace(block.programmedDistanceVal || 0, block.programmedDistanceUnit || 'mi', block.zone2TimeStr || '0:00')}
+                          </div>
+                        </div>
                         <div>
-                          <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Distance</Label>
+                          <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Notes</Label>
+                          <Textarea value={block.programmedNotes ?? ''} onChange={(e) => onChange({ programmedNotes: e.target.value })} placeholder="Zone 2 notes..." className="min-h-[60px] text-xs" />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Existing cardio UI */}
+                        <div>
+                          <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Name</Label>
+                          <Input
+                            value={block.programmedName ?? ''}
+                            onChange={(e) => onChange({ programmedName: e.target.value })}
+                            placeholder="e.g. Zone 2 Run"
+                            className="h-9"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Duration</Label>
                           <div className="flex gap-2">
                             <Input
                               type="number"
-                              value={block.programmedDistanceVal ?? ''}
-                              onChange={(e) => onChange({ programmedDistanceVal: parseFloat(e.target.value) || 0 })}
-                              placeholder="3"
+                              value={block.programmedDurationVal ?? ''}
+                              onChange={(e) => onChange({ programmedDurationVal: parseFloat(e.target.value) || 0 })}
+                              placeholder="45"
                               className="h-9"
                             />
                             <Select
-                              value={block.programmedDistanceUnit ?? 'mi'}
-                              onValueChange={(val) => onChange({ programmedDistanceUnit: val })}
+                              value={block.programmedDurationUnit ?? 'min'}
+                              onValueChange={(val) => onChange({ programmedDurationUnit: val })}
                             >
                               <SelectTrigger className="h-9 w-20">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="mi">mi</SelectItem>
-                                <SelectItem value="km">km</SelectItem>
-                                <SelectItem value="m">m</SelectItem>
-                                <SelectItem value="yd">yd</SelectItem>
+                                <SelectItem value="min">min</SelectItem>
+                                <SelectItem value="sec">sec</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
                         </div>
-                      )}
-                      {block.subtype === 'Incline Treadmill' && (
-                        <div>
-                          <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Incline / Target</Label>
-                          <Input
-                            value={block.programmedNotes ?? ''}
-                            onChange={(e) => onChange({ programmedNotes: e.target.value })}
-                            placeholder="e.g. 12% incline"
-                            className="h-9"
-                          />
-                        </div>
-                      )}
-                    </div>
-                    {block.subtype !== 'Incline Treadmill' && (
+                        {block.subtype !== 'Incline Treadmill' && (
+                          <div>
+                            <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Distance</Label>
+                            <div className="flex gap-2">
+                              <Input
+                                type="number"
+                                value={block.programmedDistanceVal ?? ''}
+                                onChange={(e) => onChange({ programmedDistanceVal: parseFloat(e.target.value) || 0 })}
+                                placeholder="3"
+                                className="h-9"
+                              />
+                              <Select
+                                value={block.programmedDistanceUnit ?? 'mi'}
+                                onValueChange={(val) => onChange({ programmedDistanceUnit: val })}
+                              >
+                                <SelectTrigger className="h-9 w-20">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="mi">mi</SelectItem>
+                                  <SelectItem value="km">km</SelectItem>
+                                  <SelectItem value="m">m</SelectItem>
+                                  <SelectItem value="yd">yd</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        )}
+                        {block.subtype === 'Incline Treadmill' && (
+                          <div>
+                            <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Incline / Target</Label>
+                            <Input
+                              value={block.programmedNotes ?? ''}
+                              onChange={(e) => onChange({ programmedNotes: e.target.value })}
+                              placeholder="e.g. 12% incline"
+                              className="h-9"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {block.subtype !== 'Incline Treadmill' && block.subtype !== 'Repeats' && block.subtype !== 'Zone 2' && (
                       <div>
                         <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Notes</Label>
                         <Textarea

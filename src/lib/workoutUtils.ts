@@ -234,3 +234,63 @@ export const deriveBlocksFromLegacy = (
 
   return blocks;
 };
+
+export const parseTime = (timeStr: string): number => {
+  if (!timeStr) return 0;
+  const parts = timeStr.split(':');
+  if (parts.length === 2) {
+    const minutes = parseInt(parts[0], 10);
+    const seconds = parseInt(parts[1], 10);
+    return (isNaN(minutes) ? 0 : minutes * 60) + (isNaN(seconds) ? 0 : seconds);
+  }
+  return parseInt(timeStr, 10) || 0;
+};
+
+export const formatSeconds = (seconds: number): string => {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.round(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
+export const calculateRepeatsTotals = (
+  splits: { distanceVal: number; distanceUnit: string; timeStr: string }[]
+) => {
+  let totalDistance = 0;
+  let totalTimeSeconds = 0;
+  
+  splits.forEach(split => {
+    totalDistance += split.distanceVal;
+    totalTimeSeconds += parseTime(split.timeStr);
+  });
+  
+  const totalTimeMinutes = totalTimeSeconds / 60;
+  const pace = totalDistance > 0 ? totalTimeMinutes / totalDistance : 0;
+  
+  const paceMinutes = Math.floor(pace);
+  const paceSeconds = Math.round((pace - paceMinutes) * 60);
+  const paceStr = `${paceMinutes}:${paceSeconds.toString().padStart(2, '0')}`;
+
+  return { 
+    totalDistance, 
+    totalTimeSeconds, 
+    totalTimeStr: formatSeconds(totalTimeSeconds),
+    avgTimePerSplitStr: formatSeconds(splits.length > 0 ? totalTimeSeconds / splits.length : 0),
+    paceStr 
+  };
+};
+
+export const calculateZone2Pace = (
+  distanceVal: number,
+  distanceUnit: string,
+  timeStr: string
+) => {
+  const totalTimeSeconds = parseTime(timeStr);
+  const totalTimeMinutes = totalTimeSeconds / 60;
+  const pace = distanceVal > 0 ? totalTimeMinutes / distanceVal : 0;
+  
+  const paceMinutes = Math.floor(pace);
+  const paceSeconds = Math.round((pace - paceMinutes) * 60);
+  const paceStr = `${paceMinutes}:${paceSeconds.toString().padStart(2, '0')}`;
+
+  return `${paceStr} / ${distanceUnit}`;
+};

@@ -132,6 +132,21 @@ export interface CardioBlock extends BlockBase {
   programmedDurationUnit?: string;
   programmedUnits?: string;
   programmedNotes?: string;
+  // Repeats specific
+  splitCount?: number;
+  splits?: {
+    distanceVal: number;
+    distanceUnit: string;
+    timeStr: string;
+  }[];
+  restValue?: number;
+  restUnit?: string;
+  averageHeartRate?: number;
+  // Zone 2 specific
+  zone2DistanceVal?: number;
+  zone2DistanceUnit?: string;
+  zone2TimeStr?: string;
+  zone2AverageHeartRate?: number;
   // Logged
   loggedDistance?: string;
   loggedDuration?: string;
