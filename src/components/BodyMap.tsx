@@ -10,10 +10,10 @@ interface BodyMapProps {
 }
 
 export const HEATMAP_COLORS = [
-  '#9CA3AF',  // Gray (Low < 70%)
-  '#FFBF00',  // Amber (Near Target)
-  '#D4AF37',  // Metallic Gold (On Target)
-  '#800000',  // Deep Maroon (Above Zone)
+  '#9CA3AF',  // Gray: < 70% (Low)
+  '#F59E0B',  // Amber: 70-99% (Near)
+  '#D4AF37',  // Metallic Gold: 100-119% (On Target)
+  '#800000',  // Deep Maroon: >= 120% (Above Zone)
   '#800000',  // Deep Maroon (Above Zone)
   '#800000',  // Deep Maroon (Above Zone)
 ];

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Dumbbell, LineChart, Users, HeartPulse, Settings } from 'lucide-react';
+import { LayoutDashboard, History, Dumbbell, LineChart, HeartPulse, Users, Settings } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useDashboardData } from '@/src/lib/hooks';
@@ -12,11 +12,12 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
 
   const navItems = [
     { id: 'log', label: 'Daily Log', icon: LayoutDashboard },
+    { id: 'history', label: 'History', icon: History },
     { id: 'programming', label: 'Programming', icon: Dumbbell },
     { id: 'progress', label: 'Progress', icon: LineChart },
-    { id: 'social', label: 'Social', icon: Users },
     { id: 'wellness', label: 'Wellness', icon: HeartPulse },
-    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'social', label: 'Social', icon: Users },
+    { id: 'settings', label: 'Settings', icon: Settings, fullWidth: true }
   ];
 
   if (loading) return <div>Loading...</div>;
@@ -35,7 +36,7 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
           <Button 
             key={item.id} 
             variant="outline" 
-            className="h-auto py-3 flex flex-col gap-1.5 border-border hover:border-maroon hover:text-maroon"
+            className={"h-auto py-3 flex flex-col gap-1.5 border-border hover:border-maroon hover:text-maroon " + (item.fullWidth ? "col-span-3 md:col-span-1" : "")}
             onClick={() => setCurrentPage(item.id)}
           >
             <item.icon size={20} />
