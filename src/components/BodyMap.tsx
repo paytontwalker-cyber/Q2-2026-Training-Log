@@ -10,12 +10,12 @@ interface BodyMapProps {
 }
 
 export const HEATMAP_COLORS = [
-  '#FEF3C7',  // very light yellow
-  '#FDE68A',  // yellow-orange
-  '#FB923C',  // orange
-  '#EA580C',  // dark orange
-  '#DC2626',  // red
-  '#991B1B',  // dark red
+  '#9CA3AF',  // Gray (Low < 70%)
+  '#FFBF00',  // Amber (Near Target)
+  '#D4AF37',  // Metallic Gold (On Target)
+  '#800000',  // Deep Maroon (Above Zone)
+  '#800000',  // Deep Maroon (Above Zone)
+  '#800000',  // Deep Maroon (Above Zone)
 ];
 const NO_DATA_COLOR = '#E5E7EB'; // neutral gray
 
