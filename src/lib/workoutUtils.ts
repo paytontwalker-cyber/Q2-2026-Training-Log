@@ -31,6 +31,82 @@ export const getDistanceInMeters = (c: Conditioning): number => {
   return 0;
 };
 
+export const normalizeCardioBlock = (cb: CardioBlock): Conditioning => {
+  let workDistance = cb.loggedDistance || cb.programmedDistance;
+  let workDuration = cb.loggedDuration || cb.programmedDuration;
+  let workUnits = cb.loggedUnits || cb.programmedUnits;
+  let averagePace = cb.loggedAveragePace;
+  let actualSplits: string[] | undefined = undefined;
+  let reps: number | undefined = undefined;
+  let averageHeartRate = cb.averageHeartRate || cb.zone2AverageHeartRate;
+
+  if (cb.subtype === 'Repeats' && cb.splits && cb.splits.length > 0) {
+    const totals = calculateRepeatsTotals(cb.splits);
+    workDistance = cb.splits[0].distanceVal.toString();
+    workUnits = cb.splits[0].distanceUnit;
+    workDuration = totals.avgTimePerSplitStr;
+    averagePace = totals.paceStr;
+    actualSplits = cb.splits.map(s => s.timeStr);
+    reps = cb.splits.length;
+  } else if (cb.subtype === 'Zone 2' && cb.programmedDistanceVal && cb.zone2TimeStr) {
+    workDistance = cb.programmedDistanceVal.toString();
+    workDuration = cb.zone2TimeStr;
+    workUnits = cb.programmedDistanceUnit || 'mi';
+    const totals = calculateRepeatsTotals([{ distanceVal: cb.programmedDistanceVal, distanceUnit: workUnits, timeStr: cb.zone2TimeStr }]);
+    averagePace = totals.paceStr;
+  }
+
+  return {
+    type: cb.subtype as CardioType,
+    name: cb.programmedName || cb.subtype || '',
+    workDistance,
+    workDuration,
+    workUnits,
+    averagePace,
+    incline: cb.loggedIncline,
+    speed: cb.loggedSpeed,
+    notes: cb.loggedNotes || cb.programmedNotes,
+    actualSplits,
+    reps,
+    averageHeartRate,
+  } as Conditioning;
+};
+
+export const normalizeHiitBlock = (hb: HiitBlock): Conditioning => {
+  return {
+    type: (hb.subtype as CardioType) || hb.hiitType || 'Intervals',
+    name: hb.programmedName || '',
+    reps: hb.programmedReps,
+    workDistance: hb.programmedWorkDistance,
+    workDuration: hb.programmedWorkDuration,
+    workUnits: hb.programmedWorkUnits,
+    restType: hb.programmedRestType,
+    restValue: hb.programmedRestValue,
+    structure: hb.programmedStructure || hb.structureNotes,
+    targetSplit: hb.programmedTargetSplit,
+    actualSplits: hb.loggedActualSplits,
+    averagePace: hb.loggedAveragePace,
+    notes: hb.loggedNotes,
+  } as Conditioning;
+};
+
+export const normalizeConditioning = (conditioning: Conditioning | undefined, blocks: Block[] | undefined): Conditioning | null => {
+  if (blocks && blocks.length > 0) {
+    const conditioningBlock = blocks.find(b => b.kind === 'cardio' || b.kind === 'hiit');
+    if (conditioningBlock) {
+      if (conditioningBlock.kind === 'cardio') {
+        return normalizeCardioBlock(conditioningBlock as CardioBlock);
+      } else {
+        return normalizeHiitBlock(conditioningBlock as HiitBlock);
+      }
+    }
+  }
+  if (conditioning && (conditioning.type || conditioning.name)) {
+    return conditioning;
+  }
+  return null;
+};
+
 export const cleanSummary = (text: string): string => {
   if (!text) return '';
   return text
@@ -133,38 +209,10 @@ export const projectBlocksToLegacy = (blocks: Block[]): {
     if (block.kind === 'lift') {
       exercises.push(...block.exercises);
     } else if (!conditioning && (block.kind === 'cardio' || block.kind === 'hiit')) {
-      // Project the FIRST cardio or HIIT block into the legacy conditioning field.
-      // Additional cardio/HIIT blocks are preserved in `blocks` but not mirrored to
-      // the legacy field (downstream pages only support one conditioning entry).
       if (block.kind === 'cardio') {
-        conditioning = {
-          type: block.subtype as CardioType,
-          name: block.programmedName || '',
-          workDistance: block.loggedDistance || block.programmedDistance,
-          workDuration: block.loggedDuration || block.programmedDuration,
-          workUnits: block.loggedUnits || block.programmedUnits,
-          averagePace: block.loggedAveragePace,
-          incline: block.loggedIncline,
-          speed: block.loggedSpeed,
-          notes: block.loggedNotes || block.programmedNotes,
-        };
+        conditioning = normalizeCardioBlock(block as CardioBlock);
       } else {
-        // hiit
-        conditioning = {
-          type: (block.subtype as CardioType) || block.hiitType || 'Intervals',
-          name: block.programmedName || '',
-          reps: block.programmedReps,
-          workDistance: block.programmedWorkDistance,
-          workDuration: block.programmedWorkDuration,
-          workUnits: block.programmedWorkUnits,
-          restType: block.programmedRestType,
-          restValue: block.programmedRestValue,
-          structure: block.programmedStructure || block.structureNotes,
-          targetSplit: block.programmedTargetSplit,
-          actualSplits: block.loggedActualSplits,
-          averagePace: block.loggedAveragePace,
-          notes: block.loggedNotes,
-        };
+        conditioning = normalizeHiitBlock(block as HiitBlock);
         if (block.exercises) {
           exercises.push(...block.exercises);
         }
@@ -215,7 +263,7 @@ export const deriveBlocksFromLegacy = (
         loggedNotes: conditioning.notes,
       } as HiitBlock);
     } else {
-      blocks.push({
+      const cardioBlock: CardioBlock = {
         id: Math.random().toString(36).substr(2, 9),
         kind: 'cardio',
         placement: 'after',
@@ -228,7 +276,22 @@ export const deriveBlocksFromLegacy = (
         loggedIncline: conditioning.incline,
         loggedSpeed: conditioning.speed,
         loggedNotes: conditioning.notes,
-      } as CardioBlock);
+      };
+
+      if (conditioning.type === 'Repeats' && conditioning.actualSplits && conditioning.actualSplits.length > 0) {
+        cardioBlock.splitCount = conditioning.reps || conditioning.actualSplits.length;
+        cardioBlock.splits = conditioning.actualSplits.map(timeStr => ({
+          distanceVal: parseFloat(conditioning.workDistance || '0'),
+          distanceUnit: conditioning.workUnits || 'm',
+          timeStr
+        }));
+      } else if (conditioning.type === 'Zone 2') {
+        cardioBlock.programmedDistanceVal = parseFloat(conditioning.workDistance || '0');
+        cardioBlock.programmedDistanceUnit = conditioning.workUnits || 'mi';
+        cardioBlock.zone2TimeStr = conditioning.workDuration;
+      }
+
+      blocks.push(cardioBlock);
     }
   }
 

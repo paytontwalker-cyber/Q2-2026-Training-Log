@@ -5,7 +5,7 @@
 
 import { ExerciseLibraryEntry, MuscleGroup } from './types';
 
-export const APP_VERSION = '3.1.0';
+export const APP_VERSION = '3.1.2';
 
 export const STATUS_EXPLANATIONS: Record<string, string> = {
   'Low': 'Under 70% of target volume.',

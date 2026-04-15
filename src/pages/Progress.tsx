@@ -41,7 +41,7 @@ import { storage } from '@/src/services/storage';
 import { useFirebase } from '@/src/components/FirebaseProvider';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
-import { getDistanceInMeters } from '../lib/workoutUtils';
+import { getDistanceInMeters, normalizeConditioning } from '../lib/workoutUtils';
 import { BodyMap, HEATMAP_COLORS } from '@/src/components/BodyMap';
 
 export default function Progress() {
@@ -396,7 +396,7 @@ export default function Progress() {
 
   // Running Analytics
   const runningAnalytics = useMemo(() => {
-    const runningWorkouts = history.filter(w => w.conditioning?.type);
+    const runningWorkouts = history.filter(w => normalizeConditioning(w.conditioning, w.blocks));
     if (runningWorkouts.length === 0) return null;
 
     const sortedRunning = [...runningWorkouts].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -406,7 +406,7 @@ export default function Progress() {
     const typeCounts: Record<string, number> = {};
     
     const paceHistory = sortedRunning.map(w => {
-      const c = w.conditioning!;
+      const c = normalizeConditioning(w.conditioning, w.blocks)!;
       const meters = getDistanceInMeters(c);
       const dur = timeToSeconds(c.workDuration || '0') || 0;
       const multiplier = (c.type === 'Repeats' && c.reps && c.reps > 0) ? c.reps : 1;
@@ -439,9 +439,12 @@ export default function Progress() {
     });
 
     const repeatHistory = sortedRunning
-      .filter(w => w.conditioning?.type === 'Repeats' && w.conditioning.actualSplits?.length)
+      .filter(w => {
+        const c = normalizeConditioning(w.conditioning, w.blocks);
+        return c?.type === 'Repeats' && c.actualSplits?.length;
+      })
       .map(w => {
-        const c = w.conditioning!;
+        const c = normalizeConditioning(w.conditioning, w.blocks)!;
         const splits = c.actualSplits!.map(s => timeToSeconds(s)).filter((s): s is number => s !== null);
         const avgSplit = splits.length > 0 ? splits.reduce((a, b) => a + b, 0) / splits.length : 0;
         const bestSplit = splits.length > 0 ? Math.min(...splits) : 0;
@@ -490,9 +493,10 @@ export default function Progress() {
     // 2. Conditioning Load
     let conditioningLoad = 0;
     recentWorkouts.forEach(w => {
-      if (w.conditioning?.type) {
+      const c = normalizeConditioning(w.conditioning, w.blocks);
+      if (c?.type) {
         // Simple conditioning load: duration * intensity factor
-        const dur = timeToSeconds(w.conditioning.workDuration || '0') || 0;
+        const dur = timeToSeconds(c.workDuration || '0') || 0;
         conditioningLoad += dur * 1.5; // 1.5 factor for conditioning intensity
       }
     });

@@ -1795,9 +1795,14 @@ export default function DailyLog() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value={NO_SPLIT_SENTINEL}>No Program</SelectItem>
-                        {splits.map(s => (
-                          <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
-                        ))}
+                        {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => {
+                          const split = splits.find(s => s.day === day);
+                          return (
+                            <SelectItem key={day} value={split?.name || day}>
+                              {day} | {split?.name || '—'}
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
                   </div>

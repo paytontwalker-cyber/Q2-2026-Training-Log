@@ -85,6 +85,7 @@ export interface Conditioning {
   incline?: number;
   speed?: number;
   notes?: string;
+  averageHeartRate?: number;
 }
 
 // ==== Block-based session model (introduced 2.6.0) ====
