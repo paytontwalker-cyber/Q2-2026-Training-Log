@@ -12,10 +12,10 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
 
   const navItems = [
     { id: 'log', label: 'Daily Log', icon: LayoutDashboard },
-    { id: 'history', label: 'History', icon: History },
     { id: 'programming', label: 'Programming', icon: Dumbbell },
     { id: 'progress', label: 'Progress', icon: LineChart },
-    { id: 'wellness', label: 'Wellness', icon: HeartPulse },
+    { id: 'history', label: 'History', icon: History },
+    { id: 'wellness', label: 'Health/Wellness', icon: HeartPulse },
     { id: 'social', label: 'Social', icon: Users },
     { id: 'settings', label: 'Settings', icon: Settings, fullWidth: true }
   ];

@@ -42,7 +42,7 @@ import { useFirebase } from '@/src/components/FirebaseProvider';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
 import { getDistanceInMeters, normalizeConditioning } from '../lib/workoutUtils';
-import { BodyMap, HEATMAP_COLORS } from '@/src/components/BodyMap';
+import { BodyMap, getVolumeColor, THERMAL_COLORS } from '@/src/components/BodyMap';
 
 export default function Progress() {
   const { user } = useFirebase();
@@ -745,7 +745,7 @@ export default function Progress() {
                           dataKey="value"
                         >
                           {weeklyVolume.muscleGroupData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={HEATMAP_COLORS[HEATMAP_COLORS.length - 1 - (index % HEATMAP_COLORS.length)]} />
+                            <Cell key={`cell-${index}`} fill={getVolumeColor((entry.value / weeklyVolume.totalBodyVolume) * 100)} />
                           ))}
                         </Pie>
                         <Tooltip 
@@ -762,7 +762,7 @@ export default function Progress() {
                   <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
                     {weeklyVolume.muscleGroupData.slice(0, 6).map((entry, index) => (
                       <div key={entry.name} className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: HEATMAP_COLORS[HEATMAP_COLORS.length - 1 - (index % HEATMAP_COLORS.length)] }} />
+                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: getVolumeColor((entry.value / weeklyVolume.totalBodyVolume) * 100) }} />
                         <span className="truncate text-muted-foreground">{entry.name}</span>
                         <span className="ml-auto font-bold text-foreground">{((entry.value / weeklyVolume.totalBodyVolume) * 100).toFixed(0)}%</span>
                       </div>
@@ -1049,7 +1049,7 @@ export default function Progress() {
                             dataKey="value"
                           >
                             {latestWorkoutSummary.muscleGroupData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={HEATMAP_COLORS[HEATMAP_COLORS.length - 1 - (index % HEATMAP_COLORS.length)]} />
+                              <Cell key={`cell-${index}`} fill={getVolumeColor((entry.value / latestWorkoutSummary.totalVolume) * 100)} />
                             ))}
                           </Pie>
                           <Tooltip 
@@ -1066,7 +1066,7 @@ export default function Progress() {
                     <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
                       {latestWorkoutSummary.muscleGroupData.slice(0, 6).map((entry, index) => (
                         <div key={entry.name} className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: HEATMAP_COLORS[HEATMAP_COLORS.length - 1 - (index % HEATMAP_COLORS.length)] }} />
+                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: getVolumeColor((entry.value / latestWorkoutSummary.totalVolume) * 100) }} />
                           <span className="truncate text-muted-foreground">{entry.name}</span>
                           <span className="ml-auto font-bold text-foreground">{((entry.value / latestWorkoutSummary.totalVolume) * 100).toFixed(0)}%</span>
                         </div>

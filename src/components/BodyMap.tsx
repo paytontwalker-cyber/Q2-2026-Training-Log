@@ -9,14 +9,24 @@ interface BodyMapProps {
   heatMode?: 'relative' | 'target';
 }
 
-export const HEATMAP_COLORS = [
-  '#9CA3AF',  // Gray: < 70% (Low)
-  '#F59E0B',  // Amber: 70-99% (Near)
-  '#D4AF37',  // Metallic Gold: 100-119% (On Target)
-  '#800000',  // Deep Maroon: >= 120% (Above Zone)
-  '#800000',  // Deep Maroon (Above Zone)
-  '#800000',  // Deep Maroon (Above Zone)
+export const THERMAL_COLORS = [
+  '#FEF08A', // Level 1: Pale Yellow (Very Low)
+  '#FACC15', // Level 2: Bright Yellow (Low)
+  '#F59E0B', // Level 3: Amber (Building)
+  '#EA580C', // Level 4: Orange (Target Zone)
+  '#DC2626', // Level 5: Bright Red (High Volume)
+  '#7F1D1D', // Level 6: Deep Red (Extreme/Overreaching)
 ];
+
+export const getVolumeColor = (percentage: number): string => {
+  if (percentage < 40) return THERMAL_COLORS[0];
+  if (percentage < 70) return THERMAL_COLORS[1];
+  if (percentage < 90) return THERMAL_COLORS[2];
+  if (percentage < 110) return THERMAL_COLORS[3];
+  if (percentage < 130) return THERMAL_COLORS[4];
+  return THERMAL_COLORS[5];
+};
+
 const NO_DATA_COLOR = '#E5E7EB'; // neutral gray
 
 const ALIAS_MAP: Record<string, string> = {
@@ -107,8 +117,7 @@ export function BodyMap({ muscleGroupData, heatMode = 'relative' }: BodyMapProps
       ratio = maxVolume > 0 ? entry.volume / maxVolume : 0;
     }
 
-    const bucket = Math.min(5, Math.floor(ratio * 6));
-    return HEATMAP_COLORS[Math.max(0, bucket)];
+    return getVolumeColor(ratio * 100);
   };
 
   const getVolume = (slug: string, side: 'front'|'back') => {
@@ -209,7 +218,7 @@ export function BodyMap({ muscleGroupData, heatMode = 'relative' }: BodyMapProps
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">Low</span>
           <div className="flex h-4 rounded overflow-hidden shadow-inner">
-            {HEATMAP_COLORS.map((c, i) => (
+            {THERMAL_COLORS.map((c, i) => (
               <div key={i} className="w-8 h-full" style={{ backgroundColor: c }} />
             ))}
           </div>
@@ -225,8 +234,8 @@ export function BodyMap({ muscleGroupData, heatMode = 'relative' }: BodyMapProps
             const regions = MUSCLE_GROUP_TO_REGIONS[data.name as MuscleGroup];
             let color = NO_DATA_COLOR;
             if (regions && data.value > 0 && maxVolume > 0) {
-              const bucket = Math.min(5, Math.floor((data.value / maxVolume) * 6));
-              color = HEATMAP_COLORS[Math.max(0, bucket)];
+              const ratio = (data.value / maxVolume) * 100;
+              color = getVolumeColor(ratio);
             }
             
             return (
