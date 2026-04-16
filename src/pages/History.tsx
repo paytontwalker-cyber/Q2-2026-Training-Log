@@ -364,8 +364,14 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
                           </div>
                         ) : null}
                         
-                        {!workout.conditioning?.type && (
-                          <p className="text-sm text-muted-foreground italic">"{workout.runningStats}"</p>
+                        {workout.runningStats && (
+                          <div className="text-sm text-muted-foreground italic space-y-1 mt-2">
+                            {workout.runningStats.split(/(?:\r\n|\r|\n|\\n)/).map((line, index, arr) => (
+                              <span key={index} className="block">
+                                {index === 0 ? '"' : ''}{line}{index === arr.length - 1 ? '"' : ''}
+                              </span>
+                            ))}
+                          </div>
                         )}
                         
                         {workout.notes && (

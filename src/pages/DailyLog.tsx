@@ -201,7 +201,7 @@ const SortableExerciseCard = ({
                 type="number" 
                 value={ex.sets || ''} 
                 onChange={e => {
-                  const val = e.target.value;
+                  const val = e.target.value.replace(/^0+(?=\d)/, '');
                   const newSets = val === '' ? 0 : parseInt(val);
                   const updates: Partial<ExerciseEntry> = { sets: newSets };
                   if (ex.usePerSetWeights) {
@@ -227,7 +227,7 @@ const SortableExerciseCard = ({
                     type="number" 
                     value={ex.distance || ''} 
                     onChange={e => {
-                      const val = e.target.value;
+                      const val = e.target.value.replace(/^0+(?=\d)/, '');
                       updateExercise(ex.id, { distance: val === '' ? 0 : parseFloat(val) });
                     }}
                     onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
@@ -262,7 +262,7 @@ const SortableExerciseCard = ({
                   type="number" 
                   value={ex.time || ''} 
                   onChange={e => {
-                    const val = e.target.value;
+                    const val = e.target.value.replace(/^0+(?=\d)/, '');
                     updateExercise(ex.id, { time: val === '' ? 0 : parseFloat(val) });
                   }}
                   onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
@@ -276,7 +276,7 @@ const SortableExerciseCard = ({
                   type="number" 
                   value={ex.reps || ''} 
                   onChange={e => {
-                    const val = e.target.value;
+                    const val = e.target.value.replace(/^0+(?=\d)/, '');
                     updateExercise(ex.id, { reps: val === '' ? 0 : parseInt(val) });
                   }}
                   onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
@@ -295,7 +295,7 @@ const SortableExerciseCard = ({
                   type="number" 
                   value={ex.weight || ''} 
                   onChange={e => {
-                    const val = e.target.value;
+                    const val = e.target.value.replace(/^0+(?=\d)/, '');
                     updateExercise(ex.id, { weight: val === '' ? 0 : parseFloat(val) });
                   }}
                   onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
@@ -310,7 +310,7 @@ const SortableExerciseCard = ({
                 step="0.5"
                 value={ex.rpe || ''} 
                 onChange={e => {
-                  const val = e.target.value;
+                  const val = e.target.value.replace(/^0+(?=\d)/, '');
                   updateExercise(ex.id, { rpe: val === '' ? null : parseFloat(val) });
                 }}
                 onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
@@ -323,7 +323,7 @@ const SortableExerciseCard = ({
                 type="number" 
                 value={ex.rir || ''} 
                 onChange={e => {
-                  const val = e.target.value;
+                  const val = e.target.value.replace(/^0+(?=\d)/, '');
                   updateExercise(ex.id, { rir: val === '' ? null : parseInt(val) });
                 }}
                 onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
@@ -342,10 +342,11 @@ const SortableExerciseCard = ({
                   <span className="text-[9px] text-muted-foreground font-bold text-center">S{i+1}</span>
                   <Input 
                     type="number"
-                    value={ex.perSetWeights?.[i] ?? ex.weight ?? ''}
+                    value={ex.perSetWeights?.[i] === 0 ? '' : (ex.perSetWeights?.[i] ?? ex.weight ?? '')}
                     onChange={e => {
+                      const val = e.target.value.replace(/^0+(?=\d)/, '');
                       const newWeights = [...(ex.perSetWeights || Array(ex.sets).fill(ex.weight || 0))];
-                      newWeights[i] = parseFloat(e.target.value) || 0;
+                      newWeights[i] = parseFloat(val) || 0;
                       updateExercise(ex.id, { perSetWeights: newWeights });
                     }}
                     className="h-8 w-16 text-xs text-center"
@@ -1557,7 +1558,7 @@ export default function DailyLog() {
         ...prev,
         id: workoutToSave.id,
         date: workoutToSave.date,
-        isHistorical: true
+        isHistorical: false
       }));
       
       setSaveStatus('success');
@@ -1579,6 +1580,7 @@ export default function DailyLog() {
         runningStats: '',
         notes: '',
         postWorkoutEnergy: 5,
+        isHistorical: false,
       }));
       setBlocks([]);
       setManualSplit(NO_SPLIT_SENTINEL);
@@ -1658,6 +1660,7 @@ export default function DailyLog() {
     runWithUndo(() => {
       setDate(prev => addDays(prev, days));
       setManualSplit(null); // Reset manual split when date changes
+      setWorkoutMeta(prev => ({ ...prev, postWorkoutEnergy: 5, notes: '', isHistorical: false }));
     });
   };
 
@@ -1771,7 +1774,7 @@ export default function DailyLog() {
                   </div>
 
                   {/* Change Program */}
-                  <div className="w-full md:w-48 space-y-1">
+                  <div className="w-full md:w-72 space-y-1">
                     <Label className="label-micro">Program</Label>
                     <Select 
                       value={manualSplit ?? ""} 
