@@ -365,12 +365,19 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
                         ) : null}
                         
                         {workout.runningStats && (
-                          <div className="text-sm text-muted-foreground italic space-y-1 mt-2">
-                            {workout.runningStats.split(/(?:\r\n|\r|\n|\\n)/).map((line, index, arr) => (
-                              <span key={index} className="block">
-                                {index === 0 ? '"' : ''}{line}{index === arr.length - 1 ? '"' : ''}
-                              </span>
-                            ))}
+                          <div className="bg-muted p-3 rounded-lg border border-border space-y-2">
+                            <div className="flex items-center justify-between">
+                              <Badge variant="outline" className="bg-maroon/5 text-maroon border-maroon/10 text-[10px] uppercase font-bold">
+                                Legacy Cardio
+                              </Badge>
+                            </div>
+                            <div className="text-sm text-muted-foreground italic space-y-1">
+                              {workout.runningStats.split(/(?:\r\n|\r|\n|\\n)/).map((line, index, arr) => (
+                                <span key={index} className="block">
+                                  {index === 0 ? '"' : ''}{line}{index === arr.length - 1 ? '"' : ''}
+                                </span>
+                              ))}
+                            </div>
                           </div>
                         )}
                         
