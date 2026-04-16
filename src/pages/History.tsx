@@ -365,7 +365,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
                         ) : null}
                         
                         {!workout.conditioning?.type && (
-                          <p className="text-sm text-muted-foreground italic">"{workout.runningStats}"</p>
+                          <p className="text-sm text-muted-foreground italic break-words whitespace-normal">"{workout.runningStats}"</p>
                         )}
                         
                         {workout.notes && (
