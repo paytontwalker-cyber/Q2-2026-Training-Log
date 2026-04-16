@@ -48,7 +48,6 @@ export default function Progress() {
   const { user } = useFirebase();
   const [view, setView] = useState<'weekly-volume' | 'session-volume' | 'strength' | 'conditioning' | 'battery'>('weekly-volume');
   const [volumeRange, setVolumeRange] = useState<'24h' | '72h' | '1w' | '2w' | '1m' | '3m'>('1w');
-  const [conditioningRange, setConditioningRange] = useState<'24h' | '72h' | '1w' | '2w' | '1m' | '3m'>('1w');
   const [heatMode, setHeatMode] = useState<'relative' | 'target'>('relative');
   const [sessionHeatMode, setSessionHeatMode] = useState<'relative' | 'target'>('relative');
   const [selectedExercise, setSelectedExercise] = useState(INITIAL_EXERCISES[5].name); // Flat Bench Press
@@ -397,19 +396,7 @@ export default function Progress() {
 
   // Running Analytics
   const runningAnalytics = useMemo(() => {
-    let cutoffDate = new Date();
-    switch (conditioningRange) {
-      case '24h': cutoffDate = subDays(new Date(), 1); break;
-      case '72h': cutoffDate = subDays(new Date(), 3); break;
-      case '1w': cutoffDate = startOfWeek(new Date(), { weekStartsOn: 0 }); break;
-      case '2w': cutoffDate = startOfDay(subDays(new Date(), 14)); break;
-      case '1m': cutoffDate = startOfDay(subDays(new Date(), 30)); break;
-      case '3m': cutoffDate = startOfDay(subDays(new Date(), 90)); break;
-    }
-
-    const runningWorkouts = history.filter(w => 
-      normalizeConditioning(w.conditioning, w.blocks) && isAfter(new Date(w.date), cutoffDate)
-    );
+    const runningWorkouts = history.filter(w => normalizeConditioning(w.conditioning, w.blocks));
     if (runningWorkouts.length === 0) return null;
 
     const sortedRunning = [...runningWorkouts].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -1228,24 +1215,9 @@ export default function Progress() {
         <>
           {/* Conditioning View (Renamed from Running) */}
           <section className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Zap className="text-gold" size={20} />
-                <h3 className="text-xl font-bold text-foreground">Conditioning Overview</h3>
-              </div>
-              <Select value={conditioningRange} onValueChange={(v: any) => setConditioningRange(v)}>
-                <SelectTrigger className="w-[120px] h-8 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="24h">Last 24h</SelectItem>
-                  <SelectItem value="72h">Last 72h</SelectItem>
-                  <SelectItem value="1w">1 Week</SelectItem>
-                  <SelectItem value="2w">2 Weeks</SelectItem>
-                  <SelectItem value="1m">1 Month</SelectItem>
-                  <SelectItem value="3m">3 Months</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex items-center gap-2">
+              <Zap className="text-gold" size={20} />
+              <h3 className="text-xl font-bold text-foreground">Conditioning Overview</h3>
             </div>
 
             {runningAnalytics ? (

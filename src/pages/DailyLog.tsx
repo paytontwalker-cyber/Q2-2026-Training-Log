@@ -200,21 +200,21 @@ const SortableExerciseCard = ({
               <Input 
                 type="number" 
                 value={ex.sets || ''} 
-                    onChange={e => {
-                      const val = e.target.value.replace(/^0+(?=\d)/, '');
-                      const newSets = val === '' ? 0 : parseInt(val);
-                      const updates: Partial<ExerciseEntry> = { sets: newSets };
-                      if (ex.usePerSetWeights) {
-                        const newWeights = [...(ex.perSetWeights || [])];
-                        if (newWeights.length < newSets) {
-                          for (let i = newWeights.length; i < newSets; i++) newWeights.push(ex.weight || 0);
-                        } else if (newWeights.length > newSets) {
-                          newWeights.length = newSets;
-                        }
-                        updates.perSetWeights = newWeights;
-                      }
-                      updateExercise(ex.id, updates);
-                    }}
+                onChange={e => {
+                  const val = e.target.value;
+                  const newSets = val === '' ? 0 : parseInt(val);
+                  const updates: Partial<ExerciseEntry> = { sets: newSets };
+                  if (ex.usePerSetWeights) {
+                    const newWeights = [...(ex.perSetWeights || [])];
+                    if (newWeights.length < newSets) {
+                      for (let i = newWeights.length; i < newSets; i++) newWeights.push(ex.weight || 0);
+                    } else if (newWeights.length > newSets) {
+                      newWeights.length = newSets;
+                    }
+                    updates.perSetWeights = newWeights;
+                  }
+                  updateExercise(ex.id, updates);
+                }}
                 onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
                 className="h-9 w-full"
               />
@@ -227,7 +227,7 @@ const SortableExerciseCard = ({
                     type="number" 
                     value={ex.distance || ''} 
                     onChange={e => {
-                      const val = e.target.value.replace(/^0+(?=\d)/, '');
+                      const val = e.target.value;
                       updateExercise(ex.id, { distance: val === '' ? 0 : parseFloat(val) });
                     }}
                     onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
@@ -262,7 +262,7 @@ const SortableExerciseCard = ({
                   type="number" 
                   value={ex.time || ''} 
                   onChange={e => {
-                    const val = e.target.value.replace(/^0+(?=\d)/, '');
+                    const val = e.target.value;
                     updateExercise(ex.id, { time: val === '' ? 0 : parseFloat(val) });
                   }}
                   onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
@@ -276,7 +276,7 @@ const SortableExerciseCard = ({
                   type="number" 
                   value={ex.reps || ''} 
                   onChange={e => {
-                    const val = e.target.value.replace(/^0+(?=\d)/, '');
+                    const val = e.target.value;
                     updateExercise(ex.id, { reps: val === '' ? 0 : parseInt(val) });
                   }}
                   onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
@@ -295,7 +295,7 @@ const SortableExerciseCard = ({
                   type="number" 
                   value={ex.weight || ''} 
                   onChange={e => {
-                    const val = e.target.value.replace(/^0+(?=\d)/, '');
+                    const val = e.target.value;
                     updateExercise(ex.id, { weight: val === '' ? 0 : parseFloat(val) });
                   }}
                   onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
@@ -344,8 +344,8 @@ const SortableExerciseCard = ({
                     type="number"
                     value={ex.perSetWeights?.[i] ?? ex.weight ?? ''}
                     onChange={e => {
-                      const newWeights = [...(ex.perSetWeights || Array(ex.sets).fill(''))];
-                      newWeights[i] = e.target.value.replace(/^0+(?=\d)/, '');
+                      const newWeights = [...(ex.perSetWeights || Array(ex.sets).fill(ex.weight || 0))];
+                      newWeights[i] = parseFloat(e.target.value) || 0;
                       updateExercise(ex.id, { perSetWeights: newWeights });
                     }}
                     className="h-8 w-16 text-xs text-center"
@@ -389,7 +389,7 @@ const SortableExerciseCard = ({
                 const usePerSet = !ex.usePerSetWeights;
                 const updates: Partial<ExerciseEntry> = { usePerSetWeights: usePerSet };
                 if (usePerSet && !ex.perSetWeights) {
-                  updates.perSetWeights = Array(ex.sets || 0).fill('');
+                  updates.perSetWeights = Array(ex.sets || 0).fill(ex.weight || 0);
                 }
                 updateExercise(ex.id, updates);
               }}
@@ -504,58 +504,33 @@ const SortableExerciseCard = ({
               </div>
               
               <div className="w-full md:flex-1 grid grid-cols-3 md:grid-cols-5 gap-2">
-                {ex.superset.trackingMode === 'distance' ? (
-                  <>
-                    <div>
-                      <Label className="text-[9px] uppercase font-bold text-muted-foreground mb-1 block">Distance</Label>
-                      <Input 
-                        type="number" 
-                        value={ex.superset.distance || ''} 
-                        onChange={e => updateSuperset(ex.id, { ...ex.superset, distance: parseFloat(e.target.value) || 0 })}
-                        className="h-8 text-xs"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-[9px] uppercase font-bold text-muted-foreground mb-1 block">Time</Label>
-                      <Input 
-                        type="number" 
-                        value={ex.superset.time || ''} 
-                        onChange={e => updateSuperset(ex.id, { ...ex.superset, time: parseFloat(e.target.value) || 0 })}
-                        className="h-8 text-xs"
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div>
-                      <Label className="text-[9px] uppercase font-bold text-muted-foreground mb-1 block">Sets</Label>
-                      <Input 
-                        type="number" 
-                        value={ex.superset.sets || ''} 
-                        onChange={e => updateSuperset(ex.id, { ...ex.superset, sets: parseInt(e.target.value) || 0 })}
-                        className="h-8 text-xs"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-[9px] uppercase font-bold text-muted-foreground mb-1 block">Reps</Label>
-                      <Input 
-                        type="number" 
-                        value={ex.superset.reps || ''} 
-                        onChange={e => updateSuperset(ex.id, { ...ex.superset, reps: parseInt(e.target.value) || 0 })}
-                        className="h-8 text-xs"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-[9px] uppercase font-bold text-muted-foreground mb-1 block">Weight</Label>
-                      <Input 
-                        type="number" 
-                        value={ex.superset.weight || ''} 
-                        onChange={e => updateSuperset(ex.id, { ...ex.superset, weight: parseFloat(e.target.value) || 0 })}
-                        className="h-8 text-xs"
-                      />
-                    </div>
-                  </>
-                )}
+                <div>
+                  <Label className="text-[9px] uppercase font-bold text-muted-foreground mb-1 block">Sets</Label>
+                  <Input 
+                    type="number" 
+                    value={ex.superset.sets || ''} 
+                    onChange={e => updateSuperset(ex.id, { ...ex.superset, sets: parseInt(e.target.value) || 0 })}
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <div>
+                  <Label className="text-[9px] uppercase font-bold text-muted-foreground mb-1 block">Reps</Label>
+                  <Input 
+                    type="number" 
+                    value={ex.superset.reps || ''} 
+                    onChange={e => updateSuperset(ex.id, { ...ex.superset, reps: parseInt(e.target.value) || 0 })}
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <div>
+                  <Label className="text-[9px] uppercase font-bold text-muted-foreground mb-1 block">Weight</Label>
+                  <Input 
+                    type="number" 
+                    value={ex.superset.weight || ''} 
+                    onChange={e => updateSuperset(ex.id, { ...ex.superset, weight: parseFloat(e.target.value) || 0 })}
+                    className="h-8 text-xs"
+                  />
+                </div>
                 <div>
                   <Label className="text-[9px] uppercase font-bold text-muted-foreground mb-1 block">RPE</Label>
                   <Input 
@@ -1582,8 +1557,7 @@ export default function DailyLog() {
         ...prev,
         id: workoutToSave.id,
         date: workoutToSave.date,
-        isHistorical: true,
-        postWorkoutEnergy: 5
+        isHistorical: true
       }));
       
       setSaveStatus('success');
@@ -1716,7 +1690,6 @@ export default function DailyLog() {
                 runWithUndo(() => {
                   setDate(new Date(year, month - 1, day));
                   setManualSplit(null);
-                  setWorkoutMeta(prev => ({ ...prev, postWorkoutEnergy: 5, notes: '' }));
                 });
               }}
               className="w-auto border-none focus-visible:ring-0 h-8 text-sm text-foreground"
