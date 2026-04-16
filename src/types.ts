@@ -19,6 +19,7 @@ export type MuscleGroup =
   | 'Hamstrings'
   | 'Glutes'
   | 'Calves'
+  | 'Tibialis'
   | 'Core'
   | 'Lower Legs'
   | 'Functional'

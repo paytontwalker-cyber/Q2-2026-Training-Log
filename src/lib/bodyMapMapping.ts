@@ -23,6 +23,7 @@ export const MUSCLE_GROUP_TO_REGIONS: Partial<Record<MuscleGroup, MappedRegion[]
   'Hamstrings':  [{ slug: 'hamstring', side: 'back' }],
   'Glutes':      [{ slug: 'gluteal', side: 'back' }],
   'Calves':      [{ slug: 'calves', side: 'back' }],
+  'Tibialis':    [{ slug: 'tibialis', side: 'front' }],
   'Core':        [{ slug: 'abs', side: 'front' }, { slug: 'obliques', side: 'front' }],
   // 'Lower Legs', 'Functional', 'Plyos', 'Conditioning', 'Other' intentionally have no mapping
 };

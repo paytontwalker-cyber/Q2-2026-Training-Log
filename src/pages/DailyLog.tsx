@@ -504,33 +504,58 @@ const SortableExerciseCard = ({
               </div>
               
               <div className="w-full md:flex-1 grid grid-cols-3 md:grid-cols-5 gap-2">
-                <div>
-                  <Label className="text-[9px] uppercase font-bold text-muted-foreground mb-1 block">Sets</Label>
-                  <Input 
-                    type="number" 
-                    value={ex.superset.sets || ''} 
-                    onChange={e => updateSuperset(ex.id, { ...ex.superset, sets: parseInt(e.target.value) || 0 })}
-                    className="h-8 text-xs"
-                  />
-                </div>
-                <div>
-                  <Label className="text-[9px] uppercase font-bold text-muted-foreground mb-1 block">Reps</Label>
-                  <Input 
-                    type="number" 
-                    value={ex.superset.reps || ''} 
-                    onChange={e => updateSuperset(ex.id, { ...ex.superset, reps: parseInt(e.target.value) || 0 })}
-                    className="h-8 text-xs"
-                  />
-                </div>
-                <div>
-                  <Label className="text-[9px] uppercase font-bold text-muted-foreground mb-1 block">Weight</Label>
-                  <Input 
-                    type="number" 
-                    value={ex.superset.weight || ''} 
-                    onChange={e => updateSuperset(ex.id, { ...ex.superset, weight: parseFloat(e.target.value) || 0 })}
-                    className="h-8 text-xs"
-                  />
-                </div>
+                {ex.superset.trackingMode === 'distance' ? (
+                  <>
+                    <div>
+                      <Label className="text-[9px] uppercase font-bold text-muted-foreground mb-1 block">Distance</Label>
+                      <Input 
+                        type="number" 
+                        value={ex.superset.distance || ''} 
+                        onChange={e => updateSuperset(ex.id, { ...ex.superset, distance: parseFloat(e.target.value) || 0 })}
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[9px] uppercase font-bold text-muted-foreground mb-1 block">Time</Label>
+                      <Input 
+                        type="number" 
+                        value={ex.superset.time || ''} 
+                        onChange={e => updateSuperset(ex.id, { ...ex.superset, time: parseFloat(e.target.value) || 0 })}
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <Label className="text-[9px] uppercase font-bold text-muted-foreground mb-1 block">Sets</Label>
+                      <Input 
+                        type="number" 
+                        value={ex.superset.sets || ''} 
+                        onChange={e => updateSuperset(ex.id, { ...ex.superset, sets: parseInt(e.target.value) || 0 })}
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[9px] uppercase font-bold text-muted-foreground mb-1 block">Reps</Label>
+                      <Input 
+                        type="number" 
+                        value={ex.superset.reps || ''} 
+                        onChange={e => updateSuperset(ex.id, { ...ex.superset, reps: parseInt(e.target.value) || 0 })}
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[9px] uppercase font-bold text-muted-foreground mb-1 block">Weight</Label>
+                      <Input 
+                        type="number" 
+                        value={ex.superset.weight || ''} 
+                        onChange={e => updateSuperset(ex.id, { ...ex.superset, weight: parseFloat(e.target.value) || 0 })}
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                  </>
+                )}
                 <div>
                   <Label className="text-[9px] uppercase font-bold text-muted-foreground mb-1 block">RPE</Label>
                   <Input 
