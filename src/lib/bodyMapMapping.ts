@@ -20,7 +20,10 @@ export const MUSCLE_GROUP_TO_REGIONS: Partial<Record<MuscleGroup, MappedRegion[]
   'Forearms':    [{ slug: 'forearm', side: 'front' }, { slug: 'forearm', side: 'back' }],
   'Upper Back':  [{ slug: 'upper-back', side: 'back' }],
   'Lats':        [{ slug: 'lats', side: 'back' }],
-  'Traps':       [{ slug: 'trapezius', side: 'back' }],
+  'Traps':       [
+    { slug: 'trapezius', side: 'front' },
+    { slug: 'trapezius', side: 'back' },
+  ],
   'Lower Back':  [{ slug: 'lower-back', side: 'back' }],
   'Quads':       [{ slug: 'quadriceps', side: 'front' }],
   'Hamstrings':  [{ slug: 'hamstring', side: 'back' }],

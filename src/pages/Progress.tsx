@@ -50,6 +50,7 @@ export default function Progress() {
   const [volumeRange, setVolumeRange] = useState<'24h' | '72h' | '1w' | '2w' | '1m' | '3m'>('1w');
   const [heatMode, setHeatMode] = useState<'relative' | 'target'>('relative');
   const [sessionHeatMode, setSessionHeatMode] = useState<'relative' | 'target'>('relative');
+  const [conditioningRange, setConditioningRange] = useState<'24h' | '72h' | '1w' | '2w' | '1m' | '3m' | 'all'>('all');
   const [selectedExercise, setSelectedExercise] = useState(INITIAL_EXERCISES[5].name); // Flat Bench Press
   const [selectedWorkoutId, setSelectedWorkoutId] = useState<string | null>(null);
   const [history, setHistory] = useState<Workout[]>([]);
@@ -147,11 +148,15 @@ export default function Progress() {
     };
   }, [chartData]);
 
+  const liftWorkouts = useMemo(() => {
+    return history.filter(w => Array.isArray(w.exercises) && w.exercises.length > 0);
+  }, [history]);
+
   const selectedWorkout = useMemo(() => {
-    if (history.length === 0) return null;
-    const sortedHistory = [...history].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    return selectedWorkoutId ? history.find(w => w.id === selectedWorkoutId) || sortedHistory[0] : sortedHistory[0];
-  }, [history, selectedWorkoutId]);
+    if (liftWorkouts.length === 0) return null;
+    const sortedHistory = [...liftWorkouts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return selectedWorkoutId ? liftWorkouts.find(w => w.id === selectedWorkoutId) || sortedHistory[0] : sortedHistory[0];
+  }, [liftWorkouts, selectedWorkoutId]);
 
   // A. Most Recent Workout Volume Summary
   const latestWorkoutSummary = useMemo(() => {
@@ -396,7 +401,24 @@ export default function Progress() {
 
   // Running Analytics
   const runningAnalytics = useMemo(() => {
-    const runningWorkouts = history.filter(w => normalizeConditioning(w.conditioning, w.blocks));
+    const cutoffMs = conditioningRange === 'all' 
+      ? 0 
+      : (() => {
+          switch (conditioningRange) {
+            case '24h': return Date.now() - 24 * 60 * 60 * 1000;
+            case '72h': return Date.now() - 72 * 60 * 60 * 1000;
+            case '1w': return Date.now() - 7 * 24 * 60 * 60 * 1000;
+            case '2w': return Date.now() - 14 * 24 * 60 * 60 * 1000;
+            case '1m': return Date.now() - 30 * 24 * 60 * 60 * 1000;
+            case '3m': return Date.now() - 90 * 24 * 60 * 60 * 1000;
+            default: return 0;
+          }
+        })();
+    const runningWorkouts = history.filter(w => {
+      if (!normalizeConditioning(w.conditioning, w.blocks)) return false;
+      if (cutoffMs === 0) return true;
+      return new Date(w.date).getTime() >= cutoffMs;
+    });
     if (runningWorkouts.length === 0) return null;
 
     const sortedRunning = [...runningWorkouts].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -469,7 +491,7 @@ export default function Progress() {
       repeatHistory,
       typeData
     };
-  }, [history]);
+  }, [history, conditioningRange]);
 
   // Body Battery Logic
   const bodyBattery = useMemo(() => {
@@ -939,7 +961,7 @@ export default function Progress() {
                 </Select>
               </div>
               <div className="w-full md:w-64">
-                <Select value={selectedWorkoutId || (history.length > 0 ? [...history].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0].id : '')} onValueChange={setSelectedWorkoutId}>
+                <Select value={selectedWorkoutId || (liftWorkouts.length > 0 ? [...liftWorkouts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0].id : '')} onValueChange={setSelectedWorkoutId}>
                   <SelectTrigger>
                     <SelectValue placeholder="Swap Log">
                       {selectedWorkout 
@@ -948,7 +970,7 @@ export default function Progress() {
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    {history.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(w => (
+                    {liftWorkouts.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(w => (
                       <SelectItem key={w.id} value={w.id}>
                         <div className="flex items-center justify-between gap-3 w-full min-w-[220px]">
                           <div className="flex flex-col min-w-0">
@@ -1233,9 +1255,28 @@ export default function Progress() {
         <>
           {/* Conditioning View (Renamed from Running) */}
           <section className="space-y-6">
-            <div className="flex items-center gap-2">
-              <Zap className="text-gold" size={20} />
-              <h3 className="text-xl font-bold text-foreground">Conditioning Overview</h3>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Zap className="text-gold" size={20} />
+                <h3 className="text-xl font-bold text-foreground">Conditioning Overview</h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <Label className="text-xs uppercase tracking-wider text-muted-foreground font-bold">Range</Label>
+                <Select value={conditioningRange} onValueChange={(v: any) => setConditioningRange(v)}>
+                  <SelectTrigger className="h-9 w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="24h">Last 24h</SelectItem>
+                    <SelectItem value="72h">Last 72h</SelectItem>
+                    <SelectItem value="1w">1 Week</SelectItem>
+                    <SelectItem value="2w">2 Weeks</SelectItem>
+                    <SelectItem value="1m">1 Month</SelectItem>
+                    <SelectItem value="3m">3 Months</SelectItem>
+                    <SelectItem value="all">All Time</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {runningAnalytics ? (
