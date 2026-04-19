@@ -148,7 +148,7 @@ export const storage = {
     try {
       const workoutToSave = removeUndefined({ ...workout, uid });
       const docRef = doc(db, 'workouts', workout.id);
-      await setDoc(docRef, workoutToSave);
+      await setDoc(docRef, workoutToSave, { merge: true });
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `workouts/${workout.id}`);
     }

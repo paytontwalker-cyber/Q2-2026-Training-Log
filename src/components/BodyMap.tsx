@@ -9,22 +9,39 @@ interface BodyMapProps {
   heatMode?: 'relative' | 'target';
 }
 
+// 10-step single-hue warm gradient, cream → deep maroon.
+// All shades sit within the same color family for visual cohesion.
+// Each step is perceptually distinguishable — cream, pale peach, peach,
+// warm peach, soft orange, orange, deep orange, burnt orange, rust, deep maroon.
 export const THERMAL_COLORS = [
-  '#FEF08A', // Level 1: Pale Yellow (Very Low)
-  '#FACC15', // Level 2: Bright Yellow (Low)
-  '#F59E0B', // Level 3: Amber (Building)
-  '#EA580C', // Level 4: Orange (Target Zone)
-  '#DC2626', // Level 5: Bright Red (High Volume)
-  '#7F1D1D', // Level 6: Deep Red (Extreme/Overreaching)
+  '#FEF3E7', // Level 1: Cream (Minimal)
+  '#FDE4C4', // Level 2: Pale Peach
+  '#FCD29F', // Level 3: Peach
+  '#FDBA74', // Level 4: Warm Peach
+  '#FB923C', // Level 5: Soft Orange
+  '#F97316', // Level 6: Orange
+  '#EA580C', // Level 7: Deep Orange (Near Target)
+  '#C2410C', // Level 8: Burnt Orange (At Target)
+  '#9A3412', // Level 9: Rust (High)
+  '#7C1D1D', // Level 10: Deep Maroon (Very High / Overreaching)
 ];
 
+// Thresholds:
+// RELATIVE mode: `percentage` = volume as % of the heatmap's max muscle volume.
+//   Buckets scale linearly across 0-110%+ for even spread.
+// TARGET mode:   `percentage` = volume as % of the muscle's weekly volume target.
+//   Buckets cluster around 100% (target) so hitting target maps to a distinct color.
 export const getVolumeColor = (percentage: number): string => {
-  if (percentage < 40) return THERMAL_COLORS[0];
-  if (percentage < 70) return THERMAL_COLORS[1];
-  if (percentage < 90) return THERMAL_COLORS[2];
-  if (percentage < 110) return THERMAL_COLORS[3];
-  if (percentage < 130) return THERMAL_COLORS[4];
-  return THERMAL_COLORS[5];
+  if (percentage < 10)  return THERMAL_COLORS[0];  // Minimal
+  if (percentage < 20)  return THERMAL_COLORS[1];
+  if (percentage < 30)  return THERMAL_COLORS[2];
+  if (percentage < 45)  return THERMAL_COLORS[3];
+  if (percentage < 60)  return THERMAL_COLORS[4];
+  if (percentage < 75)  return THERMAL_COLORS[5];
+  if (percentage < 90)  return THERMAL_COLORS[6];  // Near target
+  if (percentage < 105) return THERMAL_COLORS[7];  // At target (target mode)
+  if (percentage < 125) return THERMAL_COLORS[8];  // High / over target
+  return THERMAL_COLORS[9];                         // Very high / overreaching
 };
 
 const NO_DATA_COLOR = '#E5E7EB'; // neutral gray
@@ -181,9 +198,15 @@ export function BodyMap({ muscleGroupData, heatMode = 'relative' }: BodyMapProps
     const side = hoveredSlug.substring(lastHyphenIndex + 1) as 'front'|'back';
     const names = getMuscleGroupNames(slug, side);
     if (names.length === 0) return null; // Unmapped region
-    const volume = getVolume(slug, side);
-    return { names, volume };
-  }, [hoveredSlug, volumeBySlug]);
+    
+    // Look up each muscle group's individual volume from the input prop
+    const groups = names.map(name => {
+      const entry = muscleGroupData.find(d => d.name === name);
+      return { name, volume: entry ? entry.value : 0 };
+    });
+    
+    return { groups };
+  }, [hoveredSlug, volumeBySlug, muscleGroupData]);
 
   return (
     <div className="flex flex-col space-y-8" onMouseMove={handleMouseMove}>
@@ -204,11 +227,15 @@ export function BodyMap({ muscleGroupData, heatMode = 'relative' }: BodyMapProps
 
       {hoveredData && (
         <div 
-          className="fixed z-50 bg-foreground text-background text-xs px-3 py-2 rounded shadow-lg pointer-events-none transform -translate-x-1/2 -translate-y-full mt-[-10px]"
+          className="fixed z-50 bg-foreground text-background text-xs px-3 py-2 rounded shadow-lg pointer-events-none transform -translate-x-1/2 -translate-y-full mt-[-10px] min-w-[160px]"
           style={{ left: mousePos.x, top: mousePos.y }}
         >
-          <div className="font-bold mb-1">{hoveredData.names.join(', ')}</div>
-          <div>Volume: {hoveredData.volume.toLocaleString()} lbs moved</div>
+          {hoveredData.groups.map(g => (
+            <div key={g.name} className="flex justify-between gap-3 py-0.5">
+              <span className="font-bold">{g.name}</span>
+              <span>{g.volume.toLocaleString()} lbs</span>
+            </div>
+          ))}
         </div>
       )}
 

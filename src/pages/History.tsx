@@ -14,6 +14,108 @@ import { Workout, DeletedWorkout } from '@/src/types';
 import { storage } from '@/src/services/storage';
 import { useFirebase } from '@/src/components/FirebaseProvider';
 
+const renderCardioBlockDetails = (block: any) => {
+  const subtype = block.subtype || 'Cardio';
+  
+  if (subtype === 'Repeats') {
+    const splits = block.splits || [];
+    return (
+      <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+          {block.splitCount !== undefined && (
+            <div className="flex justify-between"><span className="text-muted-foreground">Reps:</span><span className="text-foreground font-medium">{block.splitCount}</span></div>
+          )}
+          {block.restValue !== undefined && block.restValue > 0 && (
+            <div className="flex justify-between"><span className="text-muted-foreground">Rest:</span><span className="text-foreground font-medium">{block.restValue} {block.restUnit || 'sec'}</span></div>
+          )}
+          {block.averageHeartRate !== undefined && block.averageHeartRate > 0 && (
+            <div className="flex justify-between col-span-2"><span className="text-muted-foreground">Avg HR:</span><span className="text-foreground font-medium">{block.averageHeartRate}</span></div>
+          )}
+        </div>
+        {splits.length > 0 && splits.some((s: any) => s.timeStr || s.distanceVal) && (
+          <div className="pt-2 border-t border-border/50">
+            <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">Splits</span>
+            <div className="flex flex-wrap gap-1">
+              {splits.map((s: any, i: number) => (
+                (s.timeStr || s.distanceVal) && (
+                  <span key={i} className="bg-card px-1.5 py-0.5 rounded border border-border text-[10px] text-muted-foreground">
+                    {s.distanceVal || ''}{s.distanceUnit ? s.distanceUnit : ''} {s.timeStr || ''}
+                  </span>
+                )
+              ))}
+            </div>
+          </div>
+        )}
+        {block.programmedNotes && (
+          <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-border/50 whitespace-pre-wrap break-words">{block.programmedNotes}</p>
+        )}
+      </div>
+    );
+  }
+  
+  if (subtype === 'Zone 2') {
+    return (
+      <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+          {block.programmedDistanceVal !== undefined && block.programmedDistanceVal > 0 && (
+            <div className="flex justify-between"><span className="text-muted-foreground">Distance:</span><span className="text-foreground font-medium">{block.programmedDistanceVal} {block.programmedDistanceUnit || 'mi'}</span></div>
+          )}
+          {block.zone2TimeStr && (
+            <div className="flex justify-between"><span className="text-muted-foreground">Time:</span><span className="text-foreground font-medium">{block.zone2TimeStr}</span></div>
+          )}
+          {block.zone2AverageHeartRate !== undefined && block.zone2AverageHeartRate > 0 && (
+            <div className="flex justify-between"><span className="text-muted-foreground">Avg HR:</span><span className="text-foreground font-medium">{block.zone2AverageHeartRate}</span></div>
+          )}
+        </div>
+        {block.programmedNotes && (
+          <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-border/50 whitespace-pre-wrap break-words">{block.programmedNotes}</p>
+        )}
+      </div>
+    );
+  }
+  
+  // Generic cardio fallback (Bike, Ruck, Intervals, Incline Treadmill, Ladders)
+  return (
+    <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+        {(block.programmedDistanceVal || block.programmedDistance) && (
+          <div className="flex justify-between"><span className="text-muted-foreground">Distance:</span><span className="text-foreground font-medium">{block.programmedDistanceVal || block.programmedDistance} {block.programmedDistanceUnit || ''}</span></div>
+        )}
+        {(block.programmedDurationVal || block.programmedDuration) && (
+          <div className="flex justify-between"><span className="text-muted-foreground">Time:</span><span className="text-foreground font-medium">{block.programmedDurationVal || block.programmedDuration} {block.programmedDurationUnit || ''}</span></div>
+        )}
+      </div>
+      {block.programmedNotes && (
+        <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-border/50 whitespace-pre-wrap break-words">{block.programmedNotes}</p>
+      )}
+    </div>
+  );
+};
+
+const renderHiitBlockDetails = (block: any) => {
+  return (
+    <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+        {block.programmedReps !== undefined && block.programmedReps > 0 && (
+          <div className="flex justify-between"><span className="text-muted-foreground">Rounds:</span><span className="text-foreground font-medium">{block.programmedReps}</span></div>
+        )}
+        {(block.programmedWorkDistanceVal || block.programmedWorkDistance) && (
+          <div className="flex justify-between"><span className="text-muted-foreground">Work Dist:</span><span className="text-foreground font-medium">{block.programmedWorkDistanceVal || block.programmedWorkDistance} {block.programmedWorkDistanceUnit || ''}</span></div>
+        )}
+        {(block.programmedWorkDurationVal || block.programmedWorkDuration) && (
+          <div className="flex justify-between"><span className="text-muted-foreground">Work Time:</span><span className="text-foreground font-medium">{block.programmedWorkDurationVal || block.programmedWorkDuration} {block.programmedWorkDurationUnit || ''}</span></div>
+        )}
+      </div>
+      {block.structureNotes && (
+        <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-border/50 whitespace-pre-wrap break-words">{block.structureNotes}</p>
+      )}
+      {block.programmedNotes && block.programmedNotes !== block.structureNotes && (
+        <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-border/50 whitespace-pre-wrap break-words">{block.programmedNotes}</p>
+      )}
+    </div>
+  );
+};
+
 export default function History({ setCurrentPage }: { setCurrentPage: (page: 'log') => void }) {
   const { user } = useFirebase();
   const [history, setHistory] = useState<Workout[]>([]);
@@ -74,8 +176,19 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
     text += `Date: ${dateStr}\n`;
     text += `-----------------------------------\n\n`;
     
-    if (workout.runningStats) {
-      text += `CONDITIONING:\n${workout.runningStats}\n\n`;
+    text += `CONDITIONING:\n`;
+    if (workout.blocks && workout.blocks.some((b: any) => b.kind === 'cardio' || b.kind === 'hiit')) {
+      workout.blocks.filter((b: any) => b.kind === 'cardio' || b.kind === 'hiit').forEach((block: any) => {
+        text += `- ${block.kind === 'hiit' ? (block.hiitType || block.subtype || 'HIIT') : (block.subtype || 'Cardio').toUpperCase()}: ${block.programmedName || block.subtype || ''}\n`;
+        if (block.programmedNotes) text += `  Notes: ${block.programmedNotes}\n`;
+      });
+      text += `\n`;
+    } else if (workout.conditioning && workout.conditioning.type) {
+      text += `- ${workout.conditioning.type}: ${workout.conditioning.name || 'Unnamed'}\n`;
+      if (workout.conditioning.notes) text += `  Notes: ${workout.conditioning.notes}\n`;
+      text += `\n`;
+    } else {
+      text += `None recorded\n\n`;
     }
 
     text += `EXERCISES:\n`;
@@ -143,7 +256,14 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
           <div class="grid">
             <div class="section">
               <div class="section-title">Conditioning</div>
-              ${workout.conditioning && workout.conditioning.type ? `
+              ${workout.blocks && workout.blocks.some((b: any) => b.kind === 'cardio' || b.kind === 'hiit') ? `
+                <div style="font-size: 14px; color: #475569;">
+                  ${workout.blocks.filter((b: any) => b.kind === 'cardio' || b.kind === 'hiit').map((block: any) => `
+                    <strong>${block.kind === 'hiit' ? (block.hiitType || block.subtype || 'HIIT') : (block.subtype || 'Cardio').toUpperCase()}: ${block.programmedName || block.subtype || ''}</strong><br/>
+                    ${block.programmedNotes ? `<div class="notes">${block.programmedNotes}</div>` : ''}
+                  `).join('<br/>')}
+                </div>
+              ` : workout.conditioning && workout.conditioning.type ? `
                 <div style="font-size: 14px; color: #475569;">
                   <strong>${workout.conditioning.type}: ${workout.conditioning.name || 'Unnamed'}</strong><br/>
                   ${workout.conditioning.workDistance || workout.conditioning.workDuration ? `Work: ${workout.conditioning.workDistance || workout.conditioning.workDuration} ${workout.conditioning.workUnits || ''}<br/>` : ''}
@@ -151,10 +271,10 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
                   ${workout.conditioning.restValue ? `Rest: ${workout.conditioning.restValue}<br/>` : ''}
                   ${workout.conditioning.targetSplit ? `Target: ${workout.conditioning.targetSplit}<br/>` : ''}
                   ${workout.conditioning.averagePace ? `Avg Pace: ${workout.conditioning.averagePace}<br/>` : ''}
-                  ${workout.conditioning.actualSplits && workout.conditioning.actualSplits.some(s => s) ? `Splits: ${workout.conditioning.actualSplits.filter(s => s).join(', ')}<br/>` : ''}
+                  ${workout.conditioning.actualSplits && workout.conditioning.actualSplits.some((s: any) => s) ? `Splits: ${workout.conditioning.actualSplits.filter((s: any) => s).join(', ')}<br/>` : ''}
                   ${workout.conditioning.notes ? `<div class="notes">${workout.conditioning.notes}</div>` : ''}
                 </div>
-              ` : `<p>${workout.runningStats || 'None recorded'}</p>`}
+              ` : `<p>None recorded</p>`}
             </div>
             <div class="section">
               <div class="section-title">Post-Workout</div>
@@ -310,81 +430,86 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
                       </div>
                     </div>
                     <div className="space-y-3">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Conditioning & Notes</h4>
-                      <div className="space-y-2">
-                        {workout.conditioning && workout.conditioning.type ? (
-                          <div className="bg-muted p-3 rounded-lg border border-border space-y-2">
-                            <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Session Details</h4>
+                      
+                      {/* Block-based rendering (post-2.6 workouts) */}
+                      {workout.blocks && workout.blocks.length > 0 && workout.blocks.some((b: any) => b.kind === 'cardio' || b.kind === 'hiit') ? (
+                        <>
+                          {workout.blocks
+                            .filter((b: any) => b.kind === 'cardio' || b.kind === 'hiit')
+                            .map((block: any, idx: number) => (
+                              <div key={block.id || idx} className="bg-muted/50 p-3 rounded-lg border border-border space-y-2">
+                                <div className="flex items-center justify-between mb-1">
+                                  <Badge variant="outline" className="bg-maroon/5 text-maroon border-maroon/10 text-[10px] uppercase font-bold">
+                                    {block.kind === 'hiit' 
+                                      ? (block.hiitType || block.subtype || 'HIIT') 
+                                      : (block.subtype || 'Cardio').toUpperCase()}
+                                  </Badge>
+                                  {(block.programmedName || (block.kind === 'cardio' && block.subtype)) && (
+                                    <span className="text-xs text-muted-foreground">{block.programmedName || block.subtype}</span>
+                                  )}
+                                </div>
+                                {block.kind === 'cardio' ? renderCardioBlockDetails(block) : renderHiitBlockDetails(block)}
+                              </div>
+                            ))}
+                        </>
+                      ) : (
+                        /* Legacy conditioning rendering (pre-2.6 workouts that never had blocks) */
+                        workout.conditioning && workout.conditioning.type ? (
+                          <div className="bg-muted/50 p-3 rounded-lg border border-border space-y-2">
+                            <div className="flex items-center justify-between mb-1">
                               <Badge variant="outline" className="bg-maroon/5 text-maroon border-maroon/10 text-[10px] uppercase font-bold">
-                                {workout.conditioning.type}
+                                {workout.conditioning.type.toUpperCase()}
                               </Badge>
-                              <span className="text-xs font-bold text-foreground">{workout.conditioning.name}</span>
+                              {workout.conditioning.name && (
+                                <span className="text-xs text-muted-foreground">{workout.conditioning.name}</span>
+                              )}
                             </div>
-                            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
                               {(workout.conditioning.workDistance || workout.conditioning.workDuration) && (
                                 <div className="flex justify-between">
                                   <span className="text-muted-foreground">Work:</span>
-                                  <span className="text-foreground font-medium">{workout.conditioning.workDistance || workout.conditioning.workDuration} {workout.conditioning.workUnits}</span>
+                                  <span className="text-foreground font-medium">{workout.conditioning.workDistance || workout.conditioning.workDuration} {workout.conditioning.workUnits || ''}</span>
                                 </div>
                               )}
                               {workout.conditioning.reps && (
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">Reps:</span>
-                                  <span className="text-foreground font-medium">{workout.conditioning.reps}</span>
-                                </div>
+                                <div className="flex justify-between"><span className="text-muted-foreground">Reps:</span><span className="text-foreground font-medium">{workout.conditioning.reps}</span></div>
                               )}
                               {workout.conditioning.restType !== 'none' && workout.conditioning.restValue && (
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">Rest:</span>
-                                  <span className="text-foreground font-medium">{workout.conditioning.restValue}</span>
-                                </div>
+                                <div className="flex justify-between"><span className="text-muted-foreground">Rest:</span><span className="text-foreground font-medium">{workout.conditioning.restValue}</span></div>
                               )}
                               {workout.conditioning.targetSplit && (
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">Target:</span>
-                                  <span className="text-foreground font-medium">{workout.conditioning.targetSplit}</span>
-                                </div>
+                                <div className="flex justify-between"><span className="text-muted-foreground">Target:</span><span className="text-foreground font-medium">{workout.conditioning.targetSplit}</span></div>
                               )}
                             </div>
-                            {workout.conditioning.actualSplits && workout.conditioning.actualSplits.some(s => s) && (
+                            {workout.conditioning.actualSplits && workout.conditioning.actualSplits.some((s: any) => s) && (
                               <div className="pt-2 border-t border-border/50">
                                 <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">Splits</span>
                                 <div className="flex flex-wrap gap-1">
-                                  {workout.conditioning.actualSplits.map((split, i) => split && (
-                                    <span key={i} className="bg-card px-1.5 py-0.5 rounded border border-border text-[10px] text-muted-foreground">
-                                      {split}
-                                    </span>
+                                  {workout.conditioning.actualSplits.map((split: any, i: number) => split && (
+                                    <span key={i} className="bg-card px-1.5 py-0.5 rounded border border-border text-[10px] text-muted-foreground">{split}</span>
                                   ))}
                                 </div>
                               </div>
                             )}
                             {workout.conditioning.notes && (
-                              <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-border/50">{workout.conditioning.notes}</p>
+                              <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-border/50 whitespace-pre-wrap break-words">{workout.conditioning.notes}</p>
                             )}
                           </div>
-                        ) : null}
-                        
-                        {workout.runningStats && (
-                          <div className="bg-muted p-3 rounded-lg border border-border space-y-2">
-                            <div className="flex items-center justify-between">
-                              <Badge variant="outline" className="bg-maroon/5 text-maroon border-maroon/10 text-[10px] uppercase font-bold">
-                                Legacy Cardio
-                              </Badge>
-                            </div>
-                            <div className="text-sm text-muted-foreground italic space-y-1">
-                              {workout.runningStats.split(/(?:\r\n|\r|\n|\\n)/).map((line, index, arr) => (
-                                <span key={index} className="block">
-                                  {index === 0 ? '"' : ''}{line}{index === arr.length - 1 ? '"' : ''}
-                                </span>
-                              ))}
-                            </div>
+                        ) : null
+                      )}
+                      
+                      {/* General Notes Box — user-typed notes only */}
+                      {workout.notes && workout.notes.trim() !== '' && (
+                        <div className="bg-muted/50 p-3 rounded-lg border border-border space-y-2">
+                          <div className="flex items-center justify-between mb-1">
+                            <Badge variant="outline" className="bg-maroon/5 text-maroon border-maroon/10 text-[10px] uppercase font-bold">
+                              NOTES
+                            </Badge>
                           </div>
-                        )}
-                        
-                        {workout.notes && (
-                          <p className="text-sm text-muted-foreground line-clamp-2">{workout.notes}</p>
-                        )}
-                      </div>
+                          <p className="text-[12px] text-foreground font-medium leading-relaxed whitespace-pre-wrap break-words">{workout.notes}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>

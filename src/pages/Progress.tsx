@@ -941,11 +941,29 @@ export default function Progress() {
               <div className="w-full md:w-64">
                 <Select value={selectedWorkoutId || (history.length > 0 ? [...history].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0].id : '')} onValueChange={setSelectedWorkoutId}>
                   <SelectTrigger>
-                    <span className="text-sm font-medium">Swap Log</span>
+                    <SelectValue placeholder="Swap Log">
+                      {selectedWorkout 
+                        ? `${selectedWorkout.workoutName || 'Unnamed'} — ${format(new Date(selectedWorkout.date), 'MMM d')}`
+                        : 'Swap Log'}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {history.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(w => (
-                      <SelectItem key={w.id} value={w.id}>{w.workoutName} ({format(new Date(w.date), 'MMM dd')})</SelectItem>
+                      <SelectItem key={w.id} value={w.id}>
+                        <div className="flex items-center justify-between gap-3 w-full min-w-[220px]">
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-sm font-medium text-foreground truncate">{w.workoutName || 'Unnamed'}</span>
+                            <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                              {format(new Date(w.date), 'EEE, MMM d')}
+                            </span>
+                          </div>
+                          {w.postWorkoutEnergy !== undefined && w.postWorkoutEnergy !== null && (
+                            <span className="text-[10px] font-bold text-maroon bg-maroon/10 border border-maroon/20 px-1.5 py-0.5 rounded shrink-0">
+                              {w.postWorkoutEnergy}/10
+                            </span>
+                          )}
+                        </div>
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

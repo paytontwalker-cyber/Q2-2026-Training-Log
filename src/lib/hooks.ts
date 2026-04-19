@@ -3,6 +3,7 @@ import { useFirebase } from '@/src/components/FirebaseProvider';
 import { storage } from '@/src/services/storage';
 import { Workout, ExerciseEntry } from '@/src/types';
 import { format, startOfWeek, endOfWeek } from 'date-fns';
+import { INITIAL_EXERCISES } from '@/src/constants';
 
 export function useMediaQuery(query: string): boolean {
   const [matches, setMatches] = useState(false);
@@ -55,10 +56,24 @@ export function useDashboardData() {
   // Calculate Weekly Volume
   const weeklyVolume: Record<string, number> = {};
   weeklyWorkouts.forEach(w => {
-    w.exercises.forEach(ex => {
-      const muscle = ex.muscleGroup;
+    (w.exercises || []).forEach(ex => {
       const volume = (ex.weight || 0) * (ex.reps || 0) * (ex.sets || 0);
-      weeklyVolume[muscle] = (weeklyVolume[muscle] || 0) + volume;
+      if (volume === 0) return;
+
+      let distribution = ex.muscleDistribution;
+      if (!distribution || distribution.length === 0) {
+        const libraryEx = INITIAL_EXERCISES.find(le => le.name === ex.name);
+        if (libraryEx && libraryEx.muscleDistribution && libraryEx.muscleDistribution.length > 0) {
+          distribution = libraryEx.muscleDistribution;
+        } else {
+          distribution = [{ group: ex.muscleGroup, percent: 100 }];
+        }
+      }
+
+      distribution.forEach(d => {
+        const groupVol = volume * (d.percent / 100);
+        weeklyVolume[d.group] = (weeklyVolume[d.group] || 0) + groupVol;
+      });
     });
   });
 
