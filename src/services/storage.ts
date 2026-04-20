@@ -12,10 +12,12 @@ import {
   setDoc, 
   deleteDoc, 
   orderBy,
-  getDocs
+  getDocs,
+  getDoc,
+  updateDoc
 } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
-import { Workout, ExerciseLibraryEntry, Split, SavedSplit } from '../types';
+import { Workout, ExerciseLibraryEntry, Split, SavedSplit, UserProfile } from '../types';
 import { INITIAL_EXERCISES, DEFAULT_SPLIT } from '../constants';
 
 const removeUndefined = (obj: any): any => {
@@ -699,6 +701,157 @@ export const storage = {
       await deleteDoc(doc(db, 'drafts', uid));
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `drafts/${uid}`);
+    }
+  },
+
+  // ---------- Social (3.6.0) ----------
+
+  // Claim or update a username. Enforces uniqueness via the `usernames/{lowercase}` lookup collection.
+  // Returns { success: true } on success, or { success: false, error: string } with a human-readable reason.
+  claimUsername: async (uid: string, newUsername: string, currentUsernameLower?: string): Promise<{ success: boolean; error?: string }> => {
+    const trimmed = newUsername.trim();
+    
+    // Validate format: 3-20 chars, alphanumeric + underscore, capitals allowed, no leading digit
+    if (!/^[A-Za-z_][A-Za-z0-9_]{2,19}$/.test(trimmed)) {
+      return { success: false, error: 'Username must be 3-20 characters, letters/numbers/underscores, and start with a letter or underscore.' };
+    }
+    
+    const lower = trimmed.toLowerCase();
+    const RESERVED = ['admin', 'coach', 'support', 'trainer', 'api', 'root', 'system', 'moderator', 'mod', 'help', 'about', 'contact', 'team'];
+    if (RESERVED.includes(lower)) {
+      return { success: false, error: 'That username is reserved.' };
+    }
+    
+    // If user is just changing case of their own username, no uniqueness check needed
+    if (currentUsernameLower && currentUsernameLower === lower) {
+      try {
+        const userRef = doc(db, 'users', uid);
+        await updateDoc(userRef, { username: trimmed, usernameLower: lower, updatedAt: Date.now() });
+        return { success: true };
+      } catch (e) {
+        return { success: false, error: 'Failed to update username. Try again.' };
+      }
+    }
+
+    try {
+      // Check if username doc exists
+      const usernameRef = doc(db, 'usernames', lower);
+      const existing = await getDoc(usernameRef);
+      if (existing.exists() && existing.data().uid !== uid) {
+        return { success: false, error: 'That username is already taken.' };
+      }
+      
+      // Atomic-ish: write usernames/{lower} pointing to uid, then update user doc
+      await setDoc(usernameRef, { uid, createdAt: Date.now() });
+      
+      // If user had a previous username, release it
+      if (currentUsernameLower && currentUsernameLower !== lower) {
+        try {
+          await deleteDoc(doc(db, 'usernames', currentUsernameLower));
+        } catch { /* ignore — best effort */ }
+      }
+      
+      const userRef = doc(db, 'users', uid);
+      await updateDoc(userRef, { username: trimmed, usernameLower: lower, updatedAt: Date.now() });
+      return { success: true };
+    } catch (e) {
+      return { success: false, error: 'Failed to claim username. Try again.' };
+    }
+  },
+
+  // Update a user's privacy settings.
+  updatePrivacy: async (uid: string, privacy: { profileVisible: boolean; emailSearchable: boolean }) => {
+    try {
+      const userRef = doc(db, 'users', uid);
+      await updateDoc(userRef, { privacy, updatedAt: Date.now() });
+    } catch (e) {
+      handleFirestoreError(e, OperationType.WRITE, `users/${uid}`);
+    }
+  },
+
+  // Search users by username prefix or email. Client-side filter for <100 users scale.
+  // Respects privacy: hidden users are excluded from results. Email matches require emailSearchable.
+  searchUsers: async (queryText: string, excludeUid?: string): Promise<UserProfile[]> => {
+    const q = queryText.trim().toLowerCase();
+    if (q.length < 2) return [];
+    
+    try {
+      const usersRef = collection(db, 'users');
+      const snapshot = await getDocs(usersRef);
+      const results: UserProfile[] = [];
+      
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data() as UserProfile;
+        if (excludeUid && data.uid === excludeUid) return;
+        
+        const privacyOK = data.privacy?.profileVisible !== false; // default true
+        if (!privacyOK) return;
+        
+        const usernameMatch = data.usernameLower && data.usernameLower.includes(q);
+        const emailMatch = data.privacy?.emailSearchable !== false && 
+                           data.email && data.email.toLowerCase().includes(q);
+        const nameMatch = data.displayName && data.displayName.toLowerCase().includes(q);
+        
+        if (usernameMatch || emailMatch || nameMatch) {
+          // Strip email if searcher found user by username/name (respect emailSearchable even on display)
+          if (!data.privacy?.emailSearchable) {
+            results.push({ ...data, email: '' });
+          } else {
+            results.push(data);
+          }
+        }
+      });
+      
+      // Sort: username matches first, then name, then email
+      return results.sort((a, b) => {
+        const aUser = a.usernameLower?.startsWith(q) ? 0 : 1;
+        const bUser = b.usernameLower?.startsWith(q) ? 0 : 1;
+        return aUser - bUser;
+      });
+    } catch (e) {
+      console.error('searchUsers failed:', e);
+      return [];
+    }
+  },
+
+  // Fetch a single public profile (respects privacy). Returns null if not found or private.
+  getPublicProfile: async (uid: string): Promise<UserProfile | null> => {
+    try {
+      const userRef = doc(db, 'users', uid);
+      const snap = await getDoc(userRef);
+      if (!snap.exists()) return null;
+      const data = snap.data() as UserProfile;
+      if (data.privacy?.profileVisible === false) return null;
+      if (!data.privacy?.emailSearchable) {
+        return { ...data, email: '' };
+      }
+      return data;
+    } catch (e) {
+      console.error('getPublicProfile failed:', e);
+      return null;
+    }
+  },
+
+  // Fetch recent public workouts (for showing PRs / recent activity on a public profile).
+  // Returns the 5 most recent workouts of the user if their profile is visible.
+  getPublicWorkouts: async (uid: string, limit_val: number = 5): Promise<any[]> => {
+    try {
+      // Only fetch if profile is visible
+      const profile = await storage.getPublicProfile(uid);
+      if (!profile) return [];
+      
+      const workoutsRef = collection(db, 'workouts');
+      const qRef = query(workoutsRef, where('uid', '==', uid));
+      const snap = await getDocs(qRef);
+      const all: any[] = [];
+      snap.forEach(d => all.push({ id: d.id, ...d.data() }));
+      
+      return all
+        .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+        .slice(0, limit_val);
+    } catch (e) {
+      console.error('getPublicWorkouts failed:', e);
+      return [];
     }
   }
 };

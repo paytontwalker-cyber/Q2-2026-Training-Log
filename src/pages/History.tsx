@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Trash2, Calendar, Clock, Printer, Copy, Check, Edit, RotateCcw, AlertTriangle, History as HistoryIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -298,6 +298,28 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
     }, 250);
   };
 
+  // Group same-date sessions so we can show "Session X of Y" badges
+  const sessionIndexMap = useMemo(() => {
+    const byDate = new Map<string, Workout[]>();
+    history.forEach(w => {
+      try {
+        const key = format(new Date(w.date), 'yyyy-MM-dd');
+        if (!byDate.has(key)) byDate.set(key, []);
+        byDate.get(key)!.push(w);
+      } catch { /* skip */ }
+    });
+    // Sort each day's sessions by timestamp (earliest first)
+    byDate.forEach(arr => arr.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0)));
+    // Map workout.id -> { index, total }
+    const map = new Map<string, { index: number; total: number }>();
+    byDate.forEach(arr => {
+      arr.forEach((w, idx) => {
+        map.set(w.id, { index: idx + 1, total: arr.length });
+      });
+    });
+    return map;
+  }, [history]);
+
   return (
     <div className="space-y-6">
       <header>
@@ -334,7 +356,11 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
       {view === 'history' && (
         <div className="space-y-4">
           {history.length > 0 ? (
-            history.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(workout => (
+            history.sort((a, b) => {
+              const dateDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
+              if (dateDiff !== 0) return dateDiff;
+              return (b.timestamp || 0) - (a.timestamp || 0); // Within same date, newest timestamp first
+            }).map(workout => (
               <Card key={workout.id} className="border-border shadow-sm hover:border-maroon/30 transition-colors group">
                 <CardHeader className="pb-3">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -379,6 +405,17 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
                       >
                         <Printer size={18} />
                       </Button>
+                      {(() => {
+                        const info = sessionIndexMap.get(workout.id);
+                        if (info && info.total > 1) {
+                          return (
+                            <span className="text-[10px] font-bold text-maroon bg-maroon/10 border border-maroon/20 px-1.5 py-0.5 rounded uppercase tracking-wider mr-1">
+                              Session {info.index} of {info.total}
+                            </span>
+                          );
+                        }
+                        return null;
+                      })()}
                       <Badge variant="outline" className="bg-gold/10 text-gold border-gold/20">
                         Energy: {workout.postWorkoutEnergy}/10
                       </Badge>

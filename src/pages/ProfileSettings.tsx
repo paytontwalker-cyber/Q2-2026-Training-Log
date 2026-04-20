@@ -8,9 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useFirebase } from '@/src/components/FirebaseProvider';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import { storage } from '@/src/services/storage';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -23,72 +24,31 @@ import {
 } from '@/components/ui/select';
 import { useTheme } from '@/src/components/ThemeProvider';
 import { THEME_PRESETS } from '../theme';
-import { APP_VERSION } from '../constants';
+import { APP_VERSION, BASE_VOLUME_TARGETS_180LB_INTERMEDIATE } from '../constants';
+import { computeVolumeTargets } from '@/src/lib/volumeTargets';
+import { cn } from '@/lib/utils';
 import Export from './Export';
 
 const ROADMAP_ITEMS = [
   {
-    category: 'Progress / Analytics Improvements',
+    category: 'Up Next (Database & Logic Security)',
     items: [
-      'Why this group?',
-      'Untouched Groups count label',
-      'Hide zero-volume groups toggle',
-      'Volume Targets sorting',
-      'Date range presets / Custom date range',
-      'Sunday reset weekly logic',
-      'Overshoot scaling',
-      'Data Notes',
-      'Top contributors',
-      'Body map raw volume vs % of target toggle',
-      'Front/back isolate toggle',
-      'Session Body Map vs Session Target Gaps toggle',
-      'Absolute lbs vs % of target toggle',
+      'Strict Timezone/Date locking and { merge: true } database security.',
+      'Nested Superset fixes for Distance/Time modalities (Farmer\'s Carries).',
+      'Heatmap routing fixes (Glutes & Anterior Lower Legs).',
     ],
   },
   {
-    category: 'Program / Programming',
+    category: 'On the Horizon (Advanced Analytics)',
     items: [
-      'AI Guided Program Builder',
-      'Guided program creation with Gemini AI',
-      'User cooperates with AI to build a program based on goals/preferences',
+      'Advanced Cardio Modeling (Mile-by-mile splits and intervals).',
+      'End of Week (EOW) Sitrep aggregations.',
     ],
   },
   {
-    category: 'Wellness / Recovery',
+    category: 'Vaulted',
     items: [
-      'Future Wellness or Recovery page',
-      'Sleep, nutrition, fatigue, readiness, and health metrics',
-    ],
-  },
-  {
-    category: 'Social / Profile',
-    items: [
-      'Editable profile expansion',
-      'Friends / network expansion',
-      'Posts, shared programs, and feed/autopost ideas',
-    ],
-  },
-  {
-    category: 'Architecture / Navigation',
-    items: [
-      'Sidebar reorganization into buckets',
-      'Page organization / consolidation rethink',
-    ],
-  },
-  {
-    category: 'Auth / Integrations',
-    items: [
-      'Email/password sign-in',
-      'Guest account upgrade/conversion',
-      'Garmin / Strava / Apple Health / RENPHO future support',
-    ],
-  },
-  {
-    category: 'Learn More Framework',
-    items: [
-      'Learn More buttons throughout the app',
-      'Internal learning subpages',
-      'Research / article-backed education pages',
+      'Social Feed & Friend Requests.',
     ],
   },
 ];
@@ -101,6 +61,13 @@ const INTEGRATIONS: { name: string; status: string }[] = [
 ];
 
 const UPDATE_ITEMS = [
+  {
+    category: 'Recently Shipped',
+    items: [
+      'v3.8.0: The Readiness Engine Overhaul',
+      'v3.7.3: Dynamic Volume Targets (BW & Height Scaling)',
+    ],
+  },
   {
     category: 'Settings',
     items: [
@@ -164,6 +131,25 @@ export default function ProfileSettings() {
     return { ...themeClean, ...units };
   });
   const [saving, setSaving] = useState(false);
+  
+  const [username, setUsername] = useState('');
+  const [usernameLower, setUsernameLower] = useState<string | undefined>(undefined);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [usernameSaving, setUsernameSaving] = useState(false);
+  const [privacySettings, setPrivacySettings] = useState({ profileVisible: true, emailSearchable: true });
+
+  const [trainingExperience, setTrainingExperience] = useState<'beginner' | 'intermediate' | 'advanced'>('intermediate');
+  const [targetOverrides, setTargetOverrides] = useState<Record<string, number>>({});
+  const [overrideSaving, setOverrideSaving] = useState(false);
+
+  const editorProfile = useMemo(() => ({
+    weight: profile.weight,
+    height: profile.height,
+    trainingExperience,
+    volumeTargetOverrides: targetOverrides,
+  }), [profile.weight, profile.height, trainingExperience, targetOverrides]);
+
+  const effectiveTargets = useMemo(() => computeVolumeTargets(editorProfile), [editorProfile]);
 
   useEffect(() => {
     if (user && !isGuest) {
@@ -185,6 +171,14 @@ export default function ProfileSettings() {
             bio: data.bio || '',
             photoURL: data.photoURL || '',
           });
+          setUsername(data.username || '');
+          setUsernameLower(data.usernameLower);
+          setPrivacySettings({
+            profileVisible: data.privacy?.profileVisible !== false,
+            emailSearchable: data.privacy?.emailSearchable !== false,
+          });
+          setTrainingExperience(data.trainingExperience || 'intermediate');
+          setTargetOverrides(data.volumeTargetOverrides || {});
           setAppSettings({
             weightUnit: data.weightUnit || 'lbs',
             heightUnit: data.heightUnit || 'in',
@@ -245,6 +239,22 @@ export default function ProfileSettings() {
       } finally {
         setSaving(false);
       }
+    }
+  };
+
+  const saveTrainingSettings = async () => {
+    if (!user || isGuest) return;
+    setOverrideSaving(true);
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        trainingExperience,
+        volumeTargetOverrides: targetOverrides,
+      });
+    } catch (e) {
+      console.error('Failed to save training settings:', e);
+    } finally {
+      setOverrideSaving(false);
     }
   };
 
@@ -342,6 +352,90 @@ export default function ProfileSettings() {
           </CardContent>
         </Card>
 
+        {/* Social Identity */}
+        <Card className="border-border shadow-sm">
+          <CardHeader>
+            <CardTitle>Social Identity</CardTitle>
+            <CardDescription>Pick a unique @username so friends can find you. Capital letters OK — we'll match case-insensitively.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Username</Label>
+              <div className="flex gap-2 items-start">
+                <div className="flex-1">
+                  <div className="flex items-center gap-1">
+                    <span className="text-muted-foreground text-sm">@</span>
+                    <Input
+                      value={username}
+                      onChange={e => { setUsername(e.target.value); setUsernameError(null); }}
+                      placeholder="YourHandle"
+                      maxLength={20}
+                    />
+                  </div>
+                  {usernameError && <p className="text-xs text-red-600 mt-1">{usernameError}</p>}
+                  {!usernameError && username && <p className="text-xs text-muted-foreground mt-1">Others will find you as @{username}</p>}
+                </div>
+                <Button 
+                  onClick={async () => {
+                    if (!user) return;
+                    setUsernameSaving(true);
+                    setUsernameError(null);
+                    const res = await storage.claimUsername(user.uid, username, usernameLower);
+                    if (res.success) {
+                      setUsernameLower(username.toLowerCase());
+                    } else {
+                      setUsernameError(res.error || 'Failed.');
+                    }
+                    setUsernameSaving(false);
+                  }}
+                  disabled={usernameSaving || !username.trim() || username.toLowerCase() === usernameLower}
+                  className="bg-maroon hover:bg-maroon-light text-white"
+                >
+                  {usernameSaving ? 'Saving...' : 'Claim'}
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-3 border-t border-border">
+              <h4 className="text-xs uppercase font-bold tracking-wider text-muted-foreground">Privacy</h4>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-sm">Profile visible to others</Label>
+                  <p className="text-xs text-muted-foreground">When off, your profile won't appear in searches.</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={privacySettings.profileVisible}
+                  onChange={async (e) => {
+                    if (!user) return;
+                    const next = { ...privacySettings, profileVisible: e.target.checked };
+                    setPrivacySettings(next);
+                    await storage.updatePrivacy(user.uid, next);
+                  }}
+                  className="h-5 w-5"
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-sm">Email searchable</Label>
+                  <p className="text-xs text-muted-foreground">When off, others can only find you by username or display name.</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={privacySettings.emailSearchable}
+                  onChange={async (e) => {
+                    if (!user) return;
+                    const next = { ...privacySettings, emailSearchable: e.target.checked };
+                    setPrivacySettings(next);
+                    await storage.updatePrivacy(user.uid, next);
+                  }}
+                  className="h-5 w-5"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* 2. Account Details */}
         <Card className="border-border shadow-sm no-print">
           <CardHeader>
@@ -390,6 +484,86 @@ export default function ProfileSettings() {
             <Button onClick={saveProfile} disabled={saving} className="w-full bg-maroon hover:bg-maroon-light text-white">
               <Save className="mr-2" size={16} />
               {saving ? 'Saving...' : 'Save Account Details'}
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Training & Volume Targets */}
+        <Card className="border-border shadow-sm md:col-span-2">
+          <CardHeader>
+            <CardTitle>Training & Volume Targets</CardTitle>
+            <CardDescription>
+              Your weekly volume targets scale with your bodyweight and training experience. Override any muscle group individually if the formula doesn't match your goals.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Training Experience</Label>
+              <Select value={trainingExperience} onValueChange={(v: any) => setTrainingExperience(v)}>
+                <SelectTrigger className="h-10 w-full max-w-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="beginner">Beginner (&lt; 2 yrs)</SelectItem>
+                  <SelectItem value="intermediate">Intermediate (2–5 yrs)</SelectItem>
+                  <SelectItem value="advanced">Advanced (5+ yrs)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Bodyweight: {profile.weight || '—'} lbs | Height: {profile.height || '—'}. 
+                Experience multiplier: {trainingExperience === 'beginner' ? '0.7×' : trainingExperience === 'advanced' ? '1.3×' : '1.0×'}.
+              </p>
+            </div>
+
+            <div className="pt-3 border-t border-border">
+              <h4 className="text-xs uppercase font-bold tracking-wider text-muted-foreground mb-2">Weekly Volume Targets (lbs moved)</h4>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-3">
+                {Object.keys(BASE_VOLUME_TARGETS_180LB_INTERMEDIATE).map(mg => {
+                  const computed = effectiveTargets[mg];
+                  const isOverridden = mg in targetOverrides && targetOverrides[mg] > 0;
+                  return (
+                    <div key={mg} className="flex items-center gap-2 p-2 rounded border border-border bg-card">
+                      <Label className="text-xs flex-1 min-w-0">{mg}</Label>
+                      <Input
+                        type="number"
+                        value={isOverridden ? targetOverrides[mg] : computed}
+                        onChange={e => {
+                          const val = parseInt(e.target.value) || 0;
+                          setTargetOverrides(prev => ({ ...prev, [mg]: val }));
+                        }}
+                        className={cn("h-8 text-xs w-24 text-right", isOverridden && "border-maroon")}
+                      />
+                      {isOverridden && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 text-[10px]"
+                          onClick={() => {
+                            setTargetOverrides(prev => {
+                              const { [mg]: _, ...rest } = prev;
+                              return rest;
+                            });
+                          }}
+                        >
+                          Reset
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Values shown are the currently effective targets. Overridden muscles are highlighted in maroon. Click Reset to return to the formula.
+              </p>
+            </div>
+
+            <Button 
+              onClick={saveTrainingSettings} 
+              disabled={overrideSaving}
+              className="bg-maroon hover:bg-maroon-light text-white w-full"
+            >
+              {overrideSaving ? 'Saving...' : 'Save Training Settings'}
             </Button>
           </CardContent>
         </Card>

@@ -7,7 +7,7 @@ import { ExerciseLibraryEntry, MuscleGroup } from './types';
 import INITIAL_EXERCISES_DATA from './data/exercises.json';
 import TEMPLATES_DATA from './data/templates.json';
 
-export const APP_VERSION = '3.4.0';
+export const APP_VERSION = '3.8.0';
 
 export const INITIAL_EXERCISES: ExerciseLibraryEntry[] = INITIAL_EXERCISES_DATA as ExerciseLibraryEntry[];
 export const DEFAULT_SPLIT = TEMPLATES_DATA.defaultSplit;
@@ -19,22 +19,40 @@ export const STATUS_EXPLANATIONS: Record<string, string> = {
   'On Target': '100% to 119% of target volume.',
   'Above Zone': '120% or more of target volume.',
 };
-export const MUSCLE_VOLUME_TARGETS: Record<string, number> = {
-  Chest: 8000,
-  Back: 12000,
-  Quads: 10000,
-  Hamstrings: 7000,
-  Glutes: 8000,
-  Shoulders: 5000,
-  'Side Delts': 3000,
-  'Rear Delts': 3500,
-  Biceps: 3500,
-  Triceps: 4000,
-  Calves: 6000,
-  'Abs/Core': 2500,
-  Traps: 4000,
-  Forearms: 2500,
+// Base weekly volume targets (in lbs moved) for an intermediate lifter at 180 lb bodyweight.
+// Monolithic 'Back' has been deprecated in favor of granular tracking.
+export const BASE_VOLUME_TARGETS_180LB_INTERMEDIATE: Record<string, number> = {
+  Chest: 5400,
+  Quads: 3600,
+  Hamstrings: 3600,
+  Lats: 2700,
+  'Upper Back': 1800,
+  Shoulders: 1800,
+  Triceps: 1800,
+  Biceps: 1800,
+  Glutes: 1800,
+  Calves: 1800,
+  'Lower Legs': 900, // Tibialis Anterior
+  'Side Delts': 900,
+  'Rear Delts': 900,
+  Traps: 900,
+  'Lower Back': 900,
+  Forearms: 900,
+  'Abs/Core': 900
 };
+
+// Experience multipliers scale targets to training age.
+// Beginners can grow on less volume; advanced lifters require more to continue progressing.
+export const EXPERIENCE_MULTIPLIERS: Record<'beginner' | 'intermediate' | 'advanced', number> = {
+  beginner: 0.70,
+  intermediate: 1.00,
+  advanced: 1.30,
+};
+
+// Keep the old export name as an alias that maps to intermediate-180lb values.
+// Allows gradual migration of callers; we're updating all in this patch.
+/** @deprecated Use computeVolumeTargets(profile) instead */
+export const MUSCLE_VOLUME_TARGETS = BASE_VOLUME_TARGETS_180LB_INTERMEDIATE;
 
 export const MUSCLE_GROUPS: MuscleGroup[] = [
   'Chest',

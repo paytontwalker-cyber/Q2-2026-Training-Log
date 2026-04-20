@@ -239,14 +239,26 @@ export interface UserProfile {
   uid: string;
   email: string;
   displayName: string;
-  username?: string;   // NEW
-  bio?: string;        // NEW
-  photoURL?: string;   // NEW
+  username?: string;           // display-case (e.g. "PaytonW")
+  usernameLower?: string;      // lowercase for search/uniqueness (e.g. "paytonw")
+  bio?: string;
+  photoURL?: string;
   height?: string;
   weight?: string;
   goalWeight?: string;
   age?: string;
   sex?: string;
+  // Social (added 3.6.0)
+  role?: 'user' | 'coach';     // dormant; reserved for future
+  privacy?: {
+    profileVisible: boolean;   // default true — others can view profile
+    emailSearchable: boolean;  // default true — others can find you by email
+  };
+  // Training personalization (3.7.0)
+  trainingExperience?: 'beginner' | 'intermediate' | 'advanced';
+  volumeTargetOverrides?: Record<string, number>;  // per-muscle-group override, overrides the computed target
+  createdAt?: number;
+  updatedAt?: number;
 }
 
 export interface GuestUser {

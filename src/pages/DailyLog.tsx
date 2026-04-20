@@ -1157,6 +1157,34 @@ export default function DailyLog() {
   const [manualSplit, setManualSplit] = useState<string | null>(null);
   const [isDraftLoaded, setIsDraftLoaded] = useState(false);
 
+  // Load all workouts for the current user (for detecting same-date sessions)
+  const [allWorkouts, setAllWorkouts] = useState<Workout[]>([]);
+  useEffect(() => {
+    if (!user) return;
+    const unsubscribe = storage.subscribeToWorkouts(user.uid, (workouts) => {
+      setAllWorkouts(workouts);
+    });
+    return () => unsubscribe();
+  }, [user]);
+
+  const sessionsForCurrentDate = useMemo(() => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    return allWorkouts
+      .filter(w => {
+        try {
+          return format(new Date(w.date), 'yyyy-MM-dd') === dateStr;
+        } catch {
+          return false;
+        }
+      })
+      .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+  }, [allWorkouts, date]);
+
+  const currentSessionIndex = useMemo(() => {
+    if (!workoutMeta.id) return -1; // Unsaved new session
+    return sessionsForCurrentDate.findIndex(s => s.id === workoutMeta.id);
+  }, [sessionsForCurrentDate, workoutMeta.id]);
+
   interface WorkoutSnapshot {
     workoutMeta: Partial<Workout>;
     blocks: Block[];
@@ -1681,9 +1709,72 @@ export default function DailyLog() {
     runWithUndo(() => {
       setManualSplit(null);
       loadProgrammedWorkout(targetDate, null);
-      setWorkoutMeta(prev => ({ ...prev, id: Math.random().toString(36).substr(2, 9) }));
+      setWorkoutMeta(prev => ({ ...prev, id: '', isHistorical: false }));
     });
-  }, [loadProgrammedWorkout]);
+  }, [loadProgrammedWorkout, runWithUndo]);
+
+  const loadExistingSession = useCallback((workout: Workout) => {
+    if (!user) return;
+    // Preserve the draft but load this workout's data into the editor
+    runWithUndo(() => {
+      setBlocks(workout.blocks || deriveBlocksFromLegacy(workout.exercises || [], workout.conditioning));
+      setWorkoutMeta({
+        id: workout.id,
+        workoutName: workout.workoutName || '',
+        date: workout.date,
+        postWorkoutEnergy: workout.postWorkoutEnergy ?? 5,
+        notes: workout.notes || '',
+        isHistorical: false,  // This is an edit of today's session, not a historical-copy flow
+      });
+      setManualSplit(null);
+    });
+  }, [user, runWithUndo]);
+
+  const startNewSession = useCallback(() => {
+    runWithUndo(() => {
+      // Clear blocks, give a fresh id, keep today's date
+      setBlocks([{
+        id: `lift_${Math.random().toString(36).substr(2, 9)}`,
+        kind: 'lift',
+        title: 'Lift',
+        exercises: [],
+      }]);
+      setWorkoutMeta({
+        id: '',  // New session — save will generate fresh id
+        workoutName: '',
+        date: date.toISOString(),
+        postWorkoutEnergy: 5,
+        notes: '',
+        isHistorical: false,
+      });
+      setManualSplit(NO_SPLIT_SENTINEL);
+    });
+  }, [date, runWithUndo]);
+
+  const onDateChanged = useCallback((newDate: Date) => {
+    const newDateStr = format(newDate, 'yyyy-MM-dd');
+    const existingSessionsOnNewDate = allWorkouts
+      .filter(w => {
+        try { return format(new Date(w.date), 'yyyy-MM-dd') === newDateStr; } 
+        catch { return false; }
+      })
+      .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+    
+    if (existingSessionsOnNewDate.length > 0) {
+      // Date has existing sessions — load the first one
+      loadExistingSession(existingSessionsOnNewDate[0]);
+    } else {
+      // Fresh date — reset to blank programmed state
+      setManualSplit(null);
+      setWorkoutMeta(prev => ({
+        ...prev,
+        postWorkoutEnergy: 5,
+        notes: '',
+        id: '',
+        isHistorical: false,
+      }));
+    }
+  }, [allWorkouts, loadExistingSession]);
 
   const handleReset = () => {
     reloadWorkoutForDate(date);
@@ -1747,15 +1838,9 @@ export default function DailyLog() {
 
   const changeDate = (days: number) => {
     runWithUndo(() => {
-      setDate(prev => addDays(prev, days));
-      setManualSplit(null); // Reset manual split when date changes
-      setWorkoutMeta(prev => ({
-        ...prev,
-        postWorkoutEnergy: 5,
-        notes: '',
-        id: '',                // clear historical ID so next save generates fresh
-        isHistorical: false,   // no longer editing a historical workout
-      }));
+      const newDate = addDays(date, days);
+      setDate(newDate);
+      onDateChanged(newDate);
     });
   };
 
@@ -1765,6 +1850,43 @@ export default function DailyLog() {
         <div>
           <h2 className="text-3xl font-bold text-foreground tracking-tight">Daily Log</h2>
           <p className="text-muted-foreground">{format(date, 'EEEE, MMMM do, yyyy')}</p>
+          {sessionsForCurrentDate.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 mt-2 p-2 rounded-lg bg-muted/50 border border-border">
+              <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+                Sessions Today ({sessionsForCurrentDate.length})
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {sessionsForCurrentDate.map((s, idx) => {
+                  const isActive = workoutMeta.id === s.id;
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() => loadExistingSession(s)}
+                      className={cn(
+                        "text-[11px] px-2 py-0.5 rounded border transition-colors",
+                        isActive 
+                          ? "bg-maroon text-white border-maroon font-bold" 
+                          : "bg-card text-foreground border-border hover:bg-muted hover:border-maroon/50"
+                      )}
+                    >
+                      {idx + 1}. {s.workoutName || 'Untitled'}
+                    </button>
+                  );
+                })}
+                <button
+                  onClick={startNewSession}
+                  className={cn(
+                    "text-[11px] px-2 py-0.5 rounded border border-dashed transition-colors",
+                    currentSessionIndex === -1
+                      ? "bg-maroon/10 text-maroon border-maroon font-bold"
+                      : "bg-card text-muted-foreground border-muted-foreground/40 hover:text-maroon hover:border-maroon"
+                  )}
+                >
+                  + New Session
+                </button>
+              </div>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center bg-card border border-border rounded-md p-1">
@@ -1786,15 +1908,9 @@ export default function DailyLog() {
                 const [year, month, day] = value.split('-').map(Number);
 
                 runWithUndo(() => {
-                  setDate(new Date(year, month - 1, day));
-                  setManualSplit(null);
-                  setWorkoutMeta(prev => ({
-                    ...prev,
-                    postWorkoutEnergy: 5,
-                    notes: '',
-                    id: '',                // clear historical ID so next save generates fresh
-                    isHistorical: false,   // no longer editing a historical workout
-                  }));
+                  const newDate = new Date(year, month - 1, day);
+                  setDate(newDate);
+                  onDateChanged(newDate);
                 });
               }}
               className="w-auto border-none focus-visible:ring-0 h-8 text-sm text-foreground"

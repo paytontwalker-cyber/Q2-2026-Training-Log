@@ -1,12 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { BODY_FRONT_PATHS, BODY_BACK_PATHS } from '@/src/lib/bodyMapPaths';
 import { MUSCLE_GROUP_TO_REGIONS } from '@/src/lib/bodyMapMapping';
-import { MUSCLE_VOLUME_TARGETS } from '@/src/constants';
+import { BASE_VOLUME_TARGETS_180LB_INTERMEDIATE } from '@/src/constants';
 import type { MuscleGroup } from '@/src/types';
 
 interface BodyMapProps {
   muscleGroupData: { name: string; value: number }[];
   heatMode?: 'relative' | 'target';
+  volumeTargets?: Record<string, number>;
 }
 
 // 10-step single-hue warm gradient, cream → deep maroon.
@@ -54,7 +55,7 @@ const ALIAS_MAP: Record<string, string> = {
   'Core': 'Abs/Core',
 };
 
-const getTargetForSlug = (slug: string) => {
+const getTargetForSlug = (slug: string, targets: Record<string, number> = BASE_VOLUME_TARGETS_180LB_INTERMEDIATE) => {
   const muscleGroups = Object.entries(MUSCLE_GROUP_TO_REGIONS)
     .filter(([_, regions]) => regions?.some(r => r.slug === slug))
     .map(([name]) => name);
@@ -63,21 +64,21 @@ const getTargetForSlug = (slug: string) => {
   let totalTarget = 0;
 
   muscleGroups.forEach(mg => {
-    if (MUSCLE_VOLUME_TARGETS[mg]) {
+    if (targets[mg]) {
       targetKeys.add(mg);
-    } else if (ALIAS_MAP[mg] && MUSCLE_VOLUME_TARGETS[ALIAS_MAP[mg]]) {
+    } else if (ALIAS_MAP[mg] && targets[ALIAS_MAP[mg]]) {
       targetKeys.add(ALIAS_MAP[mg]);
     }
   });
 
   targetKeys.forEach(key => {
-    totalTarget += MUSCLE_VOLUME_TARGETS[key];
+    totalTarget += targets[key];
   });
 
   return totalTarget;
 };
 
-export function BodyMap({ muscleGroupData, heatMode = 'relative' }: BodyMapProps) {
+export function BodyMap({ muscleGroupData, heatMode = 'relative', volumeTargets }: BodyMapProps) {
   const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
@@ -124,7 +125,7 @@ export function BodyMap({ muscleGroupData, heatMode = 'relative' }: BodyMapProps
     
     let ratio = 0;
     if (heatMode === 'target') {
-      const target = getTargetForSlug(slug);
+      const target = getTargetForSlug(slug, volumeTargets || BASE_VOLUME_TARGETS_180LB_INTERMEDIATE);
       if (target > 0) {
         ratio = entry.volume / target;
       } else {

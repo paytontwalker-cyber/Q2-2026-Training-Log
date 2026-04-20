@@ -36,9 +36,13 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { ExerciseSelector } from '@/src/components/ExerciseSelector';
 import { INITIAL_EXERCISES, MUSCLE_VOLUME_TARGETS } from '@/src/constants';
+import { computeVolumeTargets } from '@/src/lib/volumeTargets';
+import { BASE_VOLUME_TARGETS_180LB_INTERMEDIATE } from '@/src/constants';
 import { Workout } from '@/src/types';
 import { storage } from '@/src/services/storage';
 import { useFirebase } from '@/src/components/FirebaseProvider';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
 import { getDistanceInMeters, normalizeConditioning } from '../lib/workoutUtils';
@@ -60,6 +64,19 @@ export default function Progress() {
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [userProfile, setUserProfile] = useState<any>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    const unsubscribe = onSnapshot(doc(db, 'users', user.uid), (snap) => {
+      if (snap.exists()) {
+        setUserProfile(snap.data());
+      }
+    });
+    return () => unsubscribe();
+  }, [user]);
+
+  const userVolumeTargets = useMemo(() => computeVolumeTargets(userProfile), [userProfile]);
 
   const STATUS_EXPLANATIONS: Record<string, string> = {
     'Low': 'Under 70% of your weekly volume target.',
@@ -225,7 +242,7 @@ export default function Progress() {
       .filter(d => d.value > 0)
       .map(d => {
         const muscleGroup = aliasMap[d.name] || d.name;
-        const targetVolume = MUSCLE_VOLUME_TARGETS[muscleGroup] || 0;
+        const targetVolume = (userVolumeTargets as Record<string, number>)[muscleGroup] || 0;
         const actualVolume = d.value;
         const percentOfTarget = targetVolume > 0 ? (actualVolume / targetVolume) * 100 : 0;
         
@@ -242,7 +259,7 @@ export default function Progress() {
           status
         };
       });
-  }, [history, volumeRange, useCustomRange, customStartDate, customEndDate]);
+  }, [history, volumeRange, useCustomRange, customStartDate, customEndDate, userVolumeTargets]);
 
   // B. Weekly Volume Section
   const weeklyVolume = useMemo(() => {
@@ -339,7 +356,7 @@ export default function Progress() {
       'Core': 'Abs/Core',
     };
 
-    return Object.entries(MUSCLE_VOLUME_TARGETS).map(([muscleGroup, targetVolume]) => {
+    return Object.entries(userVolumeTargets as Record<string, number>).map(([muscleGroup, targetVolume]) => {
       // Find the actual volume from weeklyVolume.muscleGroupData
       const actualVolume = weeklyVolume.muscleGroupData
         .filter(d => d.name === muscleGroup || aliasMap[d.name] === muscleGroup)
@@ -361,7 +378,7 @@ export default function Progress() {
         status
       };
     });
-  }, [weeklyVolume]);
+  }, [weeklyVolume, userVolumeTargets]);
 
   const activeTargets = useMemo(() => {
     if (!volumeTargets) return [];
@@ -495,77 +512,61 @@ export default function Progress() {
 
   // Body Battery Logic
   const bodyBattery = useMemo(() => {
-    if (history.length === 0) return null;
+    if (history.length === 0) {
+      return { 
+        score: 100, 
+        status: 'High', 
+        systemState: 'Prime for Heavy Load',
+        hoursSince: 48,
+        timeToFull: 0
+      };
+    }
     
-    const now = new Date();
-    const sevenDaysAgo = startOfDay(subDays(now, 7));
-    const recentWorkouts = history.filter(w => isAfter(new Date(w.date), sevenDaysAgo));
+    // Sort history by date descending to find the last workout
+    const sorted = [...history].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const lastWorkout = sorted[0];
     
-    if (recentWorkouts.length === 0) return { score: 100, status: 'High', sessions: 0, liftingLoad: '0', conditioningLoad: '0', avgRPE: 'N/A', avgEnergy: '0', recentImpact: 'None', topDrivers: [] };
-
-    // 1. Lifting Load
-    let liftingLoad = 0;
-    recentWorkouts.forEach(w => {
-      if (!w) return;
-      (w.exercises || []).forEach(ex => {
-        liftingLoad += calculateVolume(ex);
-      });
-    });
-
-    // 2. Conditioning Load
-    let conditioningLoad = 0;
-    recentWorkouts.forEach(w => {
-      const c = normalizeConditioning(w.conditioning, w.blocks);
-      if (c?.type) {
-        // Simple conditioning load: duration * intensity factor
-        const dur = timeToSeconds(c.workDuration || '0') || 0;
-        conditioningLoad += dur * 1.5; // 1.5 factor for conditioning intensity
-      }
-    });
-
-    // 3. RPE Impact
-    const allLoggedRPEs = recentWorkouts.flatMap(w => 
-      (w.exercises || []).flatMap(ex => [ex.rpe, ex.superset?.rpe])
-    ).filter((rpe): rpe is number => typeof rpe === 'number' && !isNaN(rpe));
-    const avgRPE = allLoggedRPEs.length > 0 ? allLoggedRPEs.reduce((a, b) => a + b, 0) / allLoggedRPEs.length : 0;
-
-    // 4. Energy Levels
-    const avgEnergy = recentWorkouts.reduce((acc, w) => acc + (w.postWorkoutEnergy || 5), 0) / recentWorkouts.length;
-
-    // 5. Recency Weighting
-    const fortyEightHoursAgo = subDays(now, 2);
-    const veryRecentWorkouts = recentWorkouts.filter(w => isAfter(new Date(w.date), fortyEightHoursAgo)).length;
-
+    const now = new Date().getTime();
+    const lastDate = new Date(lastWorkout.date).getTime();
+    // Prevent negative hours if date is slightly in future
+    const hoursSinceLastWorkout = Math.max(0, (now - lastDate) / (1000 * 60 * 60));
+    
     let score = 100;
-    score -= Math.min(30, (liftingLoad / 10000) * 5); 
-    score -= Math.min(30, (conditioningLoad / 500) * 5);
-    score -= Math.max(0, (avgRPE - 6) * 5);
-    score -= recentWorkouts.length * 3;
-    score += (avgEnergy - 5) * 4;
-    score -= veryRecentWorkouts * 10;
-
+    
+    const energy = lastWorkout.postWorkoutEnergy || 5; 
+    // Baseline drop based on energy. energy=5 -> 40%, energy=10 -> 65%, energy=1 -> 20%
+    const baseline = Math.max(10, 40 + (energy - 5) * 5);
+    
+    if (hoursSinceLastWorkout >= 48) {
+      score = 100;
+    } else if (hoursSinceLastWorkout >= 36) {
+      // Scale 90..100 over 12 hours (36 to 48)
+      score = 90 + ((hoursSinceLastWorkout - 36) / 12) * 10;
+    } else {
+      // Scale baseline..90 over 36 hours (0 to 36)
+      score = baseline + (hoursSinceLastWorkout / 36) * (90 - baseline);
+    }
+    
     score = Math.max(5, Math.min(100, Math.round(score)));
-
+    
     let status = 'High';
-    if (score < 40) status = 'Low';
-    else if (score < 75) status = 'Moderate';
-
-    const topDrivers = [];
-    if (liftingLoad > 15000) topDrivers.push('High Lifting Load');
-    if (conditioningLoad > 600) topDrivers.push('High Conditioning Load');
-    if (avgRPE > 8) topDrivers.push('High Intensity');
-    if (veryRecentWorkouts > 1) topDrivers.push('High Frequency');
+    let systemState = 'Prime for Heavy Load';
+    if (score < 60) {
+      status = 'Low';
+      systemState = 'Active Recovery Recommended';
+    } else if (score < 85) {
+      status = 'Moderate';
+      systemState = 'Moderate Fatigue / Standard Load';
+    }
+    
+    const timeToFull = Math.max(0, Math.round(48 - hoursSinceLastWorkout));
 
     return {
       score,
       status,
-      avgRPE: allLoggedRPEs.length > 0 ? avgRPE.toFixed(1) : 'N/A',
-      avgEnergy: avgEnergy.toFixed(1),
-      liftingLoad: liftingLoad.toLocaleString(),
-      conditioningLoad: conditioningLoad.toLocaleString(),
-      sessions: recentWorkouts.length,
-      recentImpact: veryRecentWorkouts > 0 ? 'High' : 'Low',
-      topDrivers
+      systemState,
+      hoursSince: Math.round(hoursSinceLastWorkout),
+      timeToFull,
     };
   }, [history]);
 
@@ -727,7 +728,7 @@ export default function Progress() {
               </p>
             </CardHeader>
             <CardContent>
-              <BodyMap muscleGroupData={weeklyVolume?.muscleGroupData || []} heatMode={heatMode} />
+              <BodyMap muscleGroupData={weeklyVolume?.muscleGroupData || []} heatMode={heatMode} volumeTargets={userVolumeTargets} />
               {(!weeklyVolume || weeklyVolume.muscleGroupData.length === 0) && (
                 <p className="text-sm text-muted-foreground italic text-center py-4">
                   No workout data in this range yet. Log some workouts to see your body map.
@@ -1002,7 +1003,7 @@ export default function Progress() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <BodyMap muscleGroupData={latestWorkoutSummary?.muscleGroupData || []} heatMode={sessionHeatMode} />
+              <BodyMap muscleGroupData={latestWorkoutSummary?.muscleGroupData || []} heatMode={sessionHeatMode} volumeTargets={userVolumeTargets} />
               {(!latestWorkoutSummary || latestWorkoutSummary.muscleGroupData.length === 0) && (
                 <p className="text-sm text-muted-foreground italic text-center py-4">
                   No session data available yet. Select or log a workout to see the body map.
@@ -1532,157 +1533,99 @@ export default function Progress() {
             <Zap className="text-maroon" size={20} />
             <h3 className="text-xl font-bold text-foreground">Body Battery & Readiness</h3>
           </div>
-
-          {bodyBattery ? (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Main Score Card */}
-              <Card className="border-border shadow-sm lg:col-span-1 overflow-hidden">
-                <div className="h-2 bg-muted w-full">
-                  <div 
-                    className={cn(
-                      "h-full transition-all duration-1000",
-                      bodyBattery.score > 75 ? "bg-green-500" : bodyBattery.score > 40 ? "bg-gold" : "bg-red-500"
-                    )}
-                    style={{ width: `${bodyBattery.score}%` }}
-                  />
-                </div>
-                <CardContent className="pt-8 pb-10 flex flex-col items-center text-center">
-                  <div className="relative w-40 h-40 flex items-center justify-center mb-6">
-                    <svg className="w-full h-full transform -rotate-90">
-                      <circle
-                        cx="80"
-                        cy="80"
-                        r="70"
-                        stroke="currentColor"
-                        strokeWidth="8"
-                        fill="transparent"
-                        className="text-muted"
-                      />
-                      <circle
-                        cx="80"
-                        cy="80"
-                        r="70"
-                        stroke="currentColor"
-                        strokeWidth="8"
-                        fill="transparent"
-                        strokeDasharray={440}
-                        strokeDashoffset={440 - (440 * bodyBattery.score) / 100}
-                        strokeLinecap="round"
-                        className={cn(
-                          "transition-all duration-1000",
-                          bodyBattery.score > 75 ? "text-green-500" : bodyBattery.score > 40 ? "text-gold" : "text-red-500"
-                        )}
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-5xl font-black text-foreground">{bodyBattery.score}</span>
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Readiness</span>
+          {bodyBattery && (
+            <div className="space-y-6">
+              {/* Main Score Card - Horizontal Gauge */}
+              <Card className="border-border shadow-sm overflow-hidden bg-card">
+                <CardContent className="p-8">
+                  <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                    <div className="flex-1 w-full">
+                      <div className="flex justify-between items-end mb-4">
+                        <div>
+                          <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-1">Current Readiness</h4>
+                          <div className="text-4xl font-black text-foreground">{bodyBattery.score}<span className="text-2xl text-muted-foreground ml-1">%</span></div>
+                        </div>
+                        <Badge 
+                          className={cn(
+                            "px-3 py-1 font-bold text-sm rounded",
+                            bodyBattery.status === 'High' ? "bg-green-100 text-green-700 hover:bg-green-100" : 
+                            bodyBattery.status === 'Moderate' ? "bg-gold/20 text-gold hover:bg-gold/20" : 
+                            "bg-red-100 text-red-700 hover:bg-red-100"
+                          )}
+                        >
+                          {bodyBattery.status}
+                        </Badge>
+                      </div>
+                      
+                      <div className="w-full bg-muted h-6 rounded-full overflow-hidden flex">
+                        <div 
+                          className={cn(
+                            "h-full transition-all duration-1000",
+                            bodyBattery.score > 85 ? "bg-green-500" : bodyBattery.score > 60 ? "bg-gold" : "bg-maroon"
+                          )}
+                          style={{ width: `${bodyBattery.score}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between text-[10px] uppercase font-bold text-muted-foreground mt-2 px-1">
+                        <span>Depleted (0%)</span>
+                        <span>Optimal (100%)</span>
+                      </div>
                     </div>
                   </div>
-                  
-                  <Badge 
-                    className={cn(
-                      "px-4 py-1 text-sm font-bold rounded-full mb-4",
-                      bodyBattery.status === 'High' ? "bg-green-100 text-green-700 hover:bg-green-100" : 
-                      bodyBattery.status === 'Moderate' ? "bg-gold/10 text-gold hover:bg-gold/10" : 
-                      "bg-red-100 text-red-700 hover:bg-red-100"
-                    )}
-                  >
-                    {bodyBattery.status} Readiness
-                  </Badge>
-                  
-                  <p className="text-sm text-muted-foreground max-w-[200px]">
-                    {bodyBattery.status === 'High' ? "You're well recovered and ready for a high-intensity session." : 
-                     bodyBattery.status === 'Moderate' ? "Moderate fatigue detected. Consider a standard or technique-focused session." : 
-                     "High fatigue detected. A deload or rest day is highly recommended."}
-                  </p>
                 </CardContent>
               </Card>
 
-              {/* Contributors Grid */}
-              <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Telemetry Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card className="border-border shadow-sm">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground font-bold">Training Load (7d)</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex justify-between items-end">
-                      <div>
-                        <div className="text-lg font-bold text-maroon">{bodyBattery.liftingLoad}</div>
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase">Lifting Load</p>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-gold">{bodyBattery.conditioningLoad}</div>
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase">Conditioning Load</p>
-                      </div>
-                    </div>
-                    <div className="pt-2 border-t border-border">
-                      <div className="text-[10px] text-muted-foreground font-bold uppercase mb-2">Top Fatigue Drivers</div>
-                      <div className="flex flex-wrap gap-2">
-                        {bodyBattery.topDrivers.length > 0 ? bodyBattery.topDrivers.map(driver => (
-                          <Badge key={driver} variant="secondary" className="text-[10px]">{driver}</Badge>
-                        )) : <span className="text-xs text-muted-foreground italic">None</span>}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-border shadow-sm">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground font-bold">Intensity & Energy</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex justify-between items-end">
-                      <div>
-                        <div className="text-2xl font-black text-foreground">{bodyBattery.avgRPE}</div>
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase">Avg RPE (Effort)</p>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-green-600">{bodyBattery.avgEnergy}/10</div>
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase">Avg Energy Level</p>
-                      </div>
-                    </div>
-                    <div className="pt-2 border-t border-border">
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-muted-foreground">Recent Strain (48h)</span>
-                        <span className={cn("font-bold", bodyBattery.recentImpact === 'High' ? "text-red-500" : "text-green-500")}>
-                          {bodyBattery.recentImpact}
-                        </span>
-                      </div>
-                      <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
-                        <div 
-                          className={cn("h-full", bodyBattery.recentImpact === 'High' ? "bg-red-500" : "bg-green-500")} 
-                          style={{ width: bodyBattery.recentImpact === 'High' ? '85%' : '20%' }} 
-                        />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-border shadow-sm md:col-span-2 bg-primary text-primary-foreground">
-                  <CardHeader>
-                    <CardTitle className="text-sm font-bold flex items-center gap-2">
-                      <Info size={16} className="text-gold" />
-                      How Body Battery Works
-                    </CardTitle>
+                    <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Time Since Last Load</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      Your Readiness score is a heuristic estimate based on your last 7 days of activity. 
-                      It is calculated by balancing training load against recovery indicators. 
-                      <span className="text-white font-medium">Higher lifting volume, higher RPE (effort), and frequent conditioning</span> increase fatigue load and reduce your score. 
-                      <span className="text-white font-medium">Higher energy scores</span> help offset this fatigue. 
-                      Workouts performed in the <span className="text-white font-medium">last 48 hours</span> are weighted more heavily, as recent strain has a greater impact on immediate readiness. 
-                      This score is an estimate, not a medical metric.
-                    </p>
+                    <div className="text-3xl font-black text-foreground">{bodyBattery.hoursSince} <span className="text-sm font-medium text-muted-foreground">hrs</span></div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-border shadow-sm">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">System State</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className={cn(
+                      "text-lg font-bold leading-tight", 
+                      bodyBattery.score > 85 ? "text-green-600" : bodyBattery.score > 60 ? "text-gold" : "text-maroon"
+                    )}>
+                      {bodyBattery.systemState}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-border shadow-sm">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Time to 100%</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-black text-foreground">{bodyBattery.timeToFull} <span className="text-sm font-medium text-muted-foreground">hrs</span></div>
                   </CardContent>
                 </Card>
               </div>
+
+              <Card className="border-border shadow-sm bg-primary text-primary-foreground mt-4">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-bold flex items-center gap-2">
+                    <Info size={16} className="text-gold" />
+                    Time-Dominant Recovery Algorithm
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Readiness is strictly calculated based on central nervous system (CNS) rest windows. 
+                    <span className="text-white font-medium pl-1">A rest period of 48 hours guarantees 100% readiness.</span> 
+                    Between 0 and 36 hours, your readiness drops to a baseline influenced by your last post-workout energy rating, and scales up linearly.
+                  </p>
+                </CardContent>
+              </Card>
             </div>
-          ) : (
-            <Card className="border-border shadow-sm p-12 text-center text-muted-foreground italic">
-              Log at least one workout to see your readiness estimate.
-            </Card>
           )}
         </section>
       )}
