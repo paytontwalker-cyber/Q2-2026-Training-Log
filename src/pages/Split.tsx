@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Info, Plus, Trash2, Save, GripVertical, Check, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,6 +39,7 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
   horizontalListSortingStrategy,
+  verticalListSortingStrategy,
   useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -46,19 +47,23 @@ import { CSS } from '@dnd-kit/utilities';
 interface SortableExerciseBadgeProps {
   key?: string;
   exercise: string | ProgrammedExercise;
-  onRemove: () => void;
+  onRemove: (id: string) => void;
+  onUpdate: (id: string, updates: Partial<ProgrammedExercise>) => void;
+  onAddSuperset: (parentId: string) => void;
+  onRemoveSuperset: (parentId: string, childId: string) => void;
+  isParent?: boolean;
+  depth?: number;
 }
 
-const SortableExerciseBadge = ({ exercise, onRemove }: SortableExerciseBadgeProps) => {
-  const id = typeof exercise === 'string' ? exercise : exercise.name;
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging
-  } = useSortable({ id });
+const SortableExerciseBadge = ({ 
+  exercise, onRemove, onUpdate, onAddSuperset, onRemoveSuperset, isParent = true, depth = 0 
+}: SortableExerciseBadgeProps) => {
+  const isProgrammed = typeof exercise !== 'string';
+  const id = isProgrammed ? exercise.name : exercise;
+
+  const [notesOpen, setNotesOpen] = useState(false);
+
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -67,37 +72,119 @@ const SortableExerciseBadge = ({ exercise, onRemove }: SortableExerciseBadgeProp
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const isProgrammed = typeof exercise !== 'string';
+  const sets = isProgrammed ? (exercise.sets || '') : '';
+  const reps = isProgrammed ? (exercise.reps || '') : '';
+  const targetNotes = isProgrammed ? (exercise.targetNotes || '') : '';
 
   return (
-    <div 
-      ref={setNodeRef}
-      style={style}
-      className="bg-card border border-border rounded-md p-3 flex items-center justify-between shadow-sm group"
+    <div ref={setNodeRef} style={style} className={cn(
+        "bg-card border border-border rounded-md shadow-sm group transition-all space-y-2",
+        depth === 0 ? "p-3" : "p-2 ml-4 border-l-4 border-l-maroon/30"
+      )}
     >
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center gap-3">
-          <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-muted-foreground">
-            <GripVertical size={16} />
-          </div>
-          <span className="font-medium text-foreground">{id}</span>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          {isParent && (
+            <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground shrink-0">
+              <GripVertical size={16} />
+            </div>
+          )}
+          <span className="font-medium text-foreground truncate">{id}</span>
         </div>
-        {isProgrammed && (
-          <div className="pl-9 text-xs text-muted-foreground space-y-0.5">
-            {exercise.sets && exercise.reps && <div>{exercise.sets}x{exercise.reps}</div>}
-            {exercise.targetNotes && <div>{exercise.targetNotes}</div>}
-          </div>
-        )}
+        
+        <div className="flex items-center gap-1 shrink-0">
+          {isParent && (
+            <Button variant="ghost" size="sm" onClick={() => onAddSuperset(id)} className="h-7 px-2 text-[10px] font-bold text-maroon hover:bg-maroon/5">
+              <Plus size={12} className="mr-1" /> Superset
+            </Button>
+          )}
+          <button onClick={(e) => { e.stopPropagation(); onRemove(id); }} className="text-muted-foreground hover:text-red-500 transition-colors">
+            <Trash2 size={16} />
+          </button>
+        </div>
       </div>
-      <button 
-        onClick={(e) => {
-          e.stopPropagation();
-          onRemove();
-        }}
-        className="text-muted-foreground hover:text-red-500 transition-colors"
-      >
-        <Trash2 size={16} />
-      </button>
+
+      {/* Programmed sets/reps row — always editable when exercise is programmed */}
+      <div className="pl-7 flex items-center gap-2" onPointerDown={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-1 flex-1">
+          <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider w-10">Sets</Label>
+          <Input
+            value={sets}
+            onChange={e => onUpdate(id, { sets: e.target.value })}
+            placeholder="3"
+            className="h-8 text-xs"
+          />
+        </div>
+        <div className="flex items-center gap-1 flex-1">
+          <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider w-10">Reps</Label>
+          <Input
+            value={reps}
+            onChange={e => onUpdate(id, { reps: e.target.value })}
+            placeholder="6-8"
+            className="h-8 text-xs"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() => setNotesOpen(!notesOpen)}
+          className={cn(
+            "text-[10px] uppercase font-bold px-2 h-8 rounded border transition-colors",
+            targetNotes || notesOpen
+              ? "bg-maroon/10 text-maroon border-maroon/30"
+              : "text-muted-foreground border-border hover:border-maroon/40"
+          )}
+          title={targetNotes ? "Edit snapshot notes" : "Add snapshot notes"}
+        >
+          {targetNotes ? 'Note' : '+ Note'}
+        </button>
+      </div>
+
+      {/* Optional snapshot notes textarea */}
+      {notesOpen && (
+        <div className="pl-7" onPointerDown={(e) => e.stopPropagation()}>
+          <Textarea
+            value={targetNotes}
+            onChange={e => onUpdate(id, { targetNotes: e.target.value })}
+            placeholder="Snapshot notes for this exercise (e.g. 'Main lift — high intent', '155 was sweet spot')..."
+            className="text-xs min-h-[50px]"
+          />
+        </div>
+      )}
+
+      {/* RECURSIVE SUPERSET DRAG AND DROP */}
+      {isProgrammed && exercise.superset && exercise.superset.length > 0 && (
+        <div className="mt-3 space-y-2 border-l-2 border-dashed border-border pl-2">
+          <DndContext 
+            sensors={useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }))} 
+            collisionDetection={closestCenter} 
+            onDragEnd={(e) => {
+              const { active, over } = e;
+              if (!over || active.id === over.id) return;
+              const activeIdx = exercise.superset!.findIndex(ex => ex.name === active.id);
+              const overIdx = exercise.superset!.findIndex(ex => ex.name === over.id);
+              if (activeIdx !== -1 && overIdx !== -1) {
+                onUpdate(id, { superset: arrayMove(exercise.superset!, activeIdx, overIdx) });
+              }
+          }}>
+            <SortableContext items={exercise.superset.map(ex => ex.name)} strategy={verticalListSortingStrategy}>
+              {exercise.superset.map((subEx) => (
+                <SortableExerciseBadge 
+                  key={subEx.name}
+                  exercise={subEx}
+                  onRemove={(childId) => onRemoveSuperset(id, childId)}
+                  onUpdate={(childId, updates) => onUpdate(id, { 
+                    superset: exercise.superset!.map(s => s.name === childId ? { ...s, ...updates } : s) 
+                  })}
+                  onAddSuperset={() => {}} // Prevent infinite nesting
+                  onRemoveSuperset={() => {}}
+                  isParent={false}
+                  depth={depth + 1}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
+        </div>
+      )}
     </div>
   );
 };
@@ -123,6 +210,9 @@ export default function Split() {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  const addCardioToSplit = (splitId: string) => { console.log('Add Cardio Placeholder', splitId); };
+  const addHiitToSplit = (splitId: string) => { console.log('Add HIIT Placeholder', splitId); };
 
   useEffect(() => {
     if (!user) return;
@@ -209,19 +299,16 @@ export default function Split() {
     }
   };
 
-  const handleDragEnd = (event: DragEndEvent, splitId: string) => {
-    const { active, over } = event;
-    
-    if (over && active.id !== over.id) {
-      const split = splits.find(s => s.id === splitId);
-      if (split) {
-        const activeIndex = split.exercises.findIndex(ex => (typeof ex === 'string' ? ex : ex.name) === active.id);
-        const overIndex = split.exercises.findIndex(ex => (typeof ex === 'string' ? ex : ex.name) === over.id);
-        
-        const newExercises = arrayMove(split.exercises, activeIndex, overIndex) as (string | ProgrammedExercise)[];
-        updateSplit(splitId, { exercises: newExercises });
-      }
-    }
+  const updateProgrammedExercise = (splitId: string, exerciseName: string, updates: Partial<ProgrammedExercise>) => {
+    const updateRecursive = (exs: (string | ProgrammedExercise)[]): (string | ProgrammedExercise)[] => {
+      return exs.map(item => {
+        if (typeof item === 'string') return item;
+        if (item.name === exerciseName) return { ...item, ...updates } as ProgrammedExercise;
+        if (item.superset) return { ...item, superset: updateRecursive(item.superset) as ProgrammedExercise[] } as ProgrammedExercise;
+        return item;
+      });
+    };
+    setSplits(prev => prev.map(s => s.id === splitId ? { ...s, exercises: updateRecursive(s.exercises) } : s));
   };
 
   const addExerciseToSplit = (splitId: string, exerciseName: string) => {
@@ -239,6 +326,35 @@ export default function Split() {
     if (split) {
       updateSplit(splitId, { exercises: split.exercises.filter(ex => (typeof ex === 'string' ? ex : ex.name) !== exerciseName) });
     }
+  };
+
+  const addSupersetToExercise = (splitId: string, parentName: string) => {
+    const addRecursive = (exs: (string | ProgrammedExercise)[]): (string | ProgrammedExercise)[] => {
+      return exs.map(item => {
+        if (typeof item === 'string') return item;
+        if (item.name === parentName) {
+          // Add a default child
+          return { ...item, superset: [...(item.superset || []), { name: 'New Superset Exercise', sets: '', reps: '', targetNotes: '' }] } as ProgrammedExercise;
+        }
+        if (item.superset) return { ...item, superset: addRecursive(item.superset) as ProgrammedExercise[] } as ProgrammedExercise;
+        return item;
+      });
+    };
+    setSplits(prev => prev.map(s => s.id === splitId ? { ...s, exercises: addRecursive(s.exercises) } : s));
+  };
+
+  const removeSupersetChild = (splitId: string, parentName: string, childName: string) => {
+    const removeRecursive = (exs: (string | ProgrammedExercise)[]): (string | ProgrammedExercise)[] => {
+      return exs.map(item => {
+        if (typeof item === 'string') return item;
+        if (item.name === parentName && item.superset) {
+          return { ...item, superset: item.superset.filter(s => s.name !== childName) } as ProgrammedExercise;
+        }
+        if (item.superset) return { ...item, superset: removeRecursive(item.superset) as ProgrammedExercise[] } as ProgrammedExercise;
+        return item;
+      });
+    };
+    setSplits(prev => prev.map(s => s.id === splitId ? { ...s, exercises: removeRecursive(s.exercises) } : s));
   };
 
   const stageTemplateSplit = (templateDays?: any) => {
@@ -570,102 +686,84 @@ export default function Split() {
       </Dialog>
 
       <div className="grid grid-cols-1 gap-6">
-        {days.map(dayName => {
-          const split = splits.find(s => s.day === dayName);
-          if (!split) return null;
+        {/* *** WORKOUT DAY CARD REDESIGN *** */}
+        {splits.map(s => {
+          const splitSavedState = savingIds[s.id];
+          const isDeterministic = s.id === `${user!.uid}_${s.day}`;
 
           return (
-            <Card key={dayName} className="border-border shadow-sm overflow-hidden">
-              <div className="grid grid-cols-1 md:grid-cols-4">
-                <div className="bg-muted p-6 border-b md:border-b-0 md:border-r border-border flex flex-col justify-center">
-                  <h3 className="text-xl font-bold text-maroon">{dayName}</h3>
-                  <Textarea 
-                    value={split.name}
-                    onChange={e => updateSplit(split.id, { name: e.target.value })}
-                    className="mt-2 font-medium text-foreground bg-card min-h-[40px] py-2"
-                    placeholder="Program Name (e.g. Push)"
-                    rows={2}
-                  />
-                  {stagedSplitDays === null && (
-                    <Button 
-                      size="sm" 
-                      onClick={() => saveSplit(split)}
-                      disabled={savingIds[split.id] === 'saving'}
-                      className={cn(
-                        "mt-4 text-white transition-all",
-                        savingIds[split.id] === 'saved' ? "bg-green-600 hover:bg-green-700" : "bg-maroon hover:bg-maroon-light"
-                      )}
-                    >
-                      {savingIds[split.id] === 'saving' ? (
-                        <>Saving...</>
-                      ) : savingIds[split.id] === 'saved' ? (
-                        <><Check size={14} className="mr-2" /> Saved!</>
-                      ) : (
-                        <><Save size={14} className="mr-2" /> Save Changes</>
-                      )}
+            <Card key={s.id} className={cn("border-border shadow-md transition-all", !hasAssignedSplit && "opacity-60")}>
+              {/* 1. TOP SECTION: Notes/Summary (Full Width) */}
+              <CardHeader className="pb-3 border-b border-border bg-card/50">
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <CardTitle className="text-xl font-extrabold text-foreground tracking-tight">{s.day}</CardTitle>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Button variant="outline" size="sm" className="h-7 px-3 text-xs" onClick={() => saveSplit(s)} disabled={splitSavedState === 'saving'}>
+                      {splitSavedState === 'saving' ? 'Saving...' : splitSavedState === 'saved' ? 'Saved' : 'Save'}
                     </Button>
-                  )}
-                </div>
-                <div className="md:col-span-3 p-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                            <LayoutGrid size={14} className="text-maroon" />
-                            Workout Snapshot
-                          </div>
-                        </div>
-                        <Textarea 
-                          value={split.summary || ''}
-                          onChange={e => updateSplit(split.id, { summary: e.target.value })}
-                          className="min-h-[250px] text-[11px] leading-relaxed font-mono bg-card border-border"
-                          placeholder="Enter workout snapshot/summary..."
-                        />
-                      </div>
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                        <Info size={14} className="text-maroon" />
-                        Main Exercises
-                      </div>
-                      <DndContext
-                        sensors={sensors}
-                        collisionDetection={closestCenter}
-                        onDragEnd={(event) => handleDragEnd(event, split.id)}
-                      >
-                        <SortableContext
-                          items={split.exercises.map(ex => typeof ex === 'string' ? ex : ex.name)}
-                          strategy={horizontalListSortingStrategy}
-                        >
-                          <div className="flex flex-col gap-2 mb-4">
-                            {split.exercises.map(ex => {
-                              const name = typeof ex === 'string' ? ex : ex.name;
-                              return (
-                                <SortableExerciseBadge 
-                                  key={name} 
-                                  exercise={ex}
-                                  onRemove={() => removeExerciseFromSplit(split.id, name)} 
-                                />
-                              );
-                            })}
-                            {split.exercises.length === 0 && (
-                              <span className="text-muted-foreground italic text-sm">No exercises added</span>
-                            )}
-                          </div>
-                        </SortableContext>
-                      </DndContext>
-                      <div className="flex gap-2">
-                        <ExerciseSelector 
-                          exercises={library}
-                          value=""
-                          onSelect={(ex) => addExerciseToSplit(split.id, ex.name)}
-                          placeholder="Add exercise..."
-                          className="h-9"
-                        />
-                      </div>
-                    </div>
                   </div>
                 </div>
-              </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-tighter">Snapshot Notes / Summary (across top)</Label>
+                  <Textarea
+                    value={s.running || ''}
+                    onChange={e => updateSplit(s.id, { running: e.target.value })}
+                    placeholder="Focus on volume, check RPE."
+                    className="text-xs h-16 w-full"
+                  />
+                </div>
+              </CardHeader>
+
+              {/* 2. MIDDLE SECTION: Exercises (Stretched Full Width) */}
+              <CardContent className="pt-4 pb-4 space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-tighter w-8">Lift (across middle)</Label>
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => {
+                    const { active, over } = e;
+                    if (!over || active.id === over.id) return;
+                    const activeEx = s.exercises.find(ex => (typeof ex === 'string' ? ex : ex.name) === active.id);
+                    const overEx = s.exercises.find(ex => (typeof ex === 'string' ? ex : ex.name) === over.id);
+                    if (activeEx && overEx) {
+                      const activeIndex = s.exercises.indexOf(activeEx);
+                      const overIndex = s.exercises.indexOf(overEx);
+                      updateSplit(s.id, { exercises: arrayMove(s.exercises, activeIndex, overIndex) as (string | ProgrammedExercise)[] });
+                    }
+                  }}>
+                    <SortableContext items={s.exercises.map(ex => (typeof ex === 'string' ? ex : ex.name))} strategy={verticalListSortingStrategy}>
+                      {s.exercises.map(ex => (
+                        <SortableExerciseBadge
+                          key={typeof ex === 'string' ? ex : ex.name}
+                          exercise={ex}
+                          onRemove={(exerciseName) => removeExerciseFromSplit(s.id, exerciseName)}
+                          onUpdate={(exerciseName, updates) => updateProgrammedExercise(s.id, exerciseName, updates)}
+                          onAddSuperset={(parentName) => addSupersetToExercise(s.id, parentName)}
+                          onRemoveSuperset={(parentName, childName) => removeSupersetChild(s.id, parentName, childName)}
+                        />
+                      ))}
+                    </SortableContext>
+                  </DndContext>
+                </div>
+              </CardContent>
+
+              {/* 3. BOTTOM SECTION: Input Row (Full Width Across Bottom) */}
+              <CardFooter className="pt-3 border-t border-border bg-card/30">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
+                  {/* Replaced openLibrary which wasn't fully defined with ExerciseSelector */}
+                  <ExerciseSelector 
+                    exercises={library}
+                    value=""
+                    onSelect={(ex) => addExerciseToSplit(s.id, ex.name)}
+                    placeholder="Add Exercise..."
+                    className="h-9"
+                  />
+                  <Button onClick={() => addHiitToSplit(s.id)} variant="ghost" size="sm" className="w-full h-9 text-xs text-muted-foreground border border-dashed border-border hover:text-foreground">
+                    <Plus size={14} className="mr-1.5" /> Add HIIT
+                  </Button>
+                  <Button onClick={() => addCardioToSplit(s.id)} variant="ghost" size="sm" className="w-full h-9 text-xs text-muted-foreground border border-dashed border-border hover:text-foreground">
+                    <Plus size={14} className="mr-1.5" /> Add Cardio
+                  </Button>
+                </div>
+              </CardFooter>
             </Card>
           );
         })}

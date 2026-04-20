@@ -1402,24 +1402,70 @@ export default function DailyLog() {
     if (!splitData) return;
     const { currentSplit, sanitizedSplit } = splitData;
 
+    const parseProgrammedReps = (repsStr?: string): number => {
+      if (!repsStr) return 0;
+      const s = repsStr.trim();
+      if (!s) return 0;
+      // "6-8" → midpoint rounded up
+      const rangeMatch = s.match(/^(\d+)\s*-\s*(\d+)/);
+      if (rangeMatch) {
+        const lo = parseInt(rangeMatch[1], 10);
+        const hi = parseInt(rangeMatch[2], 10);
+        if (!isNaN(lo) && !isNaN(hi)) return Math.ceil((lo + hi) / 2);
+      }
+      // "10/leg" or "15/side" → the number
+      const slashMatch = s.match(/^(\d+)\s*\//);
+      if (slashMatch) return parseInt(slashMatch[1], 10);
+      // "30m", "20m", "800m" → the number (for distance-tracked)
+      const meterMatch = s.match(/^(\d+)m\b/);
+      if (meterMatch) return parseInt(meterMatch[1], 10);
+      // Plain number
+      const plain = parseInt(s, 10);
+      if (!isNaN(plain)) return plain;
+      // AMRAP, TBD, or anything else → 0 (user fills it in)
+      return 0;
+    };
+
+    const parseProgrammedSets = (setsStr?: string): number => {
+      if (!setsStr) return 0;
+      const n = parseInt(setsStr.trim(), 10);
+      return isNaN(n) ? 0 : n;
+    };
+
     const defaultExercises: ExerciseEntry[] = sanitizedSplit.exercises.map(ex => {
-      const name = typeof ex === 'string' ? ex : ex.name;
+      const isProgrammed = typeof ex !== 'string';
+      const name = isProgrammed ? ex.name : ex;
+      const programmedSets = isProgrammed ? parseProgrammedSets(ex.sets) : 0;
+      const programmedReps = isProgrammed ? parseProgrammedReps(ex.reps) : 0;
+      const programmedTargetNotes = isProgrammed ? (ex.targetNotes || '') : '';
       const libEx = library.find(e => e.name === name);
+
+      // For distance-tracked exercises, if reps string like "30m" was given,
+      // use parsed number as distance instead of reps.
+      const trackingMode = libEx?.trackingMode || 'reps';
+      const repsValue = trackingMode === 'reps' ? programmedReps : 0;
+      const distanceValue = trackingMode === 'distance' 
+        ? (isProgrammed ? parseProgrammedReps(ex.reps) : 0)
+        : 0;
+      const timeValue = trackingMode === 'time' 
+        ? (isProgrammed ? parseProgrammedReps(ex.reps) : 0)
+        : 0;
+
       return {
         id: Math.random().toString(36).substr(2, 9),
         name: name,
         muscleGroup: libEx?.muscleGroup || 'Other',
         muscleDistribution: libEx?.muscleDistribution,
-        trackingMode: libEx?.trackingMode || 'reps',
-        sets: 0,
-        reps: 0,
-        distance: 0,
-        time: 0,
+        trackingMode,
+        sets: programmedSets,
+        reps: repsValue,
+        distance: distanceValue,
+        time: timeValue,
         timeUnit: 'min',
         weight: 0,
         rpe: null,
         rir: null,
-        notes: '',
+        notes: programmedTargetNotes,  // carry snapshot note into the log entry
       };
     });
 

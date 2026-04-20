@@ -273,6 +273,7 @@ export interface ProgrammedExercise {
   sets?: string;
   reps?: string;
   targetNotes?: string;
+  superset?: ProgrammedExercise[];
 }
 
 export interface Split {

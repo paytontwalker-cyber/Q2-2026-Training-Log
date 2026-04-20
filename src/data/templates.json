@@ -12,15 +12,104 @@
     {
       "id": "hybrid-performance-spring-2026",
       "name": "Hybrid Performance Split (Spring 2026)",
-      "description": "Consolidated stress: sprints and lower body lifts occur on the same day. High intent, low volume. One primary strength movement per day. Functional staples matter, including Zercher Bulgarian Split Squats and Deadlift Rows. Optional post-lift Zone 2 Incline Treadmill Walk can be used as a finisher.",
+      "description": "Consolidated stress: sprints and lower body lifts on the same day. Main compound lifts live in the 5-8 rep range at high intent. Accessories and small muscles (side delts, rear delts, face pulls) get higher reps for volume. Functional staples like Zercher Bulgarian Split Squats, Pendlay Rows, and Deadlift Rows. Optional post-lift Zone 2 finishers on push/pull days.",
       "days": {
-        "Monday": { "name": "Posterior Biased Leg Day (DPE-D)", "running": "800m Repeats (3 to 5x)", "exercises": ["Deadlift", "Barbell Row", "Pull-Up", "Farmer's Carries", "RDL", "Hamstring Curls"], "summary": "Posterior Biased Leg Day (DPE-D)\n- Deadlift: 3x5\n- Barbell Row: 3x8\n- Pull-Up: 3xAMRAP\n- Farmer's Carries: 3x30m\n- RDL: 3x10\n- Hamstring Curls: 3x12" },
-        "Tuesday": { "name": "Push", "running": "Optional Zone 2 Run", "exercises": ["Flat Bench Press", "Seated Barbell Press", "DB Lateral Raises", "Machine Lateral Raises", "Incline Machine Press", "Chest Fly", "JM Press"], "summary": "Push Day\n- Flat Bench Press: 3x8\n- Seated Barbell Press: 3x8\n- DB Lateral Raises: 3x12\n- Machine Lateral Raises: 3x12\n- Incline Machine Press: 3x10\n- Chest Fly: 3x12\n- JM Press: 3x10" },
-        "Wednesday": { "name": "Quad Biased Leg Day (DPE-B)", "running": "400m Repeats (5 to 6x)", "exercises": ["Front Squat", "Zercher Bulgarian Split Squat", "Russian Twists", "KB Lunges", "Sled Push", "Split Squat Plyos", "KB Seated Tibial Raises", "Ankle Rotations"], "summary": "Quad Biased Leg Day (DPE-B)\n- Front Squat: 3x8\n- Zercher Bulgarian Split Squat: 3x10\n- Russian Twists: 3x20\n- KB Lunges: 3x12\n- Sled Push: 3x20m\n- Split Squat Plyos: 3x10\n- KB Seated Tibial Raises: 3x15\n- Ankle Rotations: 3x20" },
-        "Thursday": { "name": "Pull", "running": "Optional Zone 2 Run", "exercises": ["Farmer's Carries", "DB Trap Shrug", "Face Pulls", "Rear Delt Flyes", "Pendlay Row", "Lat Pulldowns", "ISO Lateral Low Rows", "Iso-Lateral Machine Rows", "Hammer Curls", "Seated Incline DB Curls"], "summary": "Pull Day\n- Farmer's Carries: 3x30m\n- DB Trap Shrug: 3x12\n- Face Pulls: 3x15\n- Rear Delt Flyes: 3x15\n- Pendlay Row: 3x8\n- Lat Pulldowns: 3x10\n- ISO Lateral Low Rows: 3x10\n- Iso-Lateral Machine Rows: 3x10\n- Hammer Curls: 3x12\n- Seated Incline DB Curls: 3x12" },
-        "Friday": { "name": "SHARMS (Modular)", "running": "Modular Speed (Ladders / Mile Repeats)", "exercises": ["Seated Barbell Press", "Arnold Press", "Seated DB Shoulder Press", "DB Lateral Raises", "Cable Lateral Raises", "Cable Tricep Pushdowns", "Skullcrushers", "DB Curls", "Hammer Curls"], "summary": "SHARMS (Modular)\n- Seated Barbell Press: 3x8\n- Arnold Press: 3x10\n- Seated DB Shoulder Press: 3x10\n- DB Lateral Raises: 3x12\n- Cable Lateral Raises: 3x12\n- Cable Tricep Pushdowns: 3x12\n- Skullcrushers: 3x10\n- DB Curls: 3x12\n- Hammer Curls: 3x12" },
-        "Saturday": { "name": "Chest & Back (Modular)", "running": "Zone 2 Run (2 to 5 miles)", "exercises": ["Flat Bench Press", "Incline Barbell Bench Press", "Chest Fly", "Machine Chest Press", "Lat Pulldowns", "Seated Cable Row", "Chest-Supported Row", "Machine High Row"], "summary": "Chest & Back (Modular)\n- Flat Bench Press: 3x8\n- Incline Barbell Bench Press: 3x8\n- Chest Fly: 3x12\n- Machine Chest Press: 3x10\n- Lat Pulldowns: 3x10\n- Seated Cable Row: 3x10\n- Chest-Supported Row: 3x10\n- Machine High Row: 3x10" },
-        "Sunday": { "name": "Recovery & Prep", "running": "Full Rest / Optional Chill Z2", "exercises": [], "summary": "Rest Day" }
+        "Monday": {
+          "name": "Posterior Biased Leg Day (DPE-D)",
+          "running": "800m Repeats (3 to 5x)",
+          "exercises": [
+            { "name": "Deadlift", "sets": "3", "reps": "5", "targetNotes": "Main lift — high intent" },
+            { "name": "Barbell Row", "sets": "3", "reps": "6-8" },
+            { "name": "Pull-Up", "sets": "3", "reps": "AMRAP" },
+            { "name": "Farmer's Carries", "sets": "3", "reps": "30m" },
+            { "name": "RDL", "sets": "3", "reps": "8" },
+            { "name": "Hamstring Curls", "sets": "3", "reps": "10" }
+          ],
+          "summary": "Posterior Biased Leg Day (DPE-D)\n- Deadlift: 3x5\n- Barbell Row: 3x6-8\n- Pull-Up: 3xAMRAP\n- Farmer's Carries: 3x30m\n- RDL: 3x8\n- Hamstring Curls: 3x10"
+        },
+        "Tuesday": {
+          "name": "Push",
+          "running": "Optional Zone 2 Run",
+          "exercises": [
+            { "name": "Flat Bench Press", "sets": "4", "reps": "6-8", "targetNotes": "Main press" },
+            { "name": "Seated Barbell Press", "sets": "3", "reps": "6-8" },
+            { "name": "Incline Machine Press", "sets": "3", "reps": "8" },
+            { "name": "Chest Fly", "sets": "3", "reps": "12" },
+            { "name": "DB Lateral Raises", "sets": "3", "reps": "15", "targetNotes": "Side delts — high reps" },
+            { "name": "Machine Lateral Raises", "sets": "3", "reps": "15" },
+            { "name": "JM Press", "sets": "3", "reps": "8-10" }
+          ],
+          "summary": "Push Day\n- Flat Bench Press: 4x6-8\n- Seated Barbell Press: 3x6-8\n- Incline Machine Press: 3x8\n- Chest Fly: 3x12\n- DB Lateral Raises: 3x15\n- Machine Lateral Raises: 3x15\n- JM Press: 3x8-10"
+        },
+        "Wednesday": {
+          "name": "Quad Biased Leg Day (DPE-B)",
+          "running": "400m Repeats (5 to 6x)",
+          "exercises": [
+            { "name": "Front Squat", "sets": "3", "reps": "5-6", "targetNotes": "Main squat variant" },
+            { "name": "Zercher Bulgarian Split Squat", "sets": "3", "reps": "8/leg" },
+            { "name": "KB Lunges", "sets": "3", "reps": "10/leg" },
+            { "name": "Sled Push", "sets": "3", "reps": "20m" },
+            { "name": "Split Squat Plyos", "sets": "3", "reps": "6" },
+            { "name": "Russian Twists", "sets": "3", "reps": "20" },
+            { "name": "KB Seated Tibial Raises", "sets": "3", "reps": "15" },
+            { "name": "Ankle Rotations", "sets": "3", "reps": "15" }
+          ],
+          "summary": "Quad Biased Leg Day (DPE-B)\n- Front Squat: 3x5-6\n- Zercher Bulgarian Split Squat: 3x8/leg\n- KB Lunges: 3x10/leg\n- Sled Push: 3x20m\n- Split Squat Plyos: 3x6\n- Russian Twists: 3x20\n- KB Seated Tibial Raises: 3x15\n- Ankle Rotations: 3x15"
+        },
+        "Thursday": {
+          "name": "Pull",
+          "running": "Optional Zone 2 Run",
+          "exercises": [
+            { "name": "Farmer's Carries", "sets": "3", "reps": "30m" },
+            { "name": "Pendlay Row", "sets": "3", "reps": "5-6", "targetNotes": "Heavy main row" },
+            { "name": "Lat Pulldowns", "sets": "3", "reps": "8" },
+            { "name": "ISO Lateral Low Rows", "sets": "3", "reps": "8" },
+            { "name": "Iso-Lateral Machine Rows", "sets": "3", "reps": "8" },
+            { "name": "DB Trap Shrug", "sets": "3", "reps": "10" },
+            { "name": "Rear Delt Flyes", "sets": "3", "reps": "15", "targetNotes": "Rear delts — high reps" },
+            { "name": "Face Pulls", "sets": "3", "reps": "15", "targetNotes": "Small muscle — high reps" },
+            { "name": "Hammer Curls", "sets": "3", "reps": "10" },
+            { "name": "Seated Incline DB Curls", "sets": "3", "reps": "10" }
+          ],
+          "summary": "Pull Day\n- Farmer's Carries: 3x30m\n- Pendlay Row: 3x5-6\n- Lat Pulldowns: 3x8\n- ISO Lateral Low Rows: 3x8\n- Iso-Lateral Machine Rows: 3x8\n- DB Trap Shrug: 3x10\n- Rear Delt Flyes: 3x15\n- Face Pulls: 3x15\n- Hammer Curls: 3x10\n- Seated Incline DB Curls: 3x10"
+        },
+        "Friday": {
+          "name": "SHARMS (Modular)",
+          "running": "Modular Speed (Ladders / Mile Repeats)",
+          "exercises": [
+            { "name": "Seated Barbell Press", "sets": "4", "reps": "6-8", "targetNotes": "Main press" },
+            { "name": "Arnold Press", "sets": "3", "reps": "8" },
+            { "name": "Seated DB Shoulder Press", "sets": "3", "reps": "8-10" },
+            { "name": "DB Lateral Raises", "sets": "3", "reps": "15" },
+            { "name": "Cable Lateral Raises", "sets": "3", "reps": "15" },
+            { "name": "Skullcrushers", "sets": "3", "reps": "8" },
+            { "name": "Cable Tricep Pushdowns", "sets": "3", "reps": "12" },
+            { "name": "DB Curls", "sets": "3", "reps": "10" },
+            { "name": "Hammer Curls", "sets": "3", "reps": "10" }
+          ],
+          "summary": "SHARMS (Modular)\n- Seated Barbell Press: 4x6-8\n- Arnold Press: 3x8\n- Seated DB Shoulder Press: 3x8-10\n- DB Lateral Raises: 3x15\n- Cable Lateral Raises: 3x15\n- Skullcrushers: 3x8\n- Cable Tricep Pushdowns: 3x12\n- DB Curls: 3x10\n- Hammer Curls: 3x10"
+        },
+        "Saturday": {
+          "name": "Chest & Back (Modular)",
+          "running": "Zone 2 Run (2 to 5 miles)",
+          "exercises": [
+            { "name": "Flat Bench Press", "sets": "3", "reps": "6-8" },
+            { "name": "Incline Barbell Bench Press", "sets": "3", "reps": "6-8" },
+            { "name": "Machine Chest Press", "sets": "3", "reps": "8" },
+            { "name": "Chest Fly", "sets": "3", "reps": "12" },
+            { "name": "Lat Pulldowns", "sets": "3", "reps": "8" },
+            { "name": "Seated Cable Row", "sets": "3", "reps": "8" },
+            { "name": "Chest-Supported Row", "sets": "3", "reps": "8" },
+            { "name": "Machine High Row", "sets": "3", "reps": "8" }
+          ],
+          "summary": "Chest & Back (Modular)\n- Flat Bench Press: 3x6-8\n- Incline Barbell Bench Press: 3x6-8\n- Machine Chest Press: 3x8\n- Chest Fly: 3x12\n- Lat Pulldowns: 3x8\n- Seated Cable Row: 3x8\n- Chest-Supported Row: 3x8\n- Machine High Row: 3x8"
+        },
+        "Sunday": {
+          "name": "Recovery & Prep",
+          "running": "Full Rest / Optional Chill Z2",
+          "exercises": [],
+          "summary": "Rest Day"
+        }
       }
     },
     {
