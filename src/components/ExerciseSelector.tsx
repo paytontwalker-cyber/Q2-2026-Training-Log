@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useMemo } from 'react';
-import { Check, ChevronsUpDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { useState, useMemo } from "react";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -14,16 +14,16 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@/components/ui/command';
+} from "@/components/ui/command";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { ExerciseLibraryEntry, MuscleGroup } from '@/src/types';
-import { MUSCLE_GROUPS } from '@/src/constants';
+} from "@/components/ui/dialog";
+import { ExerciseLibraryEntry, MuscleGroup } from "@/src/types";
+import { MUSCLE_GROUPS } from "@/src/constants";
 
 interface ExerciseSelectorProps {
   exercises: ExerciseLibraryEntry[];
@@ -31,6 +31,9 @@ interface ExerciseSelectorProps {
   onSelect: (exercise: ExerciseLibraryEntry) => void;
   placeholder?: string;
   className?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
 }
 
 export function ExerciseSelector({
@@ -39,8 +42,15 @@ export function ExerciseSelector({
   onSelect,
   placeholder = "Select exercise...",
   className,
+  open: controlledOpen,
+  onOpenChange: setControlledOpen,
+  hideTrigger,
 }: ExerciseSelectorProps) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = isControlled ? setControlledOpen! : setInternalOpen;
+
   const [search, setSearch] = useState("");
 
   const filteredExercises = useMemo(() => {
@@ -49,42 +59,43 @@ export function ExerciseSelector({
 
     // Check if term matches an exact muscle group
     const matchedMuscleGroup = MUSCLE_GROUPS.find(
-      mg => mg.toLowerCase() === term
+      (mg) => mg.toLowerCase() === term,
     );
 
     if (matchedMuscleGroup) {
       // If exact muscle group match, show ONLY exercises in that group
-      return exercises.filter(ex => ex.muscleGroup === matchedMuscleGroup);
+      return exercises.filter((ex) => ex.muscleGroup === matchedMuscleGroup);
     }
 
     // Otherwise, normal name search
-    return exercises.filter(ex => 
-      ex.name.toLowerCase().includes(term) || 
-      ex.muscleGroup.toLowerCase().includes(term)
+    return exercises.filter(
+      (ex) =>
+        ex.name.toLowerCase().includes(term) ||
+        ex.muscleGroup.toLowerCase().includes(term),
     );
   }, [exercises, search]);
 
   const groupedExercises = useMemo(() => {
     const groups: Record<MuscleGroup, ExerciseLibraryEntry[]> = {} as any;
-    
+
     // Initialize groups
-    MUSCLE_GROUPS.forEach(mg => {
+    MUSCLE_GROUPS.forEach((mg) => {
       groups[mg] = [];
     });
 
     // Populate groups
-    filteredExercises.forEach(ex => {
+    filteredExercises.forEach((ex) => {
       if (groups[ex.muscleGroup]) {
         groups[ex.muscleGroup].push(ex);
       } else {
         // Fallback for any unknown muscle groups
-        if (!groups['Other']) groups['Other'] = [];
-        groups['Other'].push(ex);
+        if (!groups["Other"]) groups["Other"] = [];
+        groups["Other"].push(ex);
       }
     });
 
     // Sort exercises within each group
-    Object.keys(groups).forEach(mg => {
+    Object.keys(groups).forEach((mg) => {
       groups[mg as MuscleGroup].sort((a, b) => a.name.localeCompare(b.name));
     });
 
@@ -94,13 +105,16 @@ export function ExerciseSelector({
   const selectedExercise = exercises.find((ex) => ex.name === value);
 
   const SelectorContent = (
-    <Command shouldFilter={false} className="flex flex-col h-full max-h-[80vh] md:max-h-[400px]">
+    <Command
+      shouldFilter={false}
+      className="flex flex-col h-full max-h-[80vh] md:max-h-[400px]"
+    >
       <CommandInput
         placeholder="Search exercise or muscle group..."
         value={search}
         onValueChange={setSearch}
         onKeyDown={(e) => {
-          if (e.key === 'Enter') {
+          if (e.key === "Enter") {
             e.preventDefault();
           }
         }}
@@ -126,7 +140,7 @@ export function ExerciseSelector({
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      value === exercise.name ? "opacity-100" : "opacity-0"
+                      value === exercise.name ? "opacity-100" : "opacity-0",
                     )}
                   />
                   <div className="flex flex-col">
@@ -147,15 +161,18 @@ export function ExerciseSelector({
       role="combobox"
       aria-expanded={open}
       onPointerDown={(e) => e.stopPropagation()}
+      onClick={() => setOpen(!open)}
       className={cn(
         buttonVariants({ variant: "outline" }),
-        "w-full justify-between font-normal h-auto min-h-9 py-2 whitespace-normal text-left", 
-        className
+        "w-full justify-between font-normal h-auto min-h-9 py-2 whitespace-normal text-left",
+        className,
       )}
     >
       {selectedExercise ? (
         <span className="flex items-center gap-2 flex-wrap">
-          <span className="font-medium break-words">{selectedExercise.name}</span>
+          <span className="font-medium break-words">
+            {selectedExercise.name}
+          </span>
           <span className="text-[10px] text-muted-foreground bg-slate-100 px-1.5 py-0.5 rounded shrink-0">
             {selectedExercise.muscleGroup}
           </span>
@@ -169,14 +186,12 @@ export function ExerciseSelector({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={Trigger} />
+      {!hideTrigger && <DialogTrigger asChild>{Trigger}</DialogTrigger>}
       <DialogContent className="sm:max-w-[425px] p-0 gap-0 overflow-hidden flex flex-col max-h-[90vh]">
         <DialogHeader className="p-4 border-b">
           <DialogTitle>Select Exercise</DialogTitle>
         </DialogHeader>
-        <div className="flex-1 overflow-hidden">
-          {SelectorContent}
-        </div>
+        <div className="flex-1 overflow-hidden">{SelectorContent}</div>
       </DialogContent>
     </Dialog>
   );

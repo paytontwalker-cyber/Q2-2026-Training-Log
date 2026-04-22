@@ -75,12 +75,55 @@ import {
   CardioBlock,
   HiitBlock,
   Block,
-  CardioSubtype
+  CardioSubtype,
+  BlockTemplate
 } from '@/src/types';
 import { INITIAL_EXERCISES, DEFAULT_SPLIT } from '@/src/constants';
 import { generateWorkoutSnapshot, cleanSummary, sanitizeData, deriveBlocksFromLegacy, projectBlocksToLegacy, calculateRepeatsTotals, parseTime, calculateZone2Pace } from '@/src/lib/workoutUtils';
 
 const NO_SPLIT_SENTINEL = '__none__';
+
+const buildBlocksFromSplit = (
+  defaultExercises: ExerciseEntry[],
+  programmedBlocks: BlockTemplate[] | undefined,
+): Block[] => {
+  const out: Block[] = [];
+  if (defaultExercises.length > 0) {
+    out.push({
+      id: Math.random().toString(36).substr(2, 9),
+      kind: 'lift',
+      exercises: [...defaultExercises],
+    } as LiftBlock);
+  }
+  (programmedBlocks || []).forEach(bt => {
+    if (bt.kind === 'cardio') {
+      out.push({
+        id: Math.random().toString(36).substr(2, 9),
+        kind: 'cardio',
+        placement: bt.placement || 'after',
+        subtype: bt.cardioSubtype,
+        programmedName: bt.cardioName || '',
+        programmedDistance: bt.cardioDistance,
+        programmedDuration: bt.cardioDuration,
+        programmedUnits: bt.cardioUnits,
+      } as CardioBlock);
+    } else if (bt.kind === 'hiit') {
+      out.push({
+        id: Math.random().toString(36).substr(2, 9),
+        kind: 'hiit',
+        placement: bt.placement || 'after',
+        hiitType: bt.hiitSubtype as any,
+        programmedName: bt.hiitName || '',
+        programmedReps: bt.hiitReps,
+        programmedWorkDistance: bt.hiitWorkDistance,
+        programmedWorkDuration: bt.hiitWorkDuration,
+        programmedRestValue: bt.hiitRestValue,
+        programmedStructure: bt.hiitStructure,
+      } as HiitBlock);
+    }
+  });
+  return out;
+};
 
 const normalizeDistance = (value: string, unit: string): number => {
   const num = parseFloat(value);
@@ -1451,7 +1494,7 @@ export default function DailyLog() {
         ? (isProgrammed ? parseProgrammedReps(ex.reps) : 0)
         : 0;
 
-      return {
+      const entry: ExerciseEntry = {
         id: Math.random().toString(36).substr(2, 9),
         name: name,
         muscleGroup: libEx?.muscleGroup || 'Other',
@@ -1467,6 +1510,35 @@ export default function DailyLog() {
         rir: null,
         notes: programmedTargetNotes,  // carry snapshot note into the log entry
       };
+
+      const supersetChild =
+        isProgrammed && Array.isArray(ex.superset) && ex.superset.length > 0
+          ? ex.superset[0]
+          : null;
+      if (supersetChild) {
+        const childLibEx = library.find(e => e.name === supersetChild.name);
+        const childTracking = childLibEx?.trackingMode || 'reps';
+        const childSets = parseProgrammedSets(supersetChild.sets);
+        const childRepsNum = parseProgrammedReps(supersetChild.reps);
+        entry.superset = {
+          id: Math.random().toString(36).substr(2, 9),
+          name: supersetChild.name || '',
+          muscleGroup: childLibEx?.muscleGroup || 'Other',
+          muscleDistribution: childLibEx?.muscleDistribution,
+          trackingMode: childTracking,
+          sets: childSets,
+          reps: childTracking === 'reps' ? childRepsNum : 0,
+          distance: childTracking === 'distance' ? childRepsNum : 0,
+          time: childTracking === 'time' ? childRepsNum : 0,
+          timeUnit: 'min',
+          weight: 0,
+          rpe: null,
+          rir: null,
+          notes: supersetChild.targetNotes || '',
+        } as ExerciseEntry;
+      }
+
+      return entry;
     });
 
     setWorkoutMeta(prev => ({
@@ -1475,8 +1547,12 @@ export default function DailyLog() {
       workoutSummary: currentSplit.summary || '',
       runningStats: currentSplit.running,
     }));
-    setBlocks(deriveBlocksFromLegacy(defaultExercises, { name: '' }));
-    setExpandedSupersets({});
+    setBlocks(buildBlocksFromSplit(defaultExercises, currentSplit.blocks));
+    const initialExpanded: Record<string, boolean> = {};
+    defaultExercises.forEach(ex => {
+      if (ex.superset) initialExpanded[ex.id] = true;
+    });
+    setExpandedSupersets(initialExpanded);
     
     return { currentSplit, sanitizedSplit };
   }, [getSplitForDate, library]);
@@ -1496,6 +1572,17 @@ export default function DailyLog() {
 
     if (library.length === 0 || splits.length === 0 || !isDraftLoaded) return;
     
+    // Never auto-populate over a historical edit — the user picked a specific workout
+    if (workoutMeta.isHistorical) {
+      // Still update lastLoadedRef so subsequent renders don't re-trigger attempts
+      lastLoadedRef.current = {
+        date: format(date, 'yyyy-MM-dd'),
+        split: manualSplit,
+        splitDataHash: JSON.stringify({ name: '', running: '', exercises: [], summary: '', blocks: [] }),
+      };
+      return;
+    }
+
     const dateStr = format(date, 'yyyy-MM-dd');
     
     const splitData = getSplitForDate(date, manualSplit);
@@ -1506,13 +1593,21 @@ export default function DailyLog() {
     const splitDataHash = JSON.stringify({
       name: sanitizedSplit.name,
       running: sanitizedSplit.running,
-      exercises: sanitizedSplit.exercises
+      exercises: sanitizedSplit.exercises,
+      summary: sanitizedSplit.summary || '',
+      blocks: sanitizedSplit.blocks || []
     });
 
     const isDateChanged = dateStr !== lastLoadedRef.current.date;
     const isSplitSelectionChanged = manualSplit !== lastLoadedRef.current.split;
     const isSplitDataChanged = splitDataHash !== lastLoadedRef.current.splitDataHash;
-    const isWorkoutEmpty = !workoutMeta.workoutName && liftExercises.length === 0;
+    const hasAnyBlockContent = blocks.some(b => {
+      if (b.kind === 'lift') return (b as LiftBlock).exercises.length > 0;
+      if (b.kind === 'cardio') return true;  // a cardio block exists — not empty
+      if (b.kind === 'hiit') return true;    // same
+      return false;
+    });
+    const isWorkoutEmpty = !workoutMeta.workoutName && !hasAnyBlockContent;
 
     // Only auto-load if:
     // 1. Date or split selection changed
@@ -1526,7 +1621,7 @@ export default function DailyLog() {
         splitDataHash: splitDataHash
       };
     }
-  }, [date, library, splits, manualSplit, workoutMeta.workoutName, liftExercises.length, isDraftLoaded, loadProgrammedWorkout, getSplitForDate]);
+  }, [date, library, splits, manualSplit, workoutMeta.workoutName, workoutMeta.isHistorical, blocks, isDraftLoaded, loadProgrammedWorkout, getSplitForDate]);
 
   const addExercise = () => {
     runWithUndo(() => {
@@ -1691,12 +1786,7 @@ export default function DailyLog() {
       // Sanitize and normalize workout data before saving
       const { exercises, conditioning } = projectBlocksToLegacy(blocks);
 
-      let finalId = workoutMeta.id;
-      if (workoutMeta.isHistorical) {
-        // A historical workout was loaded. To prevent silent overwrites of preserved
-        // history, always force a new document ID. The original remains intact in Firestore.
-        finalId = undefined;
-      }
+      const finalId = workoutMeta.id;
 
       const workoutToSave = sanitizeData({
         ...workoutMeta,
@@ -1763,16 +1853,33 @@ export default function DailyLog() {
     if (!user) return;
     // Preserve the draft but load this workout's data into the editor
     runWithUndo(() => {
-      setBlocks(workout.blocks || deriveBlocksFromLegacy(workout.exercises || [], workout.conditioning));
-      setWorkoutMeta({
+      const loadedBlocks = workout.blocks || deriveBlocksFromLegacy(workout.exercises || [], workout.conditioning);
+      setBlocks(loadedBlocks);
+
+      const initialExpanded: Record<string, boolean> = {};
+      loadedBlocks.forEach(b => {
+        if (b.kind === 'lift') {
+          (b as LiftBlock).exercises.forEach(ex => {
+            if (ex.superset) initialExpanded[ex.id] = true;
+          });
+        }
+      });
+      setExpandedSupersets(initialExpanded);
+
+      setWorkoutMeta(prev => ({
+        ...prev,
         id: workout.id,
         workoutName: workout.workoutName || '',
+        workoutSummary: workout.workoutSummary || '',
+        runningStats: workout.runningStats || '',
         date: workout.date,
         postWorkoutEnergy: workout.postWorkoutEnergy ?? 5,
         notes: workout.notes || '',
-        isHistorical: false,  // This is an edit of today's session, not a historical-copy flow
-      });
-      setManualSplit(null);
+        // Mark as historical to prevent the date effect from overwriting this
+        // specific saved session with the programmed default. The historical banner
+        // will show; user can exit historical mode if they want programmed defaults.
+        isHistorical: true,
+      }));
     });
   }, [user, runWithUndo]);
 

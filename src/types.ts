@@ -269,6 +269,7 @@ export interface GuestUser {
 }
 
 export interface ProgrammedExercise {
+  id: string;
   name: string;
   sets?: string;
   reps?: string;

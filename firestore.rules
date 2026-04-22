@@ -102,14 +102,14 @@ service cloud.firestore {
 
     function isValidWorkout(data) {
       return data.workoutName is string && data.workoutName.size() < 100 &&
-             (!('exercises' in data) || (data.exercises is list && data.exercises.size() <= 50)) &&
+             (!('exercises' in data) || (data.exercises is list && data.exercises.size() <= 150)) &&
              data.uid == request.auth.uid;
     }
 
     function isValidDraft(data) {
       return data.uid == request.auth.uid &&
              (!('workoutName' in data) || (data.workoutName is string && data.workoutName.size() < 100)) &&
-             (!('exercises' in data) || (data.exercises is list && data.exercises.size() <= 50));
+             (!('exercises' in data) || (data.exercises is list && data.exercises.size() <= 150));
     }
 
     function isValidSplit(data) {
@@ -117,7 +117,7 @@ service cloud.firestore {
              data.day is string &&
              data.name is string && data.name.size() < 100 &&
              data.running is string &&
-             data.exercises is list && data.exercises.size() <= 20 &&
+             data.exercises is list && data.exercises.size() <= 100 &&
              data.uid == request.auth.uid;
     }
 

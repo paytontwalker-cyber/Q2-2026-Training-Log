@@ -7,7 +7,7 @@ import { ExerciseLibraryEntry, MuscleGroup } from './types';
 import INITIAL_EXERCISES_DATA from './data/exercises.json';
 import TEMPLATES_DATA from './data/templates.json';
 
-export const APP_VERSION = '3.9.1';
+export const APP_VERSION = '4.0.4';
 
 export const INITIAL_EXERCISES: ExerciseLibraryEntry[] = INITIAL_EXERCISES_DATA as ExerciseLibraryEntry[];
 export const DEFAULT_SPLIT = TEMPLATES_DATA.defaultSplit;
@@ -53,6 +53,9 @@ export const EXPERIENCE_MULTIPLIERS: Record<'beginner' | 'intermediate' | 'advan
 // Allows gradual migration of callers; we're updating all in this patch.
 /** @deprecated Use computeVolumeTargets(profile) instead */
 export const MUSCLE_VOLUME_TARGETS = BASE_VOLUME_TARGETS_180LB_INTERMEDIATE;
+
+export const CARDIO_SUBTYPES = ['Repeats', 'Ladders', 'Intervals', 'Zone 2', 'Incline Treadmill', 'Bike', 'Ruck'];
+export const HIIT_SUBTYPES = ['METCON', 'AMRAP', 'EMOM'];
 
 export const MUSCLE_GROUPS: MuscleGroup[] = [
   'Chest',

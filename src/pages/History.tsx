@@ -4,13 +4,14 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import { Trash2, Calendar, Clock, Printer, Copy, Check, Edit, RotateCcw, AlertTriangle, History as HistoryIcon } from 'lucide-react';
+import { Trash2, Calendar, Clock, Printer, Copy, Check, Edit, RotateCcw, AlertTriangle, History as HistoryIcon, GitMerge } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import { Workout, DeletedWorkout } from '@/src/types';
+import { Workout, DeletedWorkout, Block, LiftBlock } from '@/src/types';
 import { storage } from '@/src/services/storage';
 import { useFirebase } from '@/src/components/FirebaseProvider';
 
@@ -121,6 +122,14 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
   const [history, setHistory] = useState<Workout[]>([]);
   const [deletedWorkouts, setDeletedWorkouts] = useState<DeletedWorkout[]>([]);
   const [view, setView] = useState<'history' | 'deleted'>('history');
+  const [mergeDialog, setMergeDialog] = useState<{ open: boolean; sessions: Workout[]; }>({ open: false, sessions: [] });
+  const [parentSessionId, setParentSessionId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (mergeDialog.open && mergeDialog.sessions.length > 0) {
+      setParentSessionId(mergeDialog.sessions[0].id);
+    }
+  }, [mergeDialog.open, mergeDialog.sessions]);
 
   useEffect(() => {
     if (!user) return;
@@ -152,6 +161,84 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
     // Refresh deleted workouts list
     const deleted = await storage.getDeletedWorkouts(user.uid);
     setDeletedWorkouts(deleted as DeletedWorkout[]);
+  };
+
+  const openMergeDialog = (workout: Workout) => {
+    const dateKey = format(new Date(workout.date), 'yyyy-MM-dd');
+    const sessions = history
+      .filter(w => {
+        try { return format(new Date(w.date), 'yyyy-MM-dd') === dateKey; }
+        catch { return false; }
+      })
+      .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+    setMergeDialog({ open: true, sessions });
+  };
+
+  const performMerge = async () => {
+    if (!user || !parentSessionId) return;
+    const parent = mergeDialog.sessions.find(s => s.id === parentSessionId);
+    if (!parent) return;
+    const others = mergeDialog.sessions.filter(s => s.id !== parentSessionId);
+    
+    // Merge strategy: append other sessions' lift-block exercises into parent's
+    // first lift block (create one if missing). Append other sessions' non-lift
+    // blocks (cardio/hiit) after parent's blocks.
+    const parentBlocks: Block[] = JSON.parse(JSON.stringify(parent.blocks || []));
+    let parentLiftBlock = parentBlocks.find(b => b.kind === 'lift') as LiftBlock | undefined;
+    if (!parentLiftBlock) {
+      parentLiftBlock = {
+        id: `lift_${Math.random().toString(36).substr(2, 9)}`,
+        kind: 'lift',
+        exercises: [],
+      };
+      parentBlocks.unshift(parentLiftBlock);
+    }
+    
+    others.forEach(other => {
+      (other.blocks || []).forEach(b => {
+        if (b.kind === 'lift') {
+          parentLiftBlock!.exercises.push(...(b as LiftBlock).exercises);
+        } else {
+          // cardio or hiit — append as new block
+          parentBlocks.push(JSON.parse(JSON.stringify(b)));
+        }
+      });
+      // If other has legacy exercises (no blocks), append them too
+      if ((!other.blocks || other.blocks.length === 0) && other.exercises?.length) {
+        parentLiftBlock!.exercises.push(...other.exercises);
+      }
+    });
+    
+    // Regenerate ids to avoid collisions
+    parentBlocks.forEach(b => {
+      if (b.kind === 'lift') {
+        (b as LiftBlock).exercises.forEach(ex => {
+          ex.id = Math.random().toString(36).substr(2, 9);
+          if (ex.superset) ex.superset.id = Math.random().toString(36).substr(2, 9);
+        });
+      }
+    });
+    
+    const mergedWorkout: Workout = {
+      ...parent,
+      blocks: parentBlocks,
+      // Also update legacy exercises field to stay in sync
+      exercises: parentBlocks
+        .filter(b => b.kind === 'lift')
+        .flatMap(b => (b as LiftBlock).exercises),
+    };
+    
+    try {
+      await storage.saveWorkout(mergedWorkout, user.uid);
+      for (const other of others) {
+        await storage.deleteWorkout(other.id, user.uid);
+      }
+      setMergeDialog({ open: false, sessions: [] });
+      setParentSessionId(null);
+    } catch (error) {
+      console.error('Merge failed:', error);
+      alert('Merge failed. Check console for details.');
+    }
   };
 
   const permanentlyDeleteWorkout = async (id: string) => {
@@ -359,7 +446,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
             history.sort((a, b) => {
               const dateDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
               if (dateDiff !== 0) return dateDiff;
-              return (b.timestamp || 0) - (a.timestamp || 0); // Within same date, newest timestamp first
+              return (a.timestamp || 0) - (b.timestamp || 0); // Within same date, earliest first (matches session numbering)
             }).map(workout => (
               <Card key={workout.id} className="border-border shadow-sm hover:border-maroon/30 transition-colors group">
                 <CardHeader className="pb-3">
@@ -405,6 +492,17 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
                       >
                         <Printer size={18} />
                       </Button>
+                      {sessionIndexMap.get(workout.id)?.total && sessionIndexMap.get(workout.id)!.total > 1 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openMergeDialog(workout)}
+                          title="Merge sessions from this day"
+                          className="text-muted-foreground hover:text-maroon"
+                        >
+                          <GitMerge size={18} />
+                        </Button>
+                      )}
                       {(() => {
                         const info = sessionIndexMap.get(workout.id);
                         if (info && info.total > 1) {
@@ -613,6 +711,68 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
           )}
         </div>
       )}
+      
+      <Dialog open={mergeDialog.open} onOpenChange={(open) => setMergeDialog(m => ({ ...m, open }))}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Merge Sessions</DialogTitle>
+            <DialogDescription>
+              Pick which session becomes the parent. Its name, notes, energy, and summary
+              are kept. The other session's exercises and conditioning are appended into
+              the parent, and the other session is deleted. This cannot be undone from
+              here — but deleted sessions remain in the trash for recovery.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-4">
+            {mergeDialog.sessions.map((s, idx) => (
+              <label key={s.id} className={cn(
+                "flex items-start gap-3 p-3 border rounded-md cursor-pointer transition-colors",
+                parentSessionId === s.id
+                  ? "border-maroon bg-maroon/5"
+                  : "border-border hover:border-maroon/40"
+              )}>
+                <input
+                  type="radio"
+                  name="merge-parent"
+                  checked={parentSessionId === s.id}
+                  onChange={() => setParentSessionId(s.id)}
+                  className="mt-1"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-maroon bg-maroon/10 px-1.5 py-0.5 rounded uppercase">
+                      Session {idx + 1}
+                    </span>
+                    <span className="font-semibold">{s.workoutName || 'Untitled'}</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {format(new Date(s.date), 'p')} — {
+                      (s.blocks?.flatMap(b => b.kind === 'lift' ? (b as any).exercises : []) || []).length
+                    } exercises
+                  </div>
+                  {parentSessionId === s.id && (
+                    <div className="text-[11px] font-bold text-maroon mt-2">
+                      ✓ Parent — this session's name and metadata will be kept
+                    </div>
+                  )}
+                </div>
+              </label>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMergeDialog(m => ({ ...m, open: false }))}>
+              Cancel
+            </Button>
+            <Button
+              onClick={performMerge}
+              disabled={!parentSessionId}
+              className="bg-maroon hover:bg-maroon-light text-white"
+            >
+              Merge Sessions
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

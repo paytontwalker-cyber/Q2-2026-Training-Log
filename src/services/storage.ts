@@ -30,6 +30,25 @@ const removeUndefined = (obj: any): any => {
   return newObj;
 };
 
+const deepRemoveUndefined = (val: any): any => {
+  if (val === undefined) return undefined; // caller removes key
+  if (val === null) return null;
+  if (Array.isArray(val)) {
+    return val
+      .map(deepRemoveUndefined)
+      .filter(v => v !== undefined);
+  }
+  if (typeof val === 'object') {
+    const out: any = {};
+    Object.keys(val).forEach(k => {
+      const cleaned = deepRemoveUndefined(val[k]);
+      if (cleaned !== undefined) out[k] = cleaned;
+    });
+    return out;
+  }
+  return val;
+};
+
 const sanitizeWorkoutRecord = (raw: unknown): Workout | null => {
   if (!raw || typeof raw !== 'object') return null;
   const w = raw as Partial<Workout>;
@@ -78,6 +97,8 @@ export const sanitizeSplitRecord = (raw: unknown): Split | null => {
     name: s.name,
     running: s.running,
     exercises: Array.isArray(s.exercises) ? s.exercises : [],
+    blocks: Array.isArray(s.blocks) ? s.blocks : [],
+    summary: typeof s.summary === 'string' ? s.summary : '',
     uid: typeof s.uid === 'string' ? s.uid : '',
   } as Split;
 };
@@ -148,7 +169,11 @@ export const storage = {
     }
 
     try {
-      const workoutToSave = removeUndefined({ ...workout, uid });
+      const workoutToSave = deepRemoveUndefined({ 
+        ...workout, 
+        workoutName: workout.workoutName || "",
+        uid 
+      });
       const docRef = doc(db, 'workouts', workout.id);
       await setDoc(docRef, workoutToSave, { merge: true });
     } catch (error) {
@@ -546,11 +571,17 @@ export const storage = {
     }
 
     try {
-      const splitToSave = { ...split, uid };
       // Use a deterministic ID: uid_day
       const docId = `${uid}_${split.day}`;
       const docRef = doc(db, 'splits', docId);
-      await setDoc(docRef, { ...splitToSave, id: docId });
+      const cleaned = deepRemoveUndefined({ 
+        ...split, 
+        name: split.name || "",
+        running: split.running || "",
+        uid, 
+        id: docId 
+      });
+      await setDoc(docRef, cleaned);
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `splits/${split.day}`);
     }
@@ -564,6 +595,7 @@ export const storage = {
       name: data.name,
       running: data.running,
       exercises: data.exercises,
+      blocks: data.blocks || [],
       summary: data.summary || '',
       uid
     }));
@@ -575,7 +607,7 @@ export const storage = {
 
     try {
       for (const split of splitsToSeed) {
-        await setDoc(doc(db, 'splits', split.id), split);
+        await setDoc(doc(db, 'splits', split.id), deepRemoveUndefined(split));
       }
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'splits/seed');
@@ -620,7 +652,11 @@ export const storage = {
     }
 
     try {
-      const splitToSave = { ...savedSplit, uid };
+      const splitToSave = deepRemoveUndefined({ 
+        ...savedSplit, 
+        name: savedSplit.name || "",
+        uid 
+      });
       const docRef = doc(db, 'saved_splits', savedSplit.id);
       await setDoc(docRef, splitToSave);
     } catch (error) {
@@ -685,7 +721,7 @@ export const storage = {
 
     try {
       const docRef = doc(db, 'drafts', uid);
-      await setDoc(docRef, removeUndefined({ ...draft, uid, timestamp: Date.now() }));
+      await setDoc(docRef, deepRemoveUndefined({ ...draft, uid, timestamp: draft.timestamp ?? Date.now() }));
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `drafts/${uid}`);
     }
