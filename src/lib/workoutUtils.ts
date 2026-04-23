@@ -24,9 +24,10 @@ export const getDistanceInMeters = (c: Conditioning): number => {
   if (!unit) return 0;
 
   if (['miles', 'mile', 'mi'].includes(unit)) return dist * 1609.34;
-  if (['km', 'kilometer', 'kilometers'].includes(unit)) return dist * 1000;
+  if (['km', 'kilometer', 'kilometers', 'k'].includes(unit)) return dist * 1000;
   if (['meters', 'meter', 'm'].includes(unit)) return dist;
-  if (['yards', 'yard', 'yards'].includes(unit)) return dist * 0.9144;
+  if (['yards', 'yard', 'yd', 'yds'].includes(unit)) return dist * 0.9144;
+  if (['feet', 'foot', 'ft'].includes(unit)) return dist * 0.3048;
   
   return 0;
 };

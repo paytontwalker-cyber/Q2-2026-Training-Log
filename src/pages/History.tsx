@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { Workout, DeletedWorkout, Block, LiftBlock } from '@/src/types';
 import { storage } from '@/src/services/storage';
@@ -124,6 +126,9 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
   const [view, setView] = useState<'history' | 'deleted'>('history');
   const [mergeDialog, setMergeDialog] = useState<{ open: boolean; sessions: Workout[]; }>({ open: false, sessions: [] });
   const [parentSessionId, setParentSessionId] = useState<string | null>(null);
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterDate, setFilterDate] = useState<string>('');  // YYYY-MM-DD
 
   useEffect(() => {
     if (mergeDialog.open && mergeDialog.sessions.length > 0) {
@@ -407,6 +412,29 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
     return map;
   }, [history]);
 
+  const filteredHistory = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return history.filter(w => {
+      // Date range
+      if (filterDate && format(new Date(w.date), 'yyyy-MM-dd') !== filterDate) return false;
+      // Text query — match name OR notes OR any exercise name
+      if (q) {
+        const inName = (w.workoutName || '').toLowerCase().includes(q);
+        const inNotes = (w.notes || '').toLowerCase().includes(q);
+        const exList = (w.blocks || [])
+          .filter((b: any) => b.kind === 'lift')
+          .flatMap((b: any) => b.exercises || [])
+          .concat(w.exercises || []);
+        const inEx = exList.some((e: any) =>
+          (e.name || '').toLowerCase().includes(q) ||
+          (e.superset?.name || '').toLowerCase().includes(q)
+        );
+        if (!inName && !inNotes && !inEx) return false;
+      }
+      return true;
+    });
+  }, [history, searchQuery, filterDate]);
+
   return (
     <div className="space-y-6">
       <header>
@@ -442,8 +470,55 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
 
       {view === 'history' && (
         <div className="space-y-4">
+          <div className="bg-card border border-border rounded-lg p-4 mb-4 space-y-3">
+            <div className="flex flex-col md:flex-row gap-3">
+              <div className="flex-1 space-y-1">
+                <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Search</Label>
+                <Input
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Search by workout name, exercise name, or notes..."
+                  className="h-9 text-sm"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Date</Label>
+                <Input
+                  type="date"
+                  value={filterDate}
+                  onChange={e => setFilterDate(e.target.value)}
+                  className="h-9 text-sm"
+                />
+              </div>
+              {(searchQuery || filterDate) && (
+                <div className="flex items-end">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setFilterDate('');
+                    }}
+                    className="h-9 text-xs"
+                  >
+                    Clear
+                  </Button>
+                </div>
+              )}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Showing {filteredHistory.length} of {history.length} {history.length === 1 ? 'workout' : 'workouts'}
+            </div>
+          </div>
+
+          {filteredHistory.length === 0 && history.length > 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              No workouts match your filters.
+            </div>
+          )}
+
           {history.length > 0 ? (
-            history.sort((a, b) => {
+            filteredHistory.sort((a, b) => {
               const dateDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
               if (dateDiff !== 0) return dateDiff;
               return (a.timestamp || 0) - (b.timestamp || 0); // Within same date, earliest first (matches session numbering)

@@ -16,7 +16,9 @@ import {
   GripVertical,
   Scale,
   Check,
-  LayoutGrid
+  LayoutGrid,
+  History as HistoryIcon,
+  Clock
 } from 'lucide-react';
 import { format, addDays, subDays } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -166,6 +168,8 @@ export interface SortableExerciseCardProps {
   updateSuperset: (id: string, updates: Partial<ExerciseEntry> | null) => void;
   expandedSupersets: Record<string, boolean>;
   setExpandedSupersets: Dispatch<SetStateAction<Record<string, boolean>>>;
+  previousEntry?: ExerciseEntry;
+  onMirrorOpen?: () => void;
 }
 
 const SortableExerciseCard = ({ 
@@ -177,7 +181,9 @@ const SortableExerciseCard = ({
   isExpanded,
   updateSuperset,
   expandedSupersets,
-  setExpandedSupersets
+  setExpandedSupersets,
+  previousEntry,
+  onMirrorOpen
 }: SortableExerciseCardProps) => {
   const {
     attributes,
@@ -233,6 +239,16 @@ const SortableExerciseCard = ({
                   timeUnit: 'min'
                 })}
               />
+              {previousEntry && (
+                <div className="mt-1 text-[10px] text-muted-foreground flex items-center gap-1">
+                  <Clock size={10} />
+                  <span className="font-medium">Last time:</span>
+                  <span className="tabular-nums">
+                    {previousEntry.sets}×{previousEntry.reps || '-'} @ {previousEntry.weight || 0} lbs
+                    {previousEntry.rpe ? ` · RPE ${previousEntry.rpe}` : ''}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
           
@@ -476,21 +492,34 @@ const SortableExerciseCard = ({
             </Button>
           </div>
           
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => {
-              removeExercise(ex.id);
-              setExpandedSupersets(prev => {
-                const next = { ...prev };
-                delete next[ex.id];
-                return next;
-              });
-            }}
-            className="text-muted-foreground hover:text-destructive h-8 px-2"
-          >
-            <Trash2 size={14} />
-          </Button>
+          <div className="flex gap-1">
+            {onMirrorOpen && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onMirrorOpen}
+                className="text-muted-foreground hover:text-maroon h-8 px-2"
+                title="Mirror Previous"
+              >
+                <HistoryIcon size={14} />
+              </Button>
+            )}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => {
+                removeExercise(ex.id);
+                setExpandedSupersets(prev => {
+                  const next = { ...prev };
+                  delete next[ex.id];
+                  return next;
+                });
+              }}
+              className="text-muted-foreground hover:text-destructive h-8 px-2"
+            >
+              <Trash2 size={14} />
+            </Button>
+          </div>
         </div>
 
         {isExpanded && (
@@ -1117,6 +1146,8 @@ interface SortableLiftBlockProps {
   updateSuperset: (id: string, updates: Partial<ExerciseEntry> | null) => void;
   expandedSupersets: Record<string, boolean>;
   setExpandedSupersets: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
+  previousExerciseLookup?: Record<string, ExerciseEntry>;
+  onMirrorOpen?: () => void;
 }
 
 const SortableLiftBlock: React.FC<SortableLiftBlockProps> = ({
@@ -1128,7 +1159,9 @@ const SortableLiftBlock: React.FC<SortableLiftBlockProps> = ({
   expandedNotes,
   updateSuperset,
   expandedSupersets,
-  setExpandedSupersets
+  setExpandedSupersets,
+  previousExerciseLookup,
+  onMirrorOpen
 }) => {
   const {
     attributes,
@@ -1172,6 +1205,8 @@ const SortableLiftBlock: React.FC<SortableLiftBlockProps> = ({
               updateSuperset={updateSuperset}
               expandedSupersets={expandedSupersets}
               setExpandedSupersets={setExpandedSupersets}
+              previousEntry={previousExerciseLookup ? previousExerciseLookup[(ex.name || '').toLowerCase().trim()] : undefined}
+              onMirrorOpen={onMirrorOpen}
             />
           ))}
         </div>
@@ -1202,6 +1237,10 @@ export default function DailyLog() {
 
   // Load all workouts for the current user (for detecting same-date sessions)
   const [allWorkouts, setAllWorkouts] = useState<Workout[]>([]);
+
+  const [mirrorOpen, setMirrorOpen] = useState(false);
+  const [mirrorSelectedId, setMirrorSelectedId] = useState<string | null>(null);
+
   useEffect(() => {
     if (!user) return;
     const unsubscribe = storage.subscribeToWorkouts(user.uid, (workouts) => {
@@ -1426,6 +1465,88 @@ export default function DailyLog() {
 
     return { currentSplit, sanitizedSplit };
   }, [library, splits]);
+
+  // Smart-pick: the most recent past workout that best matches the current day
+  const smartMatchWorkout = useMemo<Workout | null>(() => {
+    if (!allWorkouts.length) return null;
+    const todayStr = format(date, 'yyyy-MM-dd');
+    // Only consider workouts strictly before today
+    const past = allWorkouts.filter(w => {
+      try { return format(new Date(w.date), 'yyyy-MM-dd') < todayStr; }
+      catch { return false; }
+    });
+    if (past.length === 0) return null;
+
+    // Get the programmed split name for matching
+    const splitData = getSplitForDate(date, manualSplit);
+    const splitName = splitData?.sanitizedSplit.name?.toLowerCase().trim() || '';
+
+    // Score each past workout
+    const scored = past.map(w => {
+      let score = 0;
+      const wName = (w.workoutName || '').toLowerCase();
+      // Substring match on split name (both directions for drifted names)
+      if (splitName && wName) {
+        if (wName.includes(splitName) || splitName.includes(wName)) score += 10;
+        // Also try word-level overlap — split "Push Day" matches "Brief Push Day"
+        const splitWords = splitName.split(/\s+/).filter(Boolean);
+        const nameWords = wName.split(/\s+/).filter(Boolean);
+        const overlap = splitWords.filter(sw => nameWords.some(nw => nw.includes(sw))).length;
+        if (overlap > 0) score += overlap * 3;
+      }
+      // Recency: more recent = higher bonus (max 10, decays)
+      const daysAgo = Math.floor((new Date(todayStr).getTime() - new Date(w.date).getTime()) / 86400000);
+      if (daysAgo >= 0) score += Math.max(0, 10 - daysAgo);
+      return { w, score };
+    });
+
+    scored.sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      // Tiebreak: most recent first
+      return new Date(b.w.date).getTime() - new Date(a.w.date).getTime();
+    });
+
+    if (scored[0].score === 0) return null; // No meaningful match
+    return scored[0].w;
+  }, [allWorkouts, date, manualSplit, getSplitForDate]);
+
+  // Last 30 workouts for manual selection
+  const recentWorkouts = useMemo<Workout[]>(() => {
+    const todayStr = format(date, 'yyyy-MM-dd');
+    return allWorkouts
+      .filter(w => {
+        try { return format(new Date(w.date), 'yyyy-MM-dd') < todayStr; }
+        catch { return false; }
+      })
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 30);
+  }, [allWorkouts, date]);
+
+  const previousExerciseLookup = useMemo<Record<string, ExerciseEntry>>(() => {
+    if (!smartMatchWorkout) return {};
+    const liftExs = (smartMatchWorkout.blocks || [])
+      .filter((b: any) => b.kind === 'lift')
+      .flatMap((b: any) => (b.exercises || []) as ExerciseEntry[]);
+    const legacy = smartMatchWorkout.exercises || [];
+    const all = liftExs.length > 0 ? liftExs : legacy;
+    const map: Record<string, ExerciseEntry> = {};
+    all.forEach(ex => {
+      const key = (ex.name || '').toLowerCase().trim();
+      if (key) map[key] = ex;
+    });
+    return map;
+  }, [smartMatchWorkout]);
+
+  useEffect(() => {
+    if (mirrorOpen && !mirrorSelectedId && smartMatchWorkout) {
+      setMirrorSelectedId(smartMatchWorkout.id);
+    }
+  }, [mirrorOpen, mirrorSelectedId, smartMatchWorkout]);
+
+  const mirrorViewWorkout = useMemo(() => {
+    if (!mirrorSelectedId) return smartMatchWorkout;
+    return allWorkouts.find(w => w.id === mirrorSelectedId) || smartMatchWorkout;
+  }, [mirrorSelectedId, allWorkouts, smartMatchWorkout]);
 
   const loadProgrammedWorkout = useCallback((targetDate: Date, splitName: string | null) => {
     if (splitName === NO_SPLIT_SENTINEL) {
@@ -1800,7 +1921,7 @@ export default function DailyLog() {
           const d = date.getDate();
           return new Date(Date.UTC(y, m, d, 12, 0, 0)).toISOString();
         })(),
-        timestamp: Date.now(),
+        timestamp: workoutMeta.timestamp || Date.now(),
         uid: user.uid,
       });
       
@@ -1919,8 +2040,13 @@ export default function DailyLog() {
     } else {
       // Fresh date — reset to blank programmed state
       setManualSplit(null);
+      setBlocks([]);
+      setExpandedSupersets({});
       setWorkoutMeta(prev => ({
         ...prev,
+        workoutName: '',
+        workoutSummary: '',
+        runningStats: '',
         postWorkoutEnergy: 5,
         notes: '',
         id: '',
@@ -2236,6 +2362,16 @@ export default function DailyLog() {
                     </DialogContent>
                   </Dialog>
 
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setMirrorOpen(true)}
+                    disabled={!smartMatchWorkout && recentWorkouts.length === 0}
+                    className="h-8 text-xs border-border text-muted-foreground hover:text-maroon hover:border-maroon/50"
+                  >
+                    <HistoryIcon size={14} className="mr-1.5" /> Mirror Previous
+                  </Button>
+
                   {previousSnapshot && (
                     <div className="flex items-center gap-2 ml-2">
                       <Button 
@@ -2306,6 +2442,7 @@ export default function DailyLog() {
                           updateSuperset={updateSuperset}
                           expandedSupersets={expandedSupersets}
                           setExpandedSupersets={setExpandedSupersets}
+                          onMirrorOpen={smartMatchWorkout || recentWorkouts.length > 0 ? () => setMirrorOpen(true) : undefined}
                         />
                       );
                     } else {
@@ -2402,6 +2539,143 @@ export default function DailyLog() {
           </Card>
         </div>
       </div>
+
+      <Dialog open={mirrorOpen} onOpenChange={(open) => {
+        setMirrorOpen(open);
+        if (!open) setMirrorSelectedId(null);
+      }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Mirror Previous Session</DialogTitle>
+            <DialogDescription>
+              Reference a past workout while logging. Read-only view.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            {/* Smart Suggestion */}
+            {smartMatchWorkout && (
+              <div
+                className={cn(
+                  "p-3 border rounded-lg cursor-pointer transition-colors",
+                  mirrorSelectedId === smartMatchWorkout.id
+                    ? "border-maroon bg-maroon/5"
+                    : "border-border hover:border-maroon/40"
+                )}
+                onClick={() => setMirrorSelectedId(smartMatchWorkout.id)}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[10px] font-bold text-maroon bg-maroon/10 px-1.5 py-0.5 rounded uppercase tracking-wider">
+                    Smart Suggestion
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {format(new Date(smartMatchWorkout.date), 'EEE, MMM d')}
+                  </span>
+                </div>
+                <div className="font-semibold text-sm">
+                  {smartMatchWorkout.workoutName || 'Untitled'}
+                </div>
+              </div>
+            )}
+
+            {/* Manual Dropdown */}
+            <div className="space-y-1">
+              <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+                Or pick from recent workouts
+              </Label>
+              <select
+                value={mirrorSelectedId || ''}
+                onChange={e => setMirrorSelectedId(e.target.value || null)}
+                className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+              >
+                <option value="">— Select a workout —</option>
+                {recentWorkouts.map(w => (
+                  <option key={w.id} value={w.id}>
+                    {format(new Date(w.date), 'MMM d (EEE)')} — {w.workoutName || 'Untitled'}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Viewer */}
+            {mirrorViewWorkout ? (
+              <div className="border border-border rounded-lg p-4 bg-muted/30 space-y-3">
+                <div>
+                  <div className="font-bold text-base">{mirrorViewWorkout.workoutName || 'Untitled'}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {format(new Date(mirrorViewWorkout.date), 'EEEE, MMM d, yyyy')} · Energy: {mirrorViewWorkout.postWorkoutEnergy}/10
+                  </div>
+                </div>
+
+                {/* Exercises */}
+                {(() => {
+                  const liftExs: ExerciseEntry[] = (mirrorViewWorkout.blocks || [])
+                    .filter((b: any) => b.kind === 'lift')
+                    .flatMap((b: any) => b.exercises || []);
+                  const legacyExs = mirrorViewWorkout.exercises || [];
+                  const exList = liftExs.length > 0 ? liftExs : legacyExs;
+                  if (exList.length === 0) return null;
+                  return (
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Exercises</Label>
+                      {exList.map((ex: ExerciseEntry) => (
+                        <div key={ex.id} className="text-sm flex justify-between items-baseline py-1 border-b border-border/40 last:border-b-0">
+                          <span className="font-medium">{ex.name}</span>
+                          <span className="text-muted-foreground text-xs tabular-nums">
+                            {ex.sets}×{ex.reps || '-'} @ {ex.weight || 0} lbs
+                            {ex.rpe ? ` · RPE ${ex.rpe}` : ''}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+
+                {/* Conditioning */}
+                {(() => {
+                  const condBlocks = (mirrorViewWorkout.blocks || []).filter((b: any) => b.kind === 'cardio' || b.kind === 'hiit');
+                  if (condBlocks.length === 0 && !mirrorViewWorkout.conditioning?.name) return null;
+                  return (
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Conditioning</Label>
+                      {condBlocks.length > 0 ? condBlocks.map((b: any, i: number) => (
+                        <div key={b.id || i} className="text-sm text-muted-foreground">
+                          {b.kind === 'hiit' ? (b.programmedName || b.hiitType || 'HIIT') : (b.programmedName || b.subtype || 'Cardio')}
+                          {b.programmedDistance ? ` — ${b.programmedDistance}${b.programmedUnits || ''}` : ''}
+                          {b.programmedDuration ? ` / ${b.programmedDuration}` : ''}
+                        </div>
+                      )) : (
+                        <div className="text-sm text-muted-foreground">
+                          {mirrorViewWorkout.conditioning?.name}
+                          {mirrorViewWorkout.conditioning?.workDistance ? ` — ${mirrorViewWorkout.conditioning.workDistance}${mirrorViewWorkout.conditioning.workUnits || ''}` : ''}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* Notes */}
+                {mirrorViewWorkout.notes && (
+                  <div className="space-y-1">
+                    <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Notes</Label>
+                    <div className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      {mirrorViewWorkout.notes}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                No workout selected.
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMirrorOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

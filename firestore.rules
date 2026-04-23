@@ -211,5 +211,9 @@ service cloud.firestore {
     match /{path=**} {
       allow read, write: if false;
     }
+
+    match /test/connection {
+      allow read: if true;
+    }
   }
 }

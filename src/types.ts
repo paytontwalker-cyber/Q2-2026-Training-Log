@@ -16,6 +16,7 @@ export type MuscleGroup =
   | 'Traps'
   | 'Lower Back'
   | 'Quads'
+  | 'Hip Flexors'
   | 'Hamstrings'
   | 'Glutes'
   | 'Calves'
@@ -259,6 +260,8 @@ export interface UserProfile {
   volumeTargetOverrides?: Record<string, number>;  // per-muscle-group override, overrides the computed target
   createdAt?: number;
   updatedAt?: number;
+  renameMigrationV1?: boolean;
+  libraryNamespaceMigrationV1?: boolean;
 }
 
 export interface GuestUser {

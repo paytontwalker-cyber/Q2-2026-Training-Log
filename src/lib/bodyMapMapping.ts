@@ -15,7 +15,7 @@ export const MUSCLE_GROUP_TO_REGIONS: Partial<Record<MuscleGroup, MappedRegion[]
   'Shoulders':   [{ slug: 'deltoids', side: 'front' }],
   'Side Delts':  [{ slug: 'deltoids', side: 'front' }, { slug: 'deltoids', side: 'back' }],
   'Rear Delts':  [{ slug: 'deltoids', side: 'back' }],
-  'Triceps':     [{ slug: 'triceps', side: 'back' }],
+  'Triceps':     [{ slug: 'triceps', side: 'front' }, { slug: 'triceps', side: 'back' }],
   'Biceps':      [{ slug: 'biceps', side: 'front' }],
   'Forearms':    [{ slug: 'forearm', side: 'front' }, { slug: 'forearm', side: 'back' }],
   'Upper Back':  [{ slug: 'upper-back', side: 'back' }],
@@ -26,6 +26,7 @@ export const MUSCLE_GROUP_TO_REGIONS: Partial<Record<MuscleGroup, MappedRegion[]
   ],
   'Lower Back':  [{ slug: 'lower-back', side: 'back' }],
   'Quads':       [{ slug: 'quadriceps', side: 'front' }],
+  'Hip Flexors': [{ slug: 'hip-flexors', side: 'front' }],
   'Hamstrings':  [{ slug: 'hamstring', side: 'back' }],
   'Glutes':      [{ slug: 'gluteal', side: 'back' }],
   'Calves':      [

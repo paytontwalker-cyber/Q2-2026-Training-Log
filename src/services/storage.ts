@@ -30,7 +30,7 @@ const removeUndefined = (obj: any): any => {
   return newObj;
 };
 
-const deepRemoveUndefined = (val: any): any => {
+export const deepRemoveUndefined = (val: any): any => {
   if (val === undefined) return undefined; // caller removes key
   if (val === null) return null;
   if (Array.isArray(val)) {
@@ -48,6 +48,8 @@ const deepRemoveUndefined = (val: any): any => {
   }
   return val;
 };
+
+const libDocId = (uid: string, id: string) => `${uid}_${id}`;
 
 const sanitizeWorkoutRecord = (raw: unknown): Workout | null => {
   if (!raw || typeof raw !== 'object') return null;
@@ -419,8 +421,8 @@ export const storage = {
         if (missingDefaults.length > 0 || exercisesToBackfill.length > 0) {
           // Add missing defaults
           for (const ex of missingDefaults) {
-            const docRef = doc(db, 'exercises', ex.id);
-            await setDoc(docRef, { ...ex, uid });
+            const docRef = doc(db, 'exercises', libDocId(uid, ex.id));
+            await setDoc(docRef, deepRemoveUndefined({ ...ex, uid }));
           }
           // Backfill existing
           for (const ex of exercisesToBackfill) {
@@ -428,14 +430,14 @@ export const storage = {
               d.id === ex.id || d.name.toLowerCase() === ex.name.toLowerCase()
             );
             if (def) {
-              const docRef = doc(db, 'exercises', ex.id);
-              await setDoc(docRef, { 
+              const docRef = doc(db, 'exercises', libDocId(uid, ex.id));
+              await setDoc(docRef, deepRemoveUndefined({ 
                 ...ex, 
                 muscleDistribution: def.muscleDistribution,
                 muscleGroup: def.muscleGroup,
                 trackingMode: def.trackingMode,
                 uid 
-              });
+              }));
             }
           }
           // The snapshot will trigger again after these writes
@@ -464,8 +466,8 @@ export const storage = {
 
     try {
       const itemToSave = { ...item, uid };
-      const docRef = doc(db, 'exercises', item.id);
-      await setDoc(docRef, itemToSave);
+      const docRef = doc(db, 'exercises', libDocId(uid, item.id));
+      await setDoc(docRef, deepRemoveUndefined(itemToSave));
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `exercises/${item.id}`);
     }
@@ -483,7 +485,11 @@ export const storage = {
     }
 
     try {
-      await deleteDoc(doc(db, 'exercises', id));
+      if (!uid) {
+        console.warn('[deleteLibraryItem] uid required for non-guest delete; aborting');
+        return;
+      }
+      await deleteDoc(doc(db, 'exercises', libDocId(uid, id)));
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `exercises/${id}`);
     }
@@ -514,8 +520,8 @@ export const storage = {
 
     try {
       for (const ex of INITIAL_EXERCISES) {
-        const docRef = doc(db, 'exercises', ex.id);
-        await setDoc(docRef, { ...ex, uid });
+        const docRef = doc(db, 'exercises', libDocId(uid, ex.id));
+        await setDoc(docRef, deepRemoveUndefined({ ...ex, uid }));
       }
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'exercises/seed');

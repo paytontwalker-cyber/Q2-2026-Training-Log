@@ -7,7 +7,7 @@ import { ExerciseLibraryEntry, MuscleGroup } from './types';
 import INITIAL_EXERCISES_DATA from './data/exercises.json';
 import TEMPLATES_DATA from './data/templates.json';
 
-export const APP_VERSION = '4.0.4';
+export const APP_VERSION = '4.1.1';
 
 export const INITIAL_EXERCISES: ExerciseLibraryEntry[] = INITIAL_EXERCISES_DATA as ExerciseLibraryEntry[];
 export const DEFAULT_SPLIT = TEMPLATES_DATA.defaultSplit;
@@ -24,6 +24,7 @@ export const STATUS_EXPLANATIONS: Record<string, string> = {
 export const BASE_VOLUME_TARGETS_180LB_INTERMEDIATE: Record<string, number> = {
   Chest: 5400,
   Quads: 3600,
+  'Hip Flexors': 900,
   Hamstrings: 3600,
   Lats: 2700,
   'Upper Back': 1800,
@@ -70,6 +71,7 @@ export const MUSCLE_GROUPS: MuscleGroup[] = [
   'Traps',
   'Lower Back',
   'Quads',
+  'Hip Flexors',
   'Hamstrings',
   'Glutes',
   'Calves',

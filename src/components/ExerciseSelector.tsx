@@ -186,7 +186,7 @@ export function ExerciseSelector({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {!hideTrigger && <DialogTrigger asChild>{Trigger}</DialogTrigger>}
+      {!hideTrigger && <DialogTrigger render={Trigger} />}
       <DialogContent className="sm:max-w-[425px] p-0 gap-0 overflow-hidden flex flex-col max-h-[90vh]">
         <DialogHeader className="p-4 border-b">
           <DialogTitle>Select Exercise</DialogTitle>

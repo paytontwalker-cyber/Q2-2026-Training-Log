@@ -6,8 +6,11 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { auth, db, loginWithGoogle, logout as firebaseLogout, signUpWithEmail, signInWithEmail } from '../firebase';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { GuestUser } from '../types';
+import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
+import { GuestUser, UserProfile } from '../types';
+import { runRenameMigrationV1 } from '@/src/lib/renameMigration';
+import { runLibraryNamespaceMigrationV1 } from '@/src/lib/libraryNamespaceMigration';
+import { storage } from '@/src/services/storage';
 
 interface FirebaseContextType {
   user: User | GuestUser | null;
@@ -58,6 +61,57 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!user || ('isGuest' in user && user.isGuest)) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const userRef = doc(db, 'users', user.uid);
+        const profileSnap = await getDoc(userRef);
+        if (!profileSnap.exists()) return;
+        
+        const profile = profileSnap.data() as UserProfile;
+        if (cancelled) return;
+        if (profile && profile.renameMigrationV1) return; // already migrated
+        
+        const n = await runRenameMigrationV1(user.uid);
+        if (cancelled) return;
+        console.info(`[renameMigrationV1] rewrote ${n} record(s) for ${user.uid}`);
+        
+        // Set the flag LAST so a mid-flight failure leaves the migration rerunnable next load.
+        await updateDoc(userRef, { renameMigrationV1: true });
+      } catch (err) {
+        console.error('[renameMigrationV1] run failed:', err);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user, isAuthReady]);
+
+  useEffect(() => {
+    if (!user || ('isGuest' in user && user.isGuest)) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const userRef = doc(db, 'users', user.uid);
+        const profileSnap = await getDoc(userRef);
+        if (!profileSnap.exists()) return;
+
+        const profile = profileSnap.data() as UserProfile;
+        if (cancelled) return;
+        if (profile && profile.libraryNamespaceMigrationV1) return;
+        
+        const n = await runLibraryNamespaceMigrationV1(user.uid);
+        if (cancelled) return;
+        console.info(`[libraryNamespaceMigrationV1] moved ${n} exercise doc(s) for ${user.uid}`);
+        
+        await updateDoc(userRef, { libraryNamespaceMigrationV1: true });
+      } catch (err) {
+        console.error('[libraryNamespaceMigrationV1] run failed:', err);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
 
   const loginAsGuest = () => {
     const guest: GuestUser = {
