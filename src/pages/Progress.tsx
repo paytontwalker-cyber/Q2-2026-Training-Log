@@ -235,7 +235,6 @@ export default function Progress() {
       'Lats': 'Back',
       'Traps': 'Back',
       'Lower Back': 'Back',
-      'Core': 'Abs/Core',
     };
 
     return latestWorkoutSummary.muscleGroupData
@@ -353,7 +352,6 @@ export default function Progress() {
       'Lats': 'Back',
       'Traps': 'Back',
       'Lower Back': 'Back',
-      'Core': 'Abs/Core',
     };
 
     return Object.entries(userVolumeTargets as Record<string, number>).map(([muscleGroup, targetVolume]) => {

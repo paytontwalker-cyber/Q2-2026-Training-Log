@@ -15,16 +15,16 @@ interface BodyMapProps {
 // Each step is perceptually distinguishable — cream, pale peach, peach,
 // warm peach, soft orange, orange, deep orange, burnt orange, rust, deep maroon.
 export const THERMAL_COLORS = [
-  '#FEF3E7', // Level 1: Cream (Minimal)
-  '#FDE4C4', // Level 2: Pale Peach
-  '#FCD29F', // Level 3: Peach
-  '#FDBA74', // Level 4: Warm Peach
-  '#FB923C', // Level 5: Soft Orange
-  '#F97316', // Level 6: Orange
-  '#EA580C', // Level 7: Deep Orange (Near Target)
-  '#C2410C', // Level 8: Burnt Orange (At Target)
-  '#9A3412', // Level 9: Rust (High)
-  '#7C1D1D', // Level 10: Deep Maroon (Very High / Overreaching)
+  '#FCE4CC', // Level 1: Pale Peach
+  '#FCD29F', // Level 2: Peach
+  '#FDBA74', // Level 3: Warm Peach
+  '#FB923C', // Level 4: Soft Orange
+  '#F97316', // Level 5: Orange
+  '#EA580C', // Level 6: Deep Orange (Near Target)
+  '#C2410C', // Level 7: Burnt Orange (At Target)
+  '#9A3412', // Level 8: Rust (High)
+  '#7C1D1D', // Level 9: Deep Maroon
+  '#450A0A', // Level 10: Darkest Maroon (Very High / Overreaching)
 ];
 
 // Thresholds:
@@ -33,7 +33,8 @@ export const THERMAL_COLORS = [
 // TARGET mode:   `percentage` = volume as % of the muscle's weekly volume target.
 //   Buckets cluster around 100% (target) so hitting target maps to a distinct color.
 export const getVolumeColor = (percentage: number): string => {
-  if (percentage < 10)  return THERMAL_COLORS[0];  // Minimal
+  if (percentage <= 0)  return NO_DATA_COLOR; // Fallback
+  if (percentage < 10)  return THERMAL_COLORS[0];  // Minimal (guaranteed if > 0)
   if (percentage < 20)  return THERMAL_COLORS[1];
   if (percentage < 30)  return THERMAL_COLORS[2];
   if (percentage < 45)  return THERMAL_COLORS[3];
@@ -52,7 +53,6 @@ const ALIAS_MAP: Record<string, string> = {
   'Lats': 'Back',
   'Traps': 'Back',
   'Lower Back': 'Back',
-  'Core': 'Abs/Core',
 };
 
 const getTargetForSlug = (slug: string, targets: Record<string, number> = BASE_VOLUME_TARGETS_180LB_INTERMEDIATE) => {

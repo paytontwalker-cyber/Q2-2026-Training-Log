@@ -24,7 +24,6 @@ export const STATUS_EXPLANATIONS: Record<string, string> = {
 export const BASE_VOLUME_TARGETS_180LB_INTERMEDIATE: Record<string, number> = {
   Chest: 5400,
   Quads: 3600,
-  'Hip Flexors': 900,
   Hamstrings: 3600,
   Lats: 2700,
   'Upper Back': 1800,
@@ -39,7 +38,8 @@ export const BASE_VOLUME_TARGETS_180LB_INTERMEDIATE: Record<string, number> = {
   Traps: 900,
   'Lower Back': 900,
   Forearms: 900,
-  'Abs/Core': 900
+  Core: 2700,
+  'Hip Flexors': 500
 };
 
 // Experience multipliers scale targets to training age.

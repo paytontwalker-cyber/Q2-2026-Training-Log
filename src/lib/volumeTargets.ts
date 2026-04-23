@@ -54,9 +54,15 @@ export function computeVolumeTargets(
   const overrides = profile?.volumeTargetOverrides || {};
 
   Object.entries(BASE_VOLUME_TARGETS_180LB_INTERMEDIATE).forEach(([muscle, base]) => {
-    if (muscle in overrides && overrides[muscle] > 0) {
+    let overrideVal = overrides[muscle];
+    // Backwards compatibility for the rename of Abs/Core to Core
+    if (muscle === 'Core' && overrideVal === undefined && overrides['Abs/Core'] !== undefined) {
+      overrideVal = overrides['Abs/Core'];
+    }
+
+    if (overrideVal !== undefined && overrideVal > 0) {
       // User-set override wins
-      result[muscle] = Math.round(overrides[muscle]);
+      result[muscle] = Math.round(overrideVal);
     } else {
       // NEW FORMULA: Base * BW * Height * Experience
       result[muscle] = Math.round(base * bwScale * heightScale * expMultiplier);
