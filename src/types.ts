@@ -276,6 +276,8 @@ export interface ProgrammedExercise {
   name: string;
   sets?: string;
   reps?: string;
+  time?: string;
+  distance?: string;
   targetNotes?: string;
   superset?: ProgrammedExercise[];
 }
