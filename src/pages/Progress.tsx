@@ -840,7 +840,16 @@ export default function Progress() {
               </p>
             </CardHeader>
             <CardContent>
-              <BodyMap muscleGroupData={weeklyVolume?.muscleGroupData || []} heatMode={heatMode} volumeTargets={userVolumeTargets} />
+              <BodyMap 
+                muscleGroupData={weeklyVolume?.muscleGroupData || []} 
+                heatMode={heatMode} 
+                volumeTargets={userVolumeTargets} 
+                onMuscleClick={(mg) => setMuscleDrilldown({
+                  open: true,
+                  muscleGroup: mg,
+                  context: 'weekly',
+                })}
+              />
               {(!weeklyVolume || weeklyVolume.muscleGroupData.length === 0) && (
                 <p className="text-sm text-muted-foreground italic text-center py-4">
                   No workout data in this range yet. Log some workouts to see your body map.
@@ -1155,7 +1164,16 @@ export default function Progress() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <BodyMap muscleGroupData={latestWorkoutSummary?.muscleGroupData || []} heatMode={sessionHeatMode} volumeTargets={userVolumeTargets} />
+              <BodyMap 
+                muscleGroupData={latestWorkoutSummary?.muscleGroupData || []} 
+                heatMode={sessionHeatMode} 
+                volumeTargets={userVolumeTargets} 
+                onMuscleClick={(mg) => setMuscleDrilldown({
+                  open: true,
+                  muscleGroup: mg,
+                  context: 'session',
+                })}
+              />
               {(!latestWorkoutSummary || latestWorkoutSummary.muscleGroupData.length === 0) && (
                 <p className="text-sm text-muted-foreground italic text-center py-4">
                   No session data available yet. Select or log a workout to see the body map.
@@ -1165,42 +1183,6 @@ export default function Progress() {
           </Card>
           {latestWorkoutSummary ? (
             <div className="space-y-6">
-              <div className="flex items-center gap-2 mt-6">
-                <Hash className="text-maroon" size={20} />
-                <h3 className="text-xl font-bold text-foreground">MUSCLE GROUP VOLUMES</h3>
-              </div>
-              <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  {latestWorkoutSummary.muscleGroupData.map(item => (
-                    <button
-                      key={item.name}
-                      type="button"
-                      onClick={() => setMuscleDrilldown({
-                        open: true,
-                        muscleGroup: item.name,
-                        context: 'session',
-                      })}
-                      className="w-full text-left rounded-xl border border-border bg-card/70 px-4 py-3 shadow-sm transition-all cursor-pointer hover:border-maroon/40 hover:bg-maroon/5"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span
-                          className="h-3 w-3 rounded-full shrink-0 shadow-sm"
-                          style={{ backgroundColor: getVolumeColor((item.value / latestWorkoutSummary.totalVolume) * 100) }}
-                        />
-                        <div className="min-w-0">
-                          <div className="font-bold text-foreground truncate">
-                            {item.name}
-                          </div>
-                          <div className="text-sm text-muted-foreground tabular-nums">
-                            {item.value.toLocaleString(undefined, { maximumFractionDigits: 1 })} lbs moved
-                          </div>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               <div className="flex items-center gap-2 mt-6">
                 <Hash className="text-maroon" size={20} />
                 <h3 className="text-xl font-bold text-foreground">Individual Exercise Volume</h3>

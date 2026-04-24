@@ -8,6 +8,7 @@ interface BodyMapProps {
   muscleGroupData: { name: string; value: number }[];
   heatMode?: 'relative' | 'target';
   volumeTargets?: Record<string, number>;
+  onMuscleClick?: (muscleGroup: string) => void;
 }
 
 // 10-step single-hue warm gradient, cream → deep maroon.
@@ -78,7 +79,7 @@ const getTargetForSlug = (slug: string, targets: Record<string, number> = BASE_V
   return totalTarget;
 };
 
-export function BodyMap({ muscleGroupData, heatMode = 'relative', volumeTargets }: BodyMapProps) {
+export function BodyMap({ muscleGroupData, heatMode = 'relative', volumeTargets, onMuscleClick }: BodyMapProps) {
   const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
@@ -257,7 +258,7 @@ export function BodyMap({ muscleGroupData, heatMode = 'relative', volumeTargets 
       {/* Supplemental List */}
       <div className="mt-8">
         <h4 className="text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wider border-b pb-2">Muscle Group Volumes</h4>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {muscleGroupData.map(data => {
             const regions = MUSCLE_GROUP_TO_REGIONS[data.name as MuscleGroup];
             let color = NO_DATA_COLOR;
@@ -267,13 +268,22 @@ export function BodyMap({ muscleGroupData, heatMode = 'relative', volumeTargets 
             }
             
             return (
-              <div key={data.name} className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full shadow-sm border border-border" style={{ backgroundColor: color }} />
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium">{data.name}</span>
-                  <span className="text-xs text-muted-foreground">{data.value.toLocaleString()} lbs moved</span>
+              <button
+                key={data.name}
+                type="button"
+                onClick={() => onMuscleClick?.(data.name)}
+                className={`w-full text-left rounded-xl border border-border bg-card/70 px-4 py-3 shadow-sm transition-all ${onMuscleClick ? 'cursor-pointer hover:border-maroon/40 hover:bg-maroon/5' : 'cursor-default'}`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="h-3 w-3 rounded-full shrink-0 shadow-sm border border-border" style={{ backgroundColor: color }} />
+                  <div className="min-w-0">
+                    <div className="font-bold text-foreground truncate">{data.name}</div>
+                    <div className="text-sm text-muted-foreground tabular-nums">
+                      {data.value.toLocaleString(undefined, { maximumFractionDigits: 1 })} lbs moved
+                    </div>
+                  </div>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
