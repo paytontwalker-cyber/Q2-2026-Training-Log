@@ -639,7 +639,7 @@ const SortableExerciseCard = ({
                       <Input 
                         type="number" 
                         value={ex.superset.distance || ''} 
-                        onChange={e => updateSuperset(ex.id, { ...ex.superset, distance: parseFloat(e.target.value) || 0 })}
+                        onChange={e => updateSuperset(ex.id, { ...ex.superset, distance: parseFloat(e.target.value) || null })}
                         className="h-8 text-xs"
                       />
                     </div>
@@ -660,6 +660,15 @@ const SortableExerciseCard = ({
                           <SelectItem value="km">km</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+                    <div>
+                      <Label className="text-[9px] uppercase font-bold text-muted-foreground mb-1 block">Weight</Label>
+                      <Input 
+                        type="number" 
+                        value={ex.superset.weight || ''} 
+                        onChange={e => updateSuperset(ex.id, { ...ex.superset, weight: parseFloat(e.target.value) || 0 })}
+                        className="h-8 text-xs"
+                      />
                     </div>
                   </>
                 ) : (
@@ -689,6 +698,15 @@ const SortableExerciseCard = ({
                           <SelectItem value="min">min</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+                    <div>
+                      <Label className="text-[9px] uppercase font-bold text-muted-foreground mb-1 block">Weight</Label>
+                      <Input 
+                        type="number" 
+                        value={ex.superset.weight || ''} 
+                        onChange={e => updateSuperset(ex.id, { ...ex.superset, weight: parseFloat(e.target.value) || 0 })}
+                        className="h-8 text-xs"
+                      />
                     </div>
                   </>
                 )}
@@ -1354,11 +1372,11 @@ export default function DailyLog() {
           const sanitizedDraft = sanitizeDraftRecord(draft);
           if (sanitizedDraft) {
             setWorkoutMeta(prev => ({ ...prev, ...sanitizedDraft }));
-            if (sanitizedDraft.blocks) {
-              setBlocks(sanitizedDraft.blocks);
-            } else {
-              setBlocks(deriveBlocksFromLegacy(sanitizedDraft.exercises || [], sanitizedDraft.conditioning));
+            let draftBlocks = sanitizedDraft.blocks;
+            if (!draftBlocks) {
+              draftBlocks = deriveBlocksFromLegacy(sanitizedDraft.exercises || [], sanitizedDraft.conditioning);
             }
+            setBlocks(draftBlocks);
             
             if (sanitizedDraft.isHistorical) {
               setWorkoutMeta(prev => ({ ...prev, isHistorical: true }));
@@ -1366,6 +1384,16 @@ export default function DailyLog() {
             
             if (draft.expandedSupersets) {
               setExpandedSupersets(draft.expandedSupersets);
+            } else {
+              const initialExpanded: Record<string, boolean> = {};
+              draftBlocks.forEach((b: Block) => {
+                if (b.kind === 'lift') {
+                  (b as LiftBlock).exercises.forEach(ex => {
+                    if (ex.superset) initialExpanded[ex.id] = true;
+                  });
+                }
+              });
+              setExpandedSupersets(initialExpanded);
             }
 
             if (sanitizedDraft.date) {

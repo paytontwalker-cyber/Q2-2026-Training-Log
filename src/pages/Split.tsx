@@ -101,7 +101,6 @@ AutoGrowTextarea.displayName = "AutoGrowTextarea";
 
 interface SortableExerciseBadgeProps {
   exercise: string | ProgrammedExercise;
-  library: ExerciseLibraryEntry[];
   onRemove: (id: string) => void;
   onUpdate: (id: string, updates: Partial<ProgrammedExercise>) => void;
   onAddSuperset: (parentId: string) => void;
@@ -109,13 +108,13 @@ interface SortableExerciseBadgeProps {
   onEjectFromSuperset?: (childId: string) => void;
   onEjectChildFromParent?: (parentId: string, childId: string) => void;
   isParent?: boolean;
+  library: ExerciseLibraryEntry[];
   depth?: number;
 }
 
 const SortableExerciseBadge = React.memo(
   ({
     exercise,
-    library,
     onRemove,
     onUpdate,
     onAddSuperset,
@@ -123,6 +122,7 @@ const SortableExerciseBadge = React.memo(
     onEjectFromSuperset,
     onEjectChildFromParent,
     isParent = true,
+    library,
     depth = 0,
   }: SortableExerciseBadgeProps) => {
     const isProgrammed = typeof exercise !== "string";
@@ -131,10 +131,6 @@ const SortableExerciseBadge = React.memo(
 
     const [notesOpen, setNotesOpen] = useState(false);
     const [pickerOpen, setPickerOpen] = useState(false);
-
-    // Look up the tracking mode dynamically
-    const libEntry = library.find((ex) => ex.name === name);
-    const trackingMode = libEntry?.trackingMode || 'reps';
 
     const {
       attributes,
@@ -145,7 +141,6 @@ const SortableExerciseBadge = React.memo(
       isDragging,
     } = useSortable({ id });
 
-    // Fallback droppable for superset conversion if needed, but per request isolated DnD uses simple setups
     const { setNodeRef: setDropNodeRef, isOver } = useDroppable({
       id: `drop_${id}`,
       data: { type: 'parent-drop', parentId: id },
@@ -166,13 +161,9 @@ const SortableExerciseBadge = React.memo(
         }
       : undefined;
 
-    if (!isProgrammed) return null;
-
-    const sets = exercise.sets || "";
-    const reps = exercise.reps || "";
-    const time = exercise.time || "";
-    const distance = exercise.distance || "";
-    const targetNotes = exercise.targetNotes || "";
+    const sets = isProgrammed ? exercise.sets || "" : "";
+    const reps = isProgrammed ? exercise.reps || "" : "";
+    const targetNotes = isProgrammed ? exercise.targetNotes || "" : "";
 
     return (
       <div
@@ -195,7 +186,7 @@ const SortableExerciseBadge = React.memo(
                 <GripVertical size={16} />
               </div>
             )}
-            {!name ? (
+            {isProgrammed && !name ? (
               <div className="flex-1">
                 <button
                   onClick={() => setPickerOpen(true)}
@@ -223,7 +214,7 @@ const SortableExerciseBadge = React.memo(
                 {name}
               </button>
             )}
-            {name && (
+            {isProgrammed && name && (
               <ExerciseSelector
                 open={pickerOpen}
                 onOpenChange={setPickerOpen}
@@ -268,47 +259,43 @@ const SortableExerciseBadge = React.memo(
           </div>
         </div>
 
-        {/* DYNAMIC TRACKING METRICS BASED ON EXERCISE MODE */}
-        <div 
-          className="pl-7 flex flex-wrap items-center gap-x-4 gap-y-2 mt-2 pb-2"
+        {/* Programmed sets/reps row — always editable when exercise is programmed */}
+        <div
+          className="pl-7 flex items-center gap-2"
           onPointerDown={(e) => e.stopPropagation()}
         >
-          <div className="flex items-center gap-1">
-            <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-tighter w-3">S</Label>
-            <Input value={sets} onChange={e => onUpdate(id, { sets: e.target.value })} placeholder="3" className="h-7 w-12 text-xs" />
+          <div className="flex items-center gap-1 flex-1">
+            <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider w-10">
+              Sets
+            </Label>
+            <Input
+              value={sets}
+              onChange={(e) => onUpdate(id, { sets: e.target.value })}
+              className="h-8 text-xs"
+            />
           </div>
-          
-          {trackingMode === 'reps' && (
-            <div className="flex items-center gap-1">
-              <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-tighter w-3">R</Label>
-              <Input value={reps} onChange={e => onUpdate(id, { reps: e.target.value })} placeholder="8" className="h-7 w-12 text-xs" />
-            </div>
-          )}
-
-          {(trackingMode === 'time' || trackingMode === 'distance') && (
-            <div className="flex items-center gap-1">
-              <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-tighter w-3">T</Label>
-              <Input value={time} onChange={e => onUpdate(id, { time: e.target.value })} placeholder="60s" className="h-7 w-16 text-xs" />
-            </div>
-          )}
-
-          {trackingMode === 'distance' && (
-            <div className="flex items-center gap-1">
-              <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-tighter w-3">D</Label>
-              <Input value={distance} onChange={e => onUpdate(id, { distance: e.target.value })} placeholder="1mi" className="h-7 w-16 text-xs" />
-            </div>
-          )}
-
+          <div className="flex items-center gap-1 flex-1">
+            <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider w-10">
+              Reps
+            </Label>
+            <Input
+              value={reps}
+              onChange={(e) => onUpdate(id, { reps: e.target.value })}
+              className="h-8 text-xs"
+            />
+          </div>
           <button
             type="button"
             onClick={() => setNotesOpen(!notesOpen)}
             className={cn(
-              "text-[10px] uppercase font-bold px-2 h-7 rounded border transition-colors",
-              targetNotes || notesOpen ? "bg-maroon/10 text-maroon border-maroon/30" : "text-muted-foreground border-border hover:border-maroon/40"
+              "text-[10px] uppercase font-bold px-2 h-8 rounded border transition-colors",
+              targetNotes || notesOpen
+                ? "bg-maroon/10 text-maroon border-maroon/30"
+                : "text-muted-foreground border-border hover:border-maroon/40",
             )}
             title={targetNotes ? "Edit snapshot notes" : "Add snapshot notes"}
           >
-            {targetNotes ? 'Note' : '+ Note'}
+            {targetNotes ? "Note" : "+ Note"}
           </button>
         </div>
 
@@ -324,47 +311,40 @@ const SortableExerciseBadge = React.memo(
           </div>
         )}
 
-        {/* RECURSIVE SUPERSET DRAG AND DROP (ISOLATED CONTEXT) */}
-        {exercise.superset && exercise.superset.length > 0 && (
-          <div className="mt-2 space-y-2 border-l-2 border-dashed border-border pl-2">
-            <DndContext 
-              id={`child-dnd-${id}`}
-              collisionDetection={closestCenter} 
-              onDragEnd={(e) => {
-                const { active, over } = e;
-                if (!over || active.id === over.id) return;
-                
-                // STRICT BOUNDARY CHECK: Only allow move if BOTH items exist in THIS superset array
-                const activeIdx = exercise.superset!.findIndex(ex => (ex.id || ex.name) === active.id);
-                const overIdx = exercise.superset!.findIndex(ex => (ex.id || ex.name) === over.id);
-                
-                if (activeIdx !== -1 && overIdx !== -1) {
-                  onUpdate(id, { superset: arrayMove(exercise.superset!, activeIdx, overIdx) });
-                }
-            }}>
-              <SortableContext items={exercise.superset.map(ex => ex.id || ex.name)} strategy={verticalListSortingStrategy}>
-                {exercise.superset.map((subEx) => (
-                  <SortableExerciseBadge 
-                    key={subEx.id || subEx.name}
-                    exercise={subEx}
-                    library={library}
-                    onRemove={(childId) => onRemoveSuperset(id, childId)}
-                    onUpdate={(childId, updates) => onUpdate(id, { superset: exercise.superset!.map(s => (s.id || s.name) === childId ? { ...s, ...updates } : s) })}
-                    onAddSuperset={() => {}} 
-                    onRemoveSuperset={() => {}} 
-                    onEjectFromSuperset={(childId) => onEjectChildFromParent?.(id, childId)}
-                    onEjectChildFromParent={() => {}}
-                    isParent={false} 
-                    depth={depth + 1}
-                  />
-                ))}
-              </SortableContext>
-            </DndContext>
-          </div>
+        {/* RECURSIVE SUPERSET DRAG AND DROP */}
+        {isProgrammed && exercise.superset && exercise.superset.length > 0 && (
+           <div className="mt-3 space-y-2 border-l-2 border-dashed border-border pl-2">
+             <SortableContext
+               items={exercise.superset.map((ex) => ex.id || ex.name)}
+               strategy={verticalListSortingStrategy}
+             >
+               {exercise.superset.map((subEx) => (
+                 <SortableExerciseBadge
+                   key={subEx.id || subEx.name}
+                   exercise={subEx}
+                   library={library}
+                   onRemove={(childId) => onRemoveSuperset(id, childId)}
+                   onUpdate={(childId, updates) =>
+                     onUpdate(id, {
+                       superset: exercise.superset!.map((s) =>
+                         (s.id || s.name) === childId ? { ...s, ...updates } : s,
+                       ),
+                     })
+                   }
+                   onAddSuperset={() => {}}
+                   onRemoveSuperset={() => {}}
+                   onEjectFromSuperset={(childId) => onEjectChildFromParent?.(id, childId)}
+                   onEjectChildFromParent={() => {}}
+                   isParent={false}
+                   depth={depth + 1}
+                 />
+               ))}
+             </SortableContext>
+           </div>
         )}
       </div>
     );
-  }
+  },
 );
 
 const dropZoneFirstCollision: CollisionDetection = (args) => {
@@ -1270,35 +1250,111 @@ export default function Split() {
                   <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-tighter w-8">
                     Lift
                   </Label>
-                  {/* ISOLATED PARENT DND CONTEXT */}
-                  <DndContext 
-                    id={`parent-dnd-${s.id}`} 
-                    sensors={sensors} 
-                    collisionDetection={closestCenter} 
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={dropZoneFirstCollision}
                     onDragEnd={(e) => {
                       const { active, over } = e;
-                      if (!over || active.id === over.id) return;
-                      
-                      // STRICT BOUNDARY CHECK: Only move if BOTH items belong to the main parent array
-                      const activeEx = s.exercises.find(ex => (typeof ex === 'string' ? ex : ex.id || ex.name) === active.id);
-                      const overEx = s.exercises.find(ex => (typeof ex === 'string' ? ex : ex.id || ex.name) === over.id);
-                      
-                      if (activeEx && overEx) {
-                        const activeIndex = s.exercises.indexOf(activeEx);
-                        const overIndex = s.exercises.indexOf(overEx);
-                        updateSplit(s.id, { exercises: arrayMove(s.exercises, activeIndex, overIndex) });
+                      if (!over) return;
+
+                      const activeId = String(active.id);
+                      const overId = String(over.id);
+                      if (activeId === overId) return;
+
+                      // Strip "drop_" prefix if present
+                      const isOverDropZone = overId.startsWith('drop_');
+                      const overTargetId = isOverDropZone ? overId.slice('drop_'.length) : overId;
+
+                      // Locate active (parent or child?) and over (parent or child?)
+                      const findLocation = (id: string):
+                        | { kind: 'parent'; index: number }
+                        | { kind: 'child'; parentIndex: number; childIndex: number }
+                        | null => {
+                        const pIdx = s.exercises.findIndex(
+                          ex => (typeof ex === 'string' ? ex : ex.id || ex.name) === id,
+                        );
+                        if (pIdx !== -1) return { kind: 'parent', index: pIdx };
+                        for (let i = 0; i < s.exercises.length; i++) {
+                          const ex = s.exercises[i];
+                          if (typeof ex === 'string' || !ex.superset) continue;
+                          const cIdx = ex.superset.findIndex(
+                            c => (c.id || c.name) === id,
+                          );
+                          if (cIdx !== -1) return { kind: 'child', parentIndex: i, childIndex: cIdx };
+                        }
+                        return null;
+                      };
+
+                      const activeLoc = findLocation(activeId);
+                      const overLoc = findLocation(overTargetId);
+                      if (!activeLoc) return;
+
+                      // Case 1: parent dropped INTO another parent's drop zone -> nest
+                      if (isOverDropZone && activeLoc.kind === 'parent' && overLoc?.kind === 'parent'
+                          && activeLoc.index !== overLoc.index) {
+                        const next = [...s.exercises];
+                        const draggedParent = next[activeLoc.index] as ProgrammedExercise;
+                        const targetParent = next[overLoc.index] as ProgrammedExercise;
+
+                        // Flatten: dragged parent + its children all become children of target
+                        const draggedChildren = (draggedParent.superset || []);
+                        const newChild: ProgrammedExercise = {
+                          id: draggedParent.id || genId(),
+                          name: draggedParent.name,
+                          sets: draggedParent.sets || '',
+                          reps: draggedParent.reps || '',
+                          targetNotes: draggedParent.targetNotes || '',
+                        };
+                        const existingChildren = targetParent.superset || [];
+                        const hasOnlyBlankPlaceholder =
+                          existingChildren.length === 1 && !existingChildren[0].name;
+
+                        // Flatten: dragged parent + its children become children of target. Replace placeholder if it's the only child.
+                        const mergedChildren = hasOnlyBlankPlaceholder
+                          ? [newChild, ...draggedChildren]
+                          : [...existingChildren, newChild, ...draggedChildren];
+
+                        next[overLoc.index] = { ...targetParent, superset: mergedChildren };
+                        next.splice(activeLoc.index, 1);
+                        updateSplit(s.id, { exercises: next });
+                        return;
+                      }
+
+                      // Case 2: parent-to-parent sortable reorder
+                      if (activeLoc.kind === 'parent' && overLoc?.kind === 'parent') {
+                        updateSplit(s.id, {
+                          exercises: arrayMove(s.exercises, activeLoc.index, overLoc.index) as
+                            (string | ProgrammedExercise)[],
+                        });
+                        return;
+                      }
+
+                      // Case 3: child reorder within the SAME parent
+                      if (activeLoc.kind === 'child' && overLoc?.kind === 'child'
+                          && activeLoc.parentIndex === overLoc.parentIndex) {
+                        const parent = s.exercises[activeLoc.parentIndex] as ProgrammedExercise;
+                        const reordered = arrayMove(parent.superset!, activeLoc.childIndex, overLoc.childIndex);
+                        const next = [...s.exercises];
+                        next[activeLoc.parentIndex] = { ...parent, superset: reordered };
+                        updateSplit(s.id, { exercises: next });
+                        return;
                       }
                     }}
                   >
                     <SortableContext
-                      items={s.exercises.map((ex) => (typeof ex === "string" ? ex : ex.id || ex.name))}
+                      items={s.exercises.flatMap((ex) => {
+                        if (typeof ex === "string") return [ex];
+                        const parentId = ex.id || ex.name;
+                        const childIds = (ex.superset || []).map(c => c.id || c.name);
+                        return [parentId, ...childIds];
+                      })}
                       strategy={verticalListSortingStrategy}
                     >
                       {s.exercises.map((ex) => (
                         <SortableExerciseBadge
                           key={typeof ex === "string" ? ex : ex.id || ex.name}
                           exercise={ex}
-                          library={library} // PASS LIBRARY FOR DYNAMIC METRICS
+                          library={library}
                           onRemove={(exerciseId) =>
                             removeExerciseFromSplit(s.id, exerciseId)
                           }
