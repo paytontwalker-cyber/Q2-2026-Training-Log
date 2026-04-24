@@ -2214,7 +2214,35 @@ export default function DailyLog() {
             </div>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-center gap-2">
+          <div className="flex items-center gap-2">
+            {saveStatus === 'saving' && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setSaveStatus('idle')}
+                className="text-[10px] h-8 border-border text-muted-foreground hover:bg-muted"
+              >
+                Reset Save
+              </Button>
+            )}
+            <Button 
+              onClick={handleSave} 
+              disabled={saveStatus === 'saving'}
+              className={cn(
+                "text-white transition-all",
+                saveStatus === 'success' ? "bg-green-600 hover:bg-green-700" : "bg-maroon hover:bg-maroon-light"
+              )}
+            >
+              {saveStatus === 'saving' ? (
+                <>Saving...</>
+              ) : saveStatus === 'success' ? (
+                <><Check size={18} className="mr-2" /> Saved!</>
+              ) : (
+                <><Save size={18} className="mr-2" /> Save Workout</>
+              )}
+            </Button>
+          </div>
           <div className="flex items-center bg-card border border-border rounded-md p-1">
             <Button 
               variant="ghost" 
@@ -2558,14 +2586,14 @@ export default function DailyLog() {
         </div>
 
         {/* Save Workout Area */}
-        <div className="flex justify-center pt-4 pb-8">
+        <div className="pt-4 pb-8">
           <div className="flex items-center gap-2">
             {saveStatus === 'saving' && (
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={() => setSaveStatus('idle')}
-                className="text-[10px] h-8 border-border text-muted-foreground hover:bg-muted"
+                className="text-[10px] h-8 border-border text-muted-foreground hover:bg-muted shrink-0"
               >
                 Reset Save
               </Button>
@@ -2573,9 +2601,8 @@ export default function DailyLog() {
             <Button 
               onClick={handleSave} 
               disabled={saveStatus === 'saving'}
-              size="lg"
               className={cn(
-                "text-white transition-all min-w-[200px]",
+                "w-full h-12 text-sm font-bold text-white transition-all",
                 saveStatus === 'success' ? "bg-green-600 hover:bg-green-700" : "bg-maroon hover:bg-maroon-light"
               )}
             >

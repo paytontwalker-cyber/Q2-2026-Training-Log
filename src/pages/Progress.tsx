@@ -11,6 +11,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { 
   LineChart as RechartsLineChart, 
   Line, 
@@ -65,6 +72,12 @@ export default function Progress() {
   const [customEndDate, setCustomEndDate] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [userProfile, setUserProfile] = useState<any>(null);
+
+  const [muscleDrilldown, setMuscleDrilldown] = useState<{
+    open: boolean;
+    muscleGroup: string;
+    context: 'weekly' | 'session';
+  } | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -135,6 +148,23 @@ export default function Progress() {
     return ex.sets * (ex.reps || 0) * (ex.weight || 0);
   };
 
+  const getExerciseDistribution = (ex: any) => {
+    let distribution = ex.muscleDistribution;
+
+    if (!distribution || distribution.length === 0) {
+      const libraryEx = INITIAL_EXERCISES.find(le => le.name === ex.name);
+      if (libraryEx?.muscleDistribution?.length) {
+        distribution = libraryEx.muscleDistribution;
+      } else if (ex.muscleGroup) {
+        distribution = [{ group: ex.muscleGroup, percent: 100 }];
+      } else {
+        distribution = [{ group: 'Other', percent: 100 }];
+      }
+    }
+
+    return distribution;
+  };
+
   const chartData = useMemo(() => {
     return history
       .filter(w => w && (w.exercises || []).some(ex => ex.name === selectedExercise))
@@ -188,17 +218,9 @@ export default function Progress() {
       const vol = calculateVolume(ex);
       totalVolume += vol;
       
-      let distribution = ex.muscleDistribution;
-      if (!distribution || distribution.length === 0) {
-        const libraryEx = INITIAL_EXERCISES.find(le => le.name === ex.name);
-        if (libraryEx && libraryEx.muscleDistribution && libraryEx.muscleDistribution.length > 0) {
-          distribution = libraryEx.muscleDistribution;
-        } else {
-          distribution = [{ group: ex.muscleGroup, percent: 100 }];
-        }
-      }
+      const distribution = getExerciseDistribution(ex);
 
-      distribution.forEach(d => {
+      distribution.forEach((d: any) => {
         const groupVol = vol * (d.percent / 100);
         muscleGroupVolume[d.group] = (muscleGroupVolume[d.group] || 0) + groupVol;
       });
@@ -308,18 +330,9 @@ export default function Progress() {
         const vol = calculateVolume(ex);
         totalBodyVolume += vol;
         
-        // Get distribution with fallbacks
-        let distribution = ex.muscleDistribution;
-        if (!distribution || distribution.length === 0) {
-          const libraryEx = INITIAL_EXERCISES.find(le => le.name === ex.name);
-          if (libraryEx && libraryEx.muscleDistribution && libraryEx.muscleDistribution.length > 0) {
-            distribution = libraryEx.muscleDistribution;
-          } else {
-            distribution = [{ group: ex.muscleGroup, percent: 100 }];
-          }
-        }
+        const distribution = getExerciseDistribution(ex);
 
-        distribution.forEach(d => {
+        distribution.forEach((d: any) => {
           const groupVol = vol * (d.percent / 100);
           muscleGroupVolume[d.group] = (muscleGroupVolume[d.group] || 0) + groupVol;
         });
@@ -342,6 +355,107 @@ export default function Progress() {
       exerciseData
     };
   }, [history, volumeRange]);
+
+  const muscleDrilldownData = useMemo(() => {
+    if (!muscleDrilldown?.open || !muscleDrilldown.muscleGroup) return null;
+
+    const targetMuscle = muscleDrilldown.muscleGroup;
+    const sourceWorkouts =
+      muscleDrilldown.context === 'session' && selectedWorkout
+        ? [selectedWorkout]
+        : (() => {
+            if (history.length === 0) return [];
+
+            let cutoffDate = new Date();
+            let endDate = new Date();
+
+            if (useCustomRange && customStartDate && customEndDate) {
+              cutoffDate = startOfDay(parseISO(customStartDate));
+              endDate = endOfDay(parseISO(customEndDate));
+            } else {
+              switch (volumeRange) {
+                case '24h':
+                  cutoffDate = subDays(new Date(), 1);
+                  break;
+                case '72h':
+                  cutoffDate = subDays(new Date(), 3);
+                  break;
+                case '1w':
+                  cutoffDate = startOfWeek(new Date(), { weekStartsOn: 0 });
+                  break;
+                case '2w':
+                  cutoffDate = startOfDay(subDays(new Date(), 14));
+                  break;
+                case '1m':
+                  cutoffDate = startOfDay(subDays(new Date(), 30));
+                  break;
+                case '3m':
+                  cutoffDate = startOfDay(subDays(new Date(), 90));
+                  break;
+              }
+            }
+
+            return history.filter(w => {
+              const date = new Date(w.date);
+              return isAfter(date, cutoffDate) && (useCustomRange ? date <= endDate : true);
+            });
+          })();
+
+    const exerciseMap: Record<string, {
+      name: string;
+      volume: number;
+      sessions: { workoutName: string; date: string; volume: number }[];
+    }> = {};
+
+    sourceWorkouts.forEach(w => {
+      (w.exercises || []).forEach(ex => {
+        const totalExerciseVolume = calculateVolume(ex);
+        const distribution = getExerciseDistribution(ex);
+
+        distribution.forEach((d: any) => {
+          if (d.group !== targetMuscle) return;
+
+          const contributedVolume = totalExerciseVolume * ((d.percent || 0) / 100);
+          if (contributedVolume <= 0) return;
+
+          if (!exerciseMap[ex.name]) {
+            exerciseMap[ex.name] = {
+              name: ex.name,
+              volume: 0,
+              sessions: [],
+            };
+          }
+
+          exerciseMap[ex.name].volume += contributedVolume;
+          exerciseMap[ex.name].sessions.push({
+            workoutName: w.workoutName || 'Workout',
+            date: w.date,
+            volume: contributedVolume,
+          });
+        });
+      });
+    });
+
+    const exercises = Object.values(exerciseMap)
+      .sort((a, b) => b.volume - a.volume);
+
+    const totalVolume = exercises.reduce((sum, ex) => sum + ex.volume, 0);
+
+    return {
+      muscleGroup: targetMuscle,
+      context: muscleDrilldown.context,
+      totalVolume,
+      exercises,
+    };
+  }, [
+    muscleDrilldown,
+    selectedWorkout,
+    history,
+    volumeRange,
+    useCustomRange,
+    customStartDate,
+    customEndDate,
+  ]);
 
   const volumeTargets = useMemo(() => {
     if (!weeklyVolume) return null;
@@ -782,8 +896,16 @@ export default function Progress() {
                   </div>
                   <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
                     {weeklyVolume.muscleGroupData.slice(0, 6).map((entry, index) => (
-                      <div key={entry.name} className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: getVolumeColor((entry.value / weeklyVolume.totalBodyVolume) * 100) }} />
+                      <div 
+                        key={entry.name} 
+                        className="flex items-center gap-2 cursor-pointer hover:border-maroon/40 hover:bg-maroon/5 rounded p-1 transition-colors border border-transparent"
+                        onClick={() => setMuscleDrilldown({
+                          open: true,
+                          muscleGroup: entry.name,
+                          context: 'weekly',
+                        })}
+                      >
+                        <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: getVolumeColor((entry.value / weeklyVolume.totalBodyVolume) * 100) }} />
                         <span className="truncate text-muted-foreground">{entry.name}</span>
                         <span className="ml-auto font-bold text-foreground">{((entry.value / weeklyVolume.totalBodyVolume) * 100).toFixed(0)}%</span>
                       </div>
@@ -877,7 +999,15 @@ export default function Progress() {
 
                 <div className="space-y-4">
                   {activeTargets.map((t) => (
-                    <div key={t.muscleGroup} className="bg-card p-4 rounded-lg border border-border shadow-sm">
+                    <div 
+                      key={t.muscleGroup} 
+                      className="bg-card p-4 rounded-lg border border-border shadow-sm cursor-pointer hover:border-maroon/40 hover:bg-maroon/5 transition-colors"
+                      onClick={() => setMuscleDrilldown({
+                        open: true,
+                        muscleGroup: t.muscleGroup,
+                        context: 'weekly',
+                      })}
+                    >
                       <div className="flex justify-between items-center mb-2">
                         <span className="font-bold text-foreground flex items-center gap-2">
                           {t.muscleGroup}
@@ -901,7 +1031,15 @@ export default function Progress() {
                       </div>
 
                       {untouchedTargets.map((t) => (
-                        <div key={t.muscleGroup} className="bg-muted p-3 rounded-lg border border-border flex justify-between items-center">
+                        <div 
+                          key={t.muscleGroup} 
+                          className="bg-muted p-3 rounded-lg border border-border flex justify-between items-center cursor-pointer hover:border-maroon/40 hover:bg-maroon/5 transition-colors"
+                          onClick={() => setMuscleDrilldown({
+                            open: true,
+                            muscleGroup: t.muscleGroup,
+                            context: 'weekly',
+                          })}
+                        >
                           <span className="text-sm font-medium text-muted-foreground">{t.muscleGroup}</span>
                           <span className="text-xs text-muted-foreground">0 / {t.targetVolume.toLocaleString()} lbs (0%)</span>
                         </div>
@@ -915,7 +1053,15 @@ export default function Progress() {
                   <CardContent>
                     <div className="space-y-2">
                       {activeTargets.map(t => (
-                        <div key={t.muscleGroup} className="flex justify-between text-sm py-2 border-b border-border last:border-0">
+                        <div 
+                          key={t.muscleGroup} 
+                          className="flex justify-between text-sm py-2 border-b border-border last:border-0 cursor-pointer hover:border-maroon/40 hover:bg-maroon/5 px-2 -mx-2 rounded transition-colors"
+                          onClick={() => setMuscleDrilldown({
+                            open: true,
+                            muscleGroup: t.muscleGroup,
+                            context: 'weekly',
+                          })}
+                        >
                           <span className="font-medium text-foreground">{t.muscleGroup}</span>
                           <span className="text-muted-foreground">{t.actualVolume.toLocaleString()} / {t.targetVolume.toLocaleString()} ({t.percentOfTarget.toFixed(0)}%) - <span className={cn("font-bold cursor-help", t.status === 'Low' ? 'text-red-500' : t.status === 'Near' ? 'text-gold' : 'text-green-600')} title={STATUS_EXPLANATIONS[t.status] || ''}>{t.status} ⓘ</span></span>
                         </div>
@@ -924,7 +1070,15 @@ export default function Progress() {
                         <>
                           <div className="text-xs font-bold text-muted-foreground uppercase pt-4 pb-2 border-t border-border mt-2">Untouched Groups ({untouchedTargets.length})</div>
                           {untouchedTargets.map(t => (
-                            <div key={t.muscleGroup} className="flex justify-between text-sm py-2 border-b border-border last:border-0 text-muted-foreground">
+                            <div 
+                              key={t.muscleGroup} 
+                              className="flex justify-between text-sm py-2 border-b border-border last:border-0 text-muted-foreground cursor-pointer hover:border-maroon/40 hover:bg-maroon/5 px-2 -mx-2 rounded transition-colors"
+                              onClick={() => setMuscleDrilldown({
+                                open: true,
+                                muscleGroup: t.muscleGroup,
+                                context: 'weekly',
+                              })}
+                            >
                               <span className="font-medium">{t.muscleGroup}</span>
                               <span>0 / {t.targetVolume.toLocaleString()} (0%)</span>
                             </div>
@@ -1013,6 +1167,42 @@ export default function Progress() {
             <div className="space-y-6">
               <div className="flex items-center gap-2 mt-6">
                 <Hash className="text-maroon" size={20} />
+                <h3 className="text-xl font-bold text-foreground">MUSCLE GROUP VOLUMES</h3>
+              </div>
+              <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {latestWorkoutSummary.muscleGroupData.map(item => (
+                    <button
+                      key={item.name}
+                      type="button"
+                      onClick={() => setMuscleDrilldown({
+                        open: true,
+                        muscleGroup: item.name,
+                        context: 'session',
+                      })}
+                      className="w-full text-left rounded-xl border border-border bg-card/70 px-4 py-3 shadow-sm transition-all cursor-pointer hover:border-maroon/40 hover:bg-maroon/5"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span
+                          className="h-3 w-3 rounded-full shrink-0 shadow-sm"
+                          style={{ backgroundColor: getVolumeColor((item.value / latestWorkoutSummary.totalVolume) * 100) }}
+                        />
+                        <div className="min-w-0">
+                          <div className="font-bold text-foreground truncate">
+                            {item.name}
+                          </div>
+                          <div className="text-sm text-muted-foreground tabular-nums">
+                            {item.value.toLocaleString(undefined, { maximumFractionDigits: 1 })} lbs moved
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 mt-6">
+                <Hash className="text-maroon" size={20} />
                 <h3 className="text-xl font-bold text-foreground">Individual Exercise Volume</h3>
               </div>
               <Card className="border-border shadow-sm">
@@ -1045,7 +1235,15 @@ export default function Progress() {
                   <div className="space-y-2">
                     {sessionVolumeTargets && sessionVolumeTargets.length > 0 ? (
                       sessionVolumeTargets.map(t => (
-                        <div key={t.muscleGroup} className="flex justify-between text-sm py-2 border-b border-border last:border-0">
+                        <div 
+                          key={t.muscleGroup} 
+                          className="flex justify-between text-sm py-2 border-b border-border last:border-0 cursor-pointer hover:border-maroon/40 hover:bg-maroon/5 px-2 -mx-2 rounded transition-colors"
+                          onClick={() => setMuscleDrilldown({
+                            open: true,
+                            muscleGroup: t.muscleGroup,
+                            context: 'session',
+                          })}
+                        >
                           <span className="font-medium text-foreground">{t.muscleGroup}</span>
                           <span className="text-muted-foreground">{t.actualVolume.toLocaleString()} / {t.targetVolume.toLocaleString()} ({t.percentOfTarget.toFixed(0)}%) - <span className={cn("font-bold", t.status === 'Low' ? 'text-red-500' : t.status === 'Near' ? 'text-gold' : 'text-green-600')}>{t.status}</span></span>
                         </div>
@@ -1104,8 +1302,16 @@ export default function Progress() {
                     </div>
                     <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
                       {latestWorkoutSummary.muscleGroupData.slice(0, 6).map((entry, index) => (
-                        <div key={entry.name} className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: getVolumeColor((entry.value / latestWorkoutSummary.totalVolume) * 100) }} />
+                        <div 
+                          key={entry.name} 
+                          className="flex items-center gap-2 cursor-pointer hover:border-maroon/40 hover:bg-maroon/5 rounded p-1 transition-colors border border-transparent"
+                          onClick={() => setMuscleDrilldown({
+                            open: true,
+                            muscleGroup: entry.name,
+                            context: 'session',
+                          })}
+                        >
+                          <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: getVolumeColor((entry.value / latestWorkoutSummary.totalVolume) * 100) }} />
                           <span className="truncate text-muted-foreground">{entry.name}</span>
                           <span className="ml-auto font-bold text-foreground">{((entry.value / latestWorkoutSummary.totalVolume) * 100).toFixed(0)}%</span>
                         </div>
@@ -1627,6 +1833,105 @@ export default function Progress() {
           )}
         </section>
       )}
+
+      <Dialog
+        open={!!muscleDrilldown?.open}
+        onOpenChange={(open) => {
+          if (!open) setMuscleDrilldown(null);
+        }}
+      >
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {muscleDrilldownData?.muscleGroup || 'Muscle Group'} Volume Breakdown
+            </DialogTitle>
+            <DialogDescription>
+              {muscleDrilldownData?.context === 'session'
+                ? 'Exercise contributions from the selected session.'
+                : 'Exercise contributions from the selected weekly/range view.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          {muscleDrilldownData && (
+            <div className="space-y-4">
+              <div className="rounded-lg border border-border bg-muted/40 p-4">
+                <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+                  Total Muscle Group Volume
+                </div>
+                <div className="text-2xl font-extrabold text-maroon tabular-nums">
+                  {Math.round(muscleDrilldownData.totalVolume).toLocaleString()} lbs
+                </div>
+              </div>
+
+              {muscleDrilldownData.exercises.length > 0 ? (
+                <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+                  {muscleDrilldownData.exercises.map((ex) => {
+                    const pct =
+                      muscleDrilldownData.totalVolume > 0
+                        ? (ex.volume / muscleDrilldownData.totalVolume) * 100
+                        : 0;
+
+                    return (
+                      <div
+                        key={ex.name}
+                        className="rounded-lg border border-border bg-card p-3 space-y-2"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="font-semibold text-foreground truncate">
+                            {ex.name}
+                          </div>
+                          <div className="text-sm font-bold text-maroon tabular-nums shrink-0">
+                            {Math.round(ex.volume).toLocaleString()} lbs
+                          </div>
+                        </div>
+
+                        <div className="h-2 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className="h-full bg-maroon rounded-full"
+                            style={{ width: `${Math.min(100, pct)}%` }}
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                          <span>{pct.toFixed(1)}% of {muscleDrilldownData.muscleGroup}</span>
+                          <span>{ex.sessions.length} {ex.sessions.length === 1 ? 'entry' : 'entries'}</span>
+                        </div>
+
+                        {muscleDrilldownData.context === 'weekly' && (
+                          <div className="pt-2 border-t border-border/60 space-y-1">
+                            {ex.sessions.slice(0, 5).map((session, idx) => (
+                              <div
+                                key={`${ex.name}-${session.date}-${idx}`}
+                                className="flex justify-between text-[11px] text-muted-foreground"
+                              >
+                                <span className="truncate">
+                                  {session.workoutName} · {format(new Date(session.date), 'MMM d')}
+                                </span>
+                                <span className="tabular-nums shrink-0">
+                                  {Math.round(session.volume).toLocaleString()} lbs
+                                </span>
+                              </div>
+                            ))}
+                            {ex.sessions.length > 5 && (
+                              <div className="text-[11px] text-muted-foreground italic">
+                                + {ex.sessions.length - 5} more entries
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+                  No contributing exercises found for this muscle group in the selected context.
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
