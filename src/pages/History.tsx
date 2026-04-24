@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { Workout, DeletedWorkout, Block, LiftBlock } from '@/src/types';
 import { storage } from '@/src/services/storage';
 import { useFirebase } from '@/src/components/FirebaseProvider';
+import { normalizeEnergyToFivePoint } from '@/src/lib/workoutUtils';
 
 const renderCardioBlockDetails = (block: any) => {
   const subtype = block.subtype || 'Cardio';
@@ -310,7 +311,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
     }
 
     text += `POST-WORKOUT:\n`;
-    text += `   Energy Level: ${workout.postWorkoutEnergy}/10\n`;
+    text += `   Energy Level: ${normalizeEnergyToFivePoint(workout.postWorkoutEnergy)}/5\n`;
     if (workout.notes) text += `   General Notes: ${workout.notes}\n`;
 
     navigator.clipboard.writeText(text);
@@ -370,7 +371,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
             </div>
             <div class="section">
               <div class="section-title">Post-Workout</div>
-              <p>Energy: ${workout.postWorkoutEnergy}/10</p>
+              <p>Energy: ${normalizeEnergyToFivePoint(workout.postWorkoutEnergy)}/5</p>
               <p>${workout.notes || ''}</p>
             </div>
           </div>
@@ -590,7 +591,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
                         return null;
                       })()}
                       <Badge variant="outline" className="bg-gold/10 text-gold border-gold/20">
-                        Energy: {workout.postWorkoutEnergy}/10
+                        Energy: {normalizeEnergyToFivePoint(workout.postWorkoutEnergy)}/5
                       </Badge>
                       <Button 
                         variant="ghost" 

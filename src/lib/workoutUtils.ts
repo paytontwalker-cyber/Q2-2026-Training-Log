@@ -196,6 +196,14 @@ export const sanitizeData = (data: any): any => {
   return data;
 };
 
+export const normalizeEnergyToFivePoint = (value: unknown): number => {
+  if (typeof value !== 'number' || isNaN(value)) return 3;
+  if (value < 1) return 1;
+  if (value <= 5) return Math.round(value);
+  const normalized = Math.ceil(value / 2);
+  return Math.max(1, Math.min(5, normalized));
+};
+
 // Project a Block[] array back to the legacy flat shape so downstream
 // pages (History, Progress, Export) continue to read exercises and
 // conditioning without change. Used at save time in 2.6.1+.

@@ -81,7 +81,7 @@ import {
   BlockTemplate
 } from '@/src/types';
 import { INITIAL_EXERCISES, DEFAULT_SPLIT } from '@/src/constants';
-import { generateWorkoutSnapshot, cleanSummary, sanitizeData, deriveBlocksFromLegacy, projectBlocksToLegacy, calculateRepeatsTotals, parseTime, calculateZone2Pace } from '@/src/lib/workoutUtils';
+import { generateWorkoutSnapshot, cleanSummary, sanitizeData, deriveBlocksFromLegacy, projectBlocksToLegacy, calculateRepeatsTotals, parseTime, calculateZone2Pace, normalizeEnergyToFivePoint } from '@/src/lib/workoutUtils';
 
 const NO_SPLIT_SENTINEL = '__none__';
 
@@ -1240,7 +1240,7 @@ export default function DailyLog() {
     workoutName: '',
     workoutSummary: '',
     runningStats: '',
-    postWorkoutEnergy: 5,
+    postWorkoutEnergy: 3,
     notes: '',
     id: '',
     isHistorical: false,
@@ -1371,7 +1371,11 @@ export default function DailyLog() {
         if (draft) {
           const sanitizedDraft = sanitizeDraftRecord(draft);
           if (sanitizedDraft) {
-            setWorkoutMeta(prev => ({ ...prev, ...sanitizedDraft }));
+            setWorkoutMeta(prev => ({ 
+              ...prev, 
+              ...sanitizedDraft, 
+              postWorkoutEnergy: normalizeEnergyToFivePoint(sanitizedDraft.postWorkoutEnergy) 
+            }));
             let draftBlocks = sanitizedDraft.blocks;
             if (!draftBlocks) {
               draftBlocks = deriveBlocksFromLegacy(sanitizedDraft.exercises || [], sanitizedDraft.conditioning);
@@ -1997,7 +2001,7 @@ export default function DailyLog() {
         workoutSummary: '',
         runningStats: '',
         notes: '',
-        postWorkoutEnergy: 5,
+        postWorkoutEnergy: 3,
       }));
       setBlocks([]);
       setManualSplit(NO_SPLIT_SENTINEL);
@@ -2037,7 +2041,7 @@ export default function DailyLog() {
         workoutSummary: workout.workoutSummary || '',
         runningStats: workout.runningStats || '',
         date: workout.date,
-        postWorkoutEnergy: workout.postWorkoutEnergy ?? 5,
+        postWorkoutEnergy: normalizeEnergyToFivePoint(workout.postWorkoutEnergy),
         notes: workout.notes || '',
         // Mark as historical to prevent the date effect from overwriting this
         // specific saved session with the programmed default. The historical banner
@@ -2060,7 +2064,7 @@ export default function DailyLog() {
         id: '',  // New session — save will generate fresh id
         workoutName: '',
         date: date.toISOString(),
-        postWorkoutEnergy: 5,
+        postWorkoutEnergy: 3,
         notes: '',
         isHistorical: false,
       });
@@ -2090,7 +2094,7 @@ export default function DailyLog() {
         workoutName: '',
         workoutSummary: '',
         runningStats: '',
-        postWorkoutEnergy: 5,
+        postWorkoutEnergy: 3,
         notes: '',
         id: '',
         isHistorical: false,
@@ -2244,34 +2248,6 @@ export default function DailyLog() {
               onClick={() => changeDate(1)}
             >
               <ChevronRight size={18} />
-            </Button>
-          </div>
-          <div className="flex items-center gap-2">
-            {saveStatus === 'saving' && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setSaveStatus('idle')}
-                className="text-[10px] h-8 border-border text-muted-foreground hover:bg-muted"
-              >
-                Reset Save
-              </Button>
-            )}
-            <Button 
-              onClick={handleSave} 
-              disabled={saveStatus === 'saving'}
-              className={cn(
-                "text-white transition-all",
-                saveStatus === 'success' ? "bg-green-600 hover:bg-green-700" : "bg-maroon hover:bg-maroon-light"
-              )}
-            >
-              {saveStatus === 'saving' ? (
-                <>Saving...</>
-              ) : saveStatus === 'success' ? (
-                <><Check size={18} className="mr-2" /> Saved!</>
-              ) : (
-                <><Save size={18} className="mr-2" /> Save Workout</>
-              )}
             </Button>
           </div>
         </div>
@@ -2541,24 +2517,23 @@ export default function DailyLog() {
             <CardContent className="space-y-6">
               <div className="flex justify-between items-center">
                 <span className="text-4xl font-bold metric-display text-primary">{workoutMeta.postWorkoutEnergy}</span>
-                <span className="text-xs text-muted-foreground uppercase font-bold">Scale 1-10</span>
+                <span className="text-xs text-muted-foreground uppercase font-bold">Scale 1-5</span>
               </div>
               <Slider 
-                value={workoutMeta.postWorkoutEnergy ? (workoutMeta.postWorkoutEnergy - 1) * (10 / 9) : 4.44} 
-                min={0} 
-                max={10} 
-                step={0.1}
+                value={[workoutMeta.postWorkoutEnergy || 3]} 
+                min={1} 
+                max={5} 
+                step={1}
                 onValueChange={(val) => {
                   beginUndoableEdit();
-                  const sliderVal = typeof val === 'number' ? val : (Array.isArray(val) ? val[0] : 4.44);
-                  const energy = Math.round(sliderVal * (9 / 10) + 1);
-                  setWorkoutMeta(prev => ({ ...prev, postWorkoutEnergy: Math.max(1, Math.min(10, energy)) }));
+                  const energy = typeof val === 'number' ? val : (Array.isArray(val) ? val[0] : 3);
+                  setWorkoutMeta(prev => ({ ...prev, postWorkoutEnergy: energy }));
                 }}
               />
               <div className="flex justify-between text-[10px] text-muted-foreground uppercase font-bold">
-                <span>Drained</span>
-                <span>Average</span>
-                <span>Elite</span>
+                <span>Low</span>
+                <span>Neutral</span>
+                <span>High</span>
               </div>
             </CardContent>
           </Card>
@@ -2581,6 +2556,40 @@ export default function DailyLog() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Save Workout Area */}
+        <div className="flex justify-center pt-4 pb-8">
+          <div className="flex items-center gap-2">
+            {saveStatus === 'saving' && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setSaveStatus('idle')}
+                className="text-[10px] h-8 border-border text-muted-foreground hover:bg-muted"
+              >
+                Reset Save
+              </Button>
+            )}
+            <Button 
+              onClick={handleSave} 
+              disabled={saveStatus === 'saving'}
+              size="lg"
+              className={cn(
+                "text-white transition-all min-w-[200px]",
+                saveStatus === 'success' ? "bg-green-600 hover:bg-green-700" : "bg-maroon hover:bg-maroon-light"
+              )}
+            >
+              {saveStatus === 'saving' ? (
+                <>Saving...</>
+              ) : saveStatus === 'success' ? (
+                <><Check size={18} className="mr-2" /> Saved!</>
+              ) : (
+                <><Save size={18} className="mr-2" /> Save Workout</>
+              )}
+            </Button>
+          </div>
+        </div>
+
       </div>
 
       <Dialog open={mirrorOpen} onOpenChange={(open) => {
@@ -2646,7 +2655,7 @@ export default function DailyLog() {
                 <div>
                   <div className="font-bold text-base">{mirrorViewWorkout.workoutName || 'Untitled'}</div>
                   <div className="text-xs text-muted-foreground">
-                    {format(new Date(mirrorViewWorkout.date), 'EEEE, MMM d, yyyy')} · Energy: {mirrorViewWorkout.postWorkoutEnergy}/10
+                    {format(new Date(mirrorViewWorkout.date), 'EEEE, MMM d, yyyy')} · Energy: {normalizeEnergyToFivePoint(mirrorViewWorkout.postWorkoutEnergy)}/5
                   </div>
                 </div>
 
