@@ -262,9 +262,15 @@ export function BodyMap({ muscleGroupData, heatMode = 'target', volumeTargets, o
           {muscleGroupData.map(data => {
             const regions = MUSCLE_GROUP_TO_REGIONS[data.name as MuscleGroup];
             let color = NO_DATA_COLOR;
-            if (regions && data.value > 0 && maxVolume > 0) {
-              const ratio = (data.value / maxVolume) * 100;
-              color = getVolumeColor(ratio);
+            if (data.value > 0) {
+              if (heatMode === 'target') {
+                const target = (volumeTargets || BASE_VOLUME_TARGETS_180LB_INTERMEDIATE)[data.name] || 0;
+                const ratio = target > 0 ? (data.value / target) * 100 : (maxVolume > 0 ? (data.value / maxVolume) * 100 : 0);
+                color = getVolumeColor(ratio);
+              } else {
+                const ratio = maxVolume > 0 ? (data.value / maxVolume) * 100 : 0;
+                color = getVolumeColor(ratio);
+              }
             }
             
             return (

@@ -25,6 +25,25 @@ export function useIsMobile() {
   return useMediaQuery('(max-width: 768px)');
 }
 
+const calculateExerciseVolume = (ex: ExerciseEntry) => {
+  if (ex.trackingMode === 'distance') {
+    const dist = ex.distance || 0;
+    const weight = ex.weight || 0;
+    const sets = ex.sets || 0;
+    return sets * (dist / 100) * weight;
+  }
+  if (ex.trackingMode === 'time') {
+    const time = ex.time || 0;
+    const weight = ex.weight || 0;
+    const sets = ex.sets || 0;
+    return sets * time * weight;
+  }
+  if (ex.usePerSetWeights && ex.perSetWeights && ex.perSetWeights.length > 0) {
+    return ex.perSetWeights.reduce((sum: number, w: number) => sum + ((ex.reps || 0) * w), 0);
+  }
+  return (ex.sets || 0) * (ex.reps || 0) * (ex.weight || 0);
+};
+
 export function useDashboardData() {
   const { user } = useFirebase();
   const [data, setData] = useState<{
@@ -50,14 +69,14 @@ export function useDashboardData() {
 
   const weeklyWorkouts = data.workouts.filter(w => {
     const d = new Date(w.date);
-    return d >= startOfWeek(new Date()) && d <= endOfWeek(new Date());
+    return d >= startOfWeek(new Date(), { weekStartsOn: 0 }) && d <= endOfWeek(new Date(), { weekStartsOn: 0 });
   });
 
   // Calculate Weekly Volume
   const weeklyVolume: Record<string, number> = {};
   weeklyWorkouts.forEach(w => {
     (w.exercises || []).forEach(ex => {
-      const volume = (ex.weight || 0) * (ex.reps || 0) * (ex.sets || 0);
+      const volume = calculateExerciseVolume(ex);
       if (volume === 0) return;
 
       let distribution = ex.muscleDistribution;
@@ -94,7 +113,13 @@ export function useDashboardData() {
     .slice(0, 3);
 
   // Recent Activity
-  const recentActivity = data.workouts.slice(0, 5);
+  const recentActivity = [...data.workouts]
+    .sort((a, b) => {
+      const dateDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
+      if (dateDiff !== 0) return dateDiff;
+      return (b.timestamp || 0) - (a.timestamp || 0);
+    })
+    .slice(0, 5);
 
   return {
     ...data,

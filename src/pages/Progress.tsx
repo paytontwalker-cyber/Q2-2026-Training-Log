@@ -286,7 +286,7 @@ export default function Progress() {
           status
         };
       });
-  }, [history, volumeRange, useCustomRange, customStartDate, customEndDate, userVolumeTargets]);
+  }, [latestWorkoutSummary, userVolumeTargets]);
 
   // B. Weekly Volume Section
   const weeklyVolume = useMemo(() => {
@@ -360,7 +360,13 @@ export default function Progress() {
       muscleGroupData,
       exerciseData
     };
-  }, [history, volumeRange]);
+  }, [
+    history,
+    volumeRange,
+    useCustomRange,
+    customStartDate,
+    customEndDate
+  ]);
 
   const muscleDrilldownData = useMemo(() => {
     if (!muscleDrilldown?.open || !muscleDrilldown.muscleGroup) return null;
@@ -757,9 +763,15 @@ export default function Progress() {
     
     let score = 100;
     
-    const energy = lastWorkout.postWorkoutEnergy || 5; 
-    // Baseline drop based on energy. energy=5 -> 40%, energy=10 -> 65%, energy=1 -> 20%
-    const baseline = Math.max(10, 40 + (energy - 5) * 5);
+    const rawEnergy = typeof lastWorkout.postWorkoutEnergy === 'number'
+      ? lastWorkout.postWorkoutEnergy
+      : 3;
+    
+    const energy = Math.max(1, Math.min(5, rawEnergy));
+    
+    // 1 = deeper fatigue baseline, 3 = neutral, 5 = better post-session state
+    // Suggested baseline range: 25 to 55
+    const baseline = 25 + ((energy - 1) / 4) * 30;
     
     if (hoursSinceLastWorkout >= 48) {
       score = 100;
@@ -1264,7 +1276,7 @@ export default function Progress() {
                           </div>
                           {w.postWorkoutEnergy !== undefined && w.postWorkoutEnergy !== null && (
                             <span className="text-[10px] font-bold text-maroon bg-maroon/10 border border-maroon/20 px-1.5 py-0.5 rounded shrink-0">
-                              {w.postWorkoutEnergy}/10
+                              {w.postWorkoutEnergy}/5
                             </span>
                           )}
                         </div>

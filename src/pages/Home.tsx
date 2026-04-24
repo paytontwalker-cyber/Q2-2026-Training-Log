@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { LayoutDashboard, History, Dumbbell, LineChart, HeartPulse, Users, Settings, X, Hash } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,10 @@ import { useDashboardData } from '@/src/lib/hooks';
 import { BodyMap } from '@/src/components/BodyMap';
 import { format } from 'date-fns';
 import { INITIAL_EXERCISES } from '@/src/constants';
+import { useFirebase } from '@/src/components/FirebaseProvider';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase';
+import { computeVolumeTargets } from '@/src/lib/volumeTargets';
 
 const calculateVolume = (ex: any) => {
   if (ex.trackingMode === 'distance') {
@@ -43,10 +47,24 @@ const getExerciseDistribution = (ex: any) => {
 };
 
 export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) => void }) {
+  const { user } = useFirebase();
+  const [userProfile, setUserProfile] = useState<any>(null);
   const { weeklyVolume, recentPRs, recentActivity, loading, weeklyWorkouts } = useDashboardData();
   const [drilldownMuscle, setDrilldownMuscle] = useState<string | null>(null);
   const [homeHeatMode, setHomeHeatMode] = useState<'target' | 'relative'>('target');
   
+  useEffect(() => {
+    if (!user) return;
+    const unsubscribe = onSnapshot(doc(db, 'users', user.uid), (snap) => {
+      if (snap.exists()) {
+        setUserProfile(snap.data());
+      }
+    });
+    return () => unsubscribe();
+  }, [user]);
+
+  const homeVolumeTargets = useMemo(() => computeVolumeTargets(userProfile), [userProfile]);
+
   const today = format(new Date(), 'EEEE, MMMM d');
 
   const navItems = [
@@ -170,10 +188,10 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
           </div>
         </CardHeader>
         <CardContent>
-          {/* TODO: Pass personalized volumeTargets into Home BodyMap once profile targets are exposed to Home. */}
           <BodyMap 
             muscleGroupData={sortedMuscleGroupData} 
             heatMode={homeHeatMode}
+            volumeTargets={homeVolumeTargets}
             onMuscleClick={setDrilldownMuscle} 
           />
         </CardContent>
