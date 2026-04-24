@@ -49,6 +49,26 @@ export const deepRemoveUndefined = (val: any): any => {
   return val;
 };
 
+const normalizeDistribution = (dist: any[] = []) =>
+  [...dist]
+    .map(d => ({
+      group: String(d.group || '').trim(),
+      percent: Number(d.percent || 0),
+    }))
+    .sort((a, b) => a.group.localeCompare(b.group));
+
+const distributionsEqual = (a: any[] = [], b: any[] = []) => {
+  const na = normalizeDistribution(a);
+  const nb = normalizeDistribution(b);
+
+  if (na.length !== nb.length) return false;
+
+  return na.every((item, index) =>
+    item.group === nb[index].group &&
+    item.percent === nb[index].percent
+  );
+};
+
 const libDocId = (uid: string, id: string) => `${uid}_${id}`;
 
 const sanitizeWorkoutRecord = (raw: unknown): Workout | null => {
@@ -363,15 +383,15 @@ export const storage = {
           d.id === ex.id || d.name.toLowerCase() === ex.name.toLowerCase()
         );
         if (def) {
-          const needsMuscleDistribution = !ex.muscleDistribution || ex.muscleDistribution.length === 0;
+          const distributionNeedsSync = !distributionsEqual(ex.muscleDistribution || [], def.muscleDistribution || []);
           const needsMuscleGroup = !ex.muscleGroup;
           const needsTrackingMode = !ex.trackingMode;
 
-          if (needsMuscleDistribution || needsMuscleGroup || needsTrackingMode) {
+          if (distributionNeedsSync || needsMuscleGroup || needsTrackingMode) {
             changed = true;
             return { 
               ...ex, 
-              ...(needsMuscleDistribution ? { muscleDistribution: def.muscleDistribution } : {}),
+              muscleDistribution: def.muscleDistribution,
               ...(needsMuscleGroup ? { muscleGroup: def.muscleGroup } : {}),
               ...(needsTrackingMode ? { trackingMode: def.trackingMode } : {})
             };
@@ -403,45 +423,44 @@ export const storage = {
           def => !existingNames.has(def.name.toLowerCase())
         );
 
-        // 2. Check for existing exercises needing backfill
-        const exercisesToBackfill = library.filter(ex => {
+        // 2. Check for existing exercises needing backfill or sync
+        const exercisesToSync = library.filter(ex => {
           const def = INITIAL_EXERCISES.find(d => 
             d.id === ex.id || d.name.toLowerCase() === ex.name.toLowerCase()
           );
           if (!def) return false;
           
           return (
-            !ex.muscleDistribution || ex.muscleDistribution.length === 0 ||
+            !distributionsEqual(ex.muscleDistribution || [], def.muscleDistribution || []) ||
             !ex.muscleGroup ||
             !ex.trackingMode
           );
         });
 
-        if (missingDefaults.length > 0 || exercisesToBackfill.length > 0) {
+        if (missingDefaults.length > 0 || exercisesToSync.length > 0) {
           // Add missing defaults
           for (const ex of missingDefaults) {
             const docRef = doc(db, 'exercises', libDocId(uid, ex.id));
             await setDoc(docRef, deepRemoveUndefined({ ...ex, uid }));
           }
-          // Backfill existing
-          for (const ex of exercisesToBackfill) {
+          // Sync existing built-in exercises
+          for (const ex of exercisesToSync) {
             const def = INITIAL_EXERCISES.find(d => 
               d.id === ex.id || d.name.toLowerCase() === ex.name.toLowerCase()
             );
             if (def) {
               const docRef = doc(db, 'exercises', libDocId(uid, ex.id));
               
-              const needsMuscleDistribution = !ex.muscleDistribution || ex.muscleDistribution.length === 0;
               const needsMuscleGroup = !ex.muscleGroup;
               const needsTrackingMode = !ex.trackingMode;
 
               await setDoc(docRef, deepRemoveUndefined({ 
                 ...ex, 
-                ...(needsMuscleDistribution ? { muscleDistribution: def.muscleDistribution } : {}),
+                muscleDistribution: def.muscleDistribution,
                 ...(needsMuscleGroup ? { muscleGroup: def.muscleGroup } : {}),
                 ...(needsTrackingMode ? { trackingMode: def.trackingMode } : {}),
                 uid 
-              }));
+              }), { merge: true });
             }
           }
           // The snapshot will trigger again after these writes
