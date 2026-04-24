@@ -4,1245 +4,3667 @@
     "name": "Flat Barbell Bench Press",
     "muscleGroup": "Chest",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Chest","percent":60},{"group":"Shoulders","percent":20},{"group":"Triceps","percent":20}]
+    "muscleDistribution": [
+      {
+        "group": "Chest",
+        "percent": 60
+      },
+      {
+        "group": "Shoulders",
+        "percent": 20
+      },
+      {
+        "group": "Triceps",
+        "percent": 20
+      }
+    ]
   },
   {
     "id": "c3",
     "name": "DB Bench Press",
     "muscleGroup": "Chest",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Chest","percent":60},{"group":"Shoulders","percent":20},{"group":"Triceps","percent":20}]
+    "muscleDistribution": [
+      {
+        "group": "Chest",
+        "percent": 60
+      },
+      {
+        "group": "Shoulders",
+        "percent": 20
+      },
+      {
+        "group": "Triceps",
+        "percent": 20
+      }
+    ]
   },
   {
     "id": "c4",
     "name": "Smith Machine Bench Press",
     "muscleGroup": "Chest",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Chest","percent":60},{"group":"Shoulders","percent":15},{"group":"Triceps","percent":25}]
+    "muscleDistribution": [
+      {
+        "group": "Chest",
+        "percent": 60
+      },
+      {
+        "group": "Shoulders",
+        "percent": 15
+      },
+      {
+        "group": "Triceps",
+        "percent": 25
+      }
+    ]
   },
   {
     "id": "c5",
     "name": "Incline Barbell Bench Press",
     "muscleGroup": "Chest",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Chest","percent":50},{"group":"Shoulders","percent":30},{"group":"Triceps","percent":20}]
+    "muscleDistribution": [
+      {
+        "group": "Chest",
+        "percent": 50
+      },
+      {
+        "group": "Shoulders",
+        "percent": 30
+      },
+      {
+        "group": "Triceps",
+        "percent": 20
+      }
+    ]
   },
   {
     "id": "c6",
     "name": "Incline DB Bench Press",
     "muscleGroup": "Chest",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Chest","percent":50},{"group":"Shoulders","percent":30},{"group":"Triceps","percent":20}]
+    "muscleDistribution": [
+      {
+        "group": "Chest",
+        "percent": 50
+      },
+      {
+        "group": "Shoulders",
+        "percent": 30
+      },
+      {
+        "group": "Triceps",
+        "percent": 20
+      }
+    ]
   },
   {
     "id": "c7",
     "name": "Incline Smith Bench Press",
     "muscleGroup": "Chest",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Chest","percent":55},{"group":"Shoulders","percent":25},{"group":"Triceps","percent":20}]
+    "muscleDistribution": [
+      {
+        "group": "Chest",
+        "percent": 55
+      },
+      {
+        "group": "Shoulders",
+        "percent": 25
+      },
+      {
+        "group": "Triceps",
+        "percent": 20
+      }
+    ]
   },
   {
     "id": "c8",
     "name": "Incline Machine Press",
     "muscleGroup": "Chest",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Chest","percent":55},{"group":"Shoulders","percent":20},{"group":"Triceps","percent":25}]
+    "muscleDistribution": [
+      {
+        "group": "Chest",
+        "percent": 55
+      },
+      {
+        "group": "Shoulders",
+        "percent": 20
+      },
+      {
+        "group": "Triceps",
+        "percent": 25
+      }
+    ]
   },
   {
     "id": "c9",
     "name": "Machine Chest Press",
     "muscleGroup": "Chest",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Chest","percent":60},{"group":"Triceps","percent":25},{"group":"Shoulders","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Chest",
+        "percent": 60
+      },
+      {
+        "group": "Triceps",
+        "percent": 25
+      },
+      {
+        "group": "Shoulders",
+        "percent": 15
+      }
+    ]
   },
   {
     "id": "c10",
     "name": "Decline Bench Press",
     "muscleGroup": "Chest",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Chest","percent":70},{"group":"Triceps","percent":20},{"group":"Shoulders","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Chest",
+        "percent": 70
+      },
+      {
+        "group": "Triceps",
+        "percent": 20
+      },
+      {
+        "group": "Shoulders",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "c11",
     "name": "Chest Fly",
     "muscleGroup": "Chest",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Chest","percent":85},{"group":"Shoulders","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Chest",
+        "percent": 85
+      },
+      {
+        "group": "Shoulders",
+        "percent": 15
+      }
+    ]
   },
   {
     "id": "c12",
     "name": "DB Chest Fly",
     "muscleGroup": "Chest",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Chest","percent":85},{"group":"Shoulders","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Chest",
+        "percent": 85
+      },
+      {
+        "group": "Shoulders",
+        "percent": 15
+      }
+    ]
   },
   {
     "id": "c13",
     "name": "Cable Flyes",
     "muscleGroup": "Chest",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Chest","percent":85},{"group":"Shoulders","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Chest",
+        "percent": 85
+      },
+      {
+        "group": "Shoulders",
+        "percent": 15
+      }
+    ]
   },
   {
     "id": "c14",
     "name": "Low to High Cable Flyes",
     "muscleGroup": "Chest",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Chest","percent":75},{"group":"Shoulders","percent":25}]
+    "muscleDistribution": [
+      {
+        "group": "Chest",
+        "percent": 75
+      },
+      {
+        "group": "Shoulders",
+        "percent": 25
+      }
+    ]
   },
   {
     "id": "c15",
     "name": "Pec Deck",
     "muscleGroup": "Chest",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Chest","percent":90},{"group":"Shoulders","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Chest",
+        "percent": 90
+      },
+      {
+        "group": "Shoulders",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "c16",
     "name": "Dips",
     "muscleGroup": "Chest",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Chest","percent":50},{"group":"Triceps","percent":35},{"group":"Shoulders","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Chest",
+        "percent": 50
+      },
+      {
+        "group": "Triceps",
+        "percent": 35
+      },
+      {
+        "group": "Shoulders",
+        "percent": 15
+      }
+    ]
   },
   {
     "id": "s1",
     "name": "Seated Barbell Press",
     "muscleGroup": "Shoulders",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Shoulders","percent":60},{"group":"Triceps","percent":30},{"group":"Upper Back","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Shoulders",
+        "percent": 60
+      },
+      {
+        "group": "Triceps",
+        "percent": 30
+      },
+      {
+        "group": "Upper Back",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "s2",
     "name": "Standing OHP",
     "muscleGroup": "Shoulders",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Shoulders","percent":55},{"group":"Triceps","percent":30},{"group":"Core","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Shoulders",
+        "percent": 45
+      },
+      {
+        "group": "Triceps",
+        "percent": 30
+      },
+      {
+        "group": "Core",
+        "percent": 15
+      },
+      {
+        "group": "Upper Back",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "s3",
     "name": "Seated DB Shoulder Press",
     "muscleGroup": "Shoulders",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Shoulders","percent":60},{"group":"Triceps","percent":30},{"group":"Upper Back","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Shoulders",
+        "percent": 60
+      },
+      {
+        "group": "Triceps",
+        "percent": 30
+      },
+      {
+        "group": "Upper Back",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "s4",
     "name": "Arnold Press",
     "muscleGroup": "Shoulders",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Shoulders","percent":60},{"group":"Triceps","percent":25},{"group":"Chest","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Shoulders",
+        "percent": 60
+      },
+      {
+        "group": "Triceps",
+        "percent": 25
+      },
+      {
+        "group": "Chest",
+        "percent": 10
+      },
+      {
+        "group": "Upper Back",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "s5",
     "name": "DB Lateral Raises",
     "muscleGroup": "Side Delts",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Side Delts","percent":85},{"group":"Shoulders","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Side Delts",
+        "percent": 85
+      },
+      {
+        "group": "Shoulders",
+        "percent": 15
+      }
+    ]
   },
   {
     "id": "s6",
     "name": "Cable Lateral Raises",
     "muscleGroup": "Side Delts",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Side Delts","percent":85},{"group":"Shoulders","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Side Delts",
+        "percent": 85
+      },
+      {
+        "group": "Shoulders",
+        "percent": 15
+      }
+    ]
   },
   {
     "id": "s7",
     "name": "Machine Lateral Raises",
     "muscleGroup": "Side Delts",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Side Delts","percent":85},{"group":"Shoulders","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Side Delts",
+        "percent": 85
+      },
+      {
+        "group": "Shoulders",
+        "percent": 15
+      }
+    ]
   },
   {
     "id": "s8",
     "name": "Upright Row",
     "muscleGroup": "Shoulders",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Side Delts","percent":45},{"group":"Traps","percent":40},{"group":"Shoulders","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Side Delts",
+        "percent": 45
+      },
+      {
+        "group": "Traps",
+        "percent": 35
+      },
+      {
+        "group": "Shoulders",
+        "percent": 10
+      },
+      {
+        "group": "Biceps",
+        "percent": 5
+      },
+      {
+        "group": "Forearms",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "rd1",
     "name": "Rear Delt Flyes",
     "muscleGroup": "Rear Delts",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Rear Delts","percent":75},{"group":"Upper Back","percent":25}]
+    "muscleDistribution": [
+      {
+        "group": "Rear Delts",
+        "percent": 75
+      },
+      {
+        "group": "Upper Back",
+        "percent": 25
+      }
+    ]
   },
   {
     "id": "rd2",
     "name": "Reverse Pec Deck",
     "muscleGroup": "Rear Delts",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Rear Delts","percent":75},{"group":"Upper Back","percent":25}]
+    "muscleDistribution": [
+      {
+        "group": "Rear Delts",
+        "percent": 75
+      },
+      {
+        "group": "Upper Back",
+        "percent": 25
+      }
+    ]
   },
   {
     "id": "rd3",
     "name": "Cable Rear Delt Fly",
     "muscleGroup": "Rear Delts",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Rear Delts","percent":80},{"group":"Upper Back","percent":20}]
+    "muscleDistribution": [
+      {
+        "group": "Rear Delts",
+        "percent": 80
+      },
+      {
+        "group": "Upper Back",
+        "percent": 20
+      }
+    ]
   },
   {
     "id": "rd4",
     "name": "Face Pulls",
     "muscleGroup": "Rear Delts",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Rear Delts","percent":50},{"group":"Upper Back","percent":35},{"group":"Shoulders","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Rear Delts",
+        "percent": 45
+      },
+      {
+        "group": "Upper Back",
+        "percent": 35
+      },
+      {
+        "group": "Traps",
+        "percent": 10
+      },
+      {
+        "group": "Shoulders",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "t1",
     "name": "Cable Tricep Pushdowns",
     "muscleGroup": "Triceps",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Triceps","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Triceps",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "t2",
     "name": "Single Arm Cable Pushdowns",
     "muscleGroup": "Triceps",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Triceps","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Triceps",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "t3",
     "name": "Rope Overhead Extensions",
     "muscleGroup": "Triceps",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Triceps","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Triceps",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "t4",
     "name": "Overhead Cable Extensions",
     "muscleGroup": "Triceps",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Triceps","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Triceps",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "t5",
     "name": "Skullcrushers",
     "muscleGroup": "Triceps",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Triceps","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Triceps",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "t6",
     "name": "EZ Bar French Press",
     "muscleGroup": "Triceps",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Triceps","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Triceps",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "t7",
     "name": "JM Press",
     "muscleGroup": "Triceps",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Triceps","percent":70},{"group":"Chest","percent":15},{"group":"Shoulders","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Triceps",
+        "percent": 70
+      },
+      {
+        "group": "Chest",
+        "percent": 15
+      },
+      {
+        "group": "Shoulders",
+        "percent": 15
+      }
+    ]
   },
   {
     "id": "t8",
     "name": "Close Grip Bench Press",
     "muscleGroup": "Triceps",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Triceps","percent":55},{"group":"Chest","percent":25},{"group":"Shoulders","percent":20}]
+    "muscleDistribution": [
+      {
+        "group": "Triceps",
+        "percent": 55
+      },
+      {
+        "group": "Chest",
+        "percent": 25
+      },
+      {
+        "group": "Shoulders",
+        "percent": 20
+      }
+    ]
   },
   {
     "id": "t9",
     "name": "Machine Dip",
     "muscleGroup": "Triceps",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Triceps","percent":55},{"group":"Chest","percent":30},{"group":"Shoulders","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Triceps",
+        "percent": 55
+      },
+      {
+        "group": "Chest",
+        "percent": 30
+      },
+      {
+        "group": "Shoulders",
+        "percent": 15
+      }
+    ]
   },
   {
     "id": "bi1",
     "name": "Barbell Curls",
     "muscleGroup": "Biceps",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Biceps","percent":85},{"group":"Forearms","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Biceps",
+        "percent": 85
+      },
+      {
+        "group": "Forearms",
+        "percent": 15
+      }
+    ]
   },
   {
     "id": "bi2",
     "name": "EZ Bar Curls",
     "muscleGroup": "Biceps",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Biceps","percent":85},{"group":"Forearms","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Biceps",
+        "percent": 85
+      },
+      {
+        "group": "Forearms",
+        "percent": 15
+      }
+    ]
   },
   {
     "id": "bi3",
     "name": "DB Curls",
     "muscleGroup": "Biceps",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Biceps","percent":85},{"group":"Forearms","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Biceps",
+        "percent": 85
+      },
+      {
+        "group": "Forearms",
+        "percent": 15
+      }
+    ]
   },
   {
     "id": "bi5",
     "name": "Hammer Curls",
     "muscleGroup": "Biceps",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Biceps","percent":55},{"group":"Forearms","percent":45}]
+    "muscleDistribution": [
+      {
+        "group": "Biceps",
+        "percent": 55
+      },
+      {
+        "group": "Forearms",
+        "percent": 45
+      }
+    ]
   },
   {
     "id": "bi6",
     "name": "Cable Curls",
     "muscleGroup": "Biceps",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Biceps","percent":85},{"group":"Forearms","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Biceps",
+        "percent": 85
+      },
+      {
+        "group": "Forearms",
+        "percent": 15
+      }
+    ]
   },
   {
     "id": "bi7",
     "name": "Bayesian Cable Curls",
     "muscleGroup": "Biceps",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Biceps","percent":90},{"group":"Forearms","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Biceps",
+        "percent": 90
+      },
+      {
+        "group": "Forearms",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "bi8",
     "name": "Preacher Curls",
     "muscleGroup": "Biceps",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Biceps","percent":90},{"group":"Forearms","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Biceps",
+        "percent": 90
+      },
+      {
+        "group": "Forearms",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "bi9",
     "name": "Machine Preacher Curls",
     "muscleGroup": "Biceps",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Biceps","percent":90},{"group":"Forearms","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Biceps",
+        "percent": 90
+      },
+      {
+        "group": "Forearms",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "bi10",
     "name": "Spider Curls",
     "muscleGroup": "Biceps",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Biceps","percent":90},{"group":"Forearms","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Biceps",
+        "percent": 90
+      },
+      {
+        "group": "Forearms",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "bi11",
     "name": "Seated Incline DB Curls",
     "muscleGroup": "Biceps",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Biceps","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Biceps",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "f1",
     "name": "Wrist Curls",
     "muscleGroup": "Forearms",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Forearms","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Forearms",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "f2",
     "name": "Reverse Wrist Curls",
     "muscleGroup": "Forearms",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Forearms","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Forearms",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "f3",
     "name": "Cable Wrist Curls",
     "muscleGroup": "Forearms",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Forearms","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Forearms",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "f4",
     "name": "Behind the Back Wrist Curls",
     "muscleGroup": "Forearms",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Forearms","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Forearms",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "f5",
     "name": "Reverse Curls",
     "muscleGroup": "Forearms",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Forearms","percent":60},{"group":"Biceps","percent":40}]
+    "muscleDistribution": [
+      {
+        "group": "Forearms",
+        "percent": 60
+      },
+      {
+        "group": "Biceps",
+        "percent": 40
+      }
+    ]
   },
   {
     "id": "f6",
     "name": "Plate Pinches",
     "muscleGroup": "Forearms",
     "trackingMode": "time",
-    "muscleDistribution": [{"group":"Forearms","percent":80},{"group":"Functional","percent":20}]
+    "muscleDistribution": [
+      {
+        "group": "Forearms",
+        "percent": 80
+      },
+      {
+        "group": "Functional",
+        "percent": 20
+      }
+    ]
   },
   {
     "id": "f7",
     "name": "Fat Grip Holds",
     "muscleGroup": "Forearms",
     "trackingMode": "time",
-    "muscleDistribution": [{"group":"Forearms","percent":80},{"group":"Functional","percent":20}]
+    "muscleDistribution": [
+      {
+        "group": "Forearms",
+        "percent": 80
+      },
+      {
+        "group": "Functional",
+        "percent": 20
+      }
+    ]
   },
   {
     "id": "f8",
     "name": "Wrist Roller",
     "muscleGroup": "Forearms",
     "trackingMode": "time",
-    "muscleDistribution": [{"group":"Forearms","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Forearms",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "ub1",
     "name": "Pendlay Row",
     "muscleGroup": "Upper Back",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Upper Back","percent":50},{"group":"Lats","percent":30},{"group":"Lower Back","percent":20}]
+    "muscleDistribution": [
+      {
+        "group": "Upper Back",
+        "percent": 45
+      },
+      {
+        "group": "Lats",
+        "percent": 25
+      },
+      {
+        "group": "Lower Back",
+        "percent": 20
+      },
+      {
+        "group": "Biceps",
+        "percent": 5
+      },
+      {
+        "group": "Forearms",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "ub2",
     "name": "Barbell Row",
     "muscleGroup": "Upper Back",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Upper Back","percent":50},{"group":"Lats","percent":30},{"group":"Lower Back","percent":20}]
+    "muscleDistribution": [
+      {
+        "group": "Lats",
+        "percent": 45
+      },
+      {
+        "group": "Upper Back",
+        "percent": 25
+      },
+      {
+        "group": "Lower Back",
+        "percent": 15
+      },
+      {
+        "group": "Rear Delts",
+        "percent": 5
+      },
+      {
+        "group": "Biceps",
+        "percent": 5
+      },
+      {
+        "group": "Forearms",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "ub3",
     "name": "Chest Supported Row",
     "muscleGroup": "Upper Back",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Upper Back","percent":60},{"group":"Lats","percent":25},{"group":"Rear Delts","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Upper Back",
+        "percent": 50
+      },
+      {
+        "group": "Lats",
+        "percent": 25
+      },
+      {
+        "group": "Rear Delts",
+        "percent": 10
+      },
+      {
+        "group": "Biceps",
+        "percent": 10
+      },
+      {
+        "group": "Forearms",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "ub4",
     "name": "Seated Cable Row",
     "muscleGroup": "Upper Back",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Upper Back","percent":55},{"group":"Lats","percent":30},{"group":"Rear Delts","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Upper Back",
+        "percent": 45
+      },
+      {
+        "group": "Lats",
+        "percent": 30
+      },
+      {
+        "group": "Rear Delts",
+        "percent": 10
+      },
+      {
+        "group": "Biceps",
+        "percent": 10
+      },
+      {
+        "group": "Forearms",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "ub5",
     "name": "T Bar Row",
     "muscleGroup": "Upper Back",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Upper Back","percent":55},{"group":"Lats","percent":30},{"group":"Rear Delts","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Upper Back",
+        "percent": 45
+      },
+      {
+        "group": "Lats",
+        "percent": 30
+      },
+      {
+        "group": "Rear Delts",
+        "percent": 10
+      },
+      {
+        "group": "Biceps",
+        "percent": 10
+      },
+      {
+        "group": "Forearms",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "ub6",
     "name": "DB Row",
     "muscleGroup": "Upper Back",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Upper Back","percent":45},{"group":"Lats","percent":40},{"group":"Rear Delts","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Upper Back",
+        "percent": 40
+      },
+      {
+        "group": "Lats",
+        "percent": 35
+      },
+      {
+        "group": "Rear Delts",
+        "percent": 10
+      },
+      {
+        "group": "Biceps",
+        "percent": 10
+      },
+      {
+        "group": "Forearms",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "ub7",
     "name": "Machine High Row",
     "muscleGroup": "Upper Back",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Upper Back","percent":55},{"group":"Lats","percent":30},{"group":"Rear Delts","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Upper Back",
+        "percent": 45
+      },
+      {
+        "group": "Lats",
+        "percent": 30
+      },
+      {
+        "group": "Rear Delts",
+        "percent": 10
+      },
+      {
+        "group": "Biceps",
+        "percent": 10
+      },
+      {
+        "group": "Forearms",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "ub8",
     "name": "Cable High Row",
     "muscleGroup": "Upper Back",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Upper Back","percent":55},{"group":"Lats","percent":30},{"group":"Rear Delts","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Upper Back",
+        "percent": 45
+      },
+      {
+        "group": "Lats",
+        "percent": 30
+      },
+      {
+        "group": "Rear Delts",
+        "percent": 10
+      },
+      {
+        "group": "Biceps",
+        "percent": 10
+      },
+      {
+        "group": "Forearms",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "ub9",
     "name": "Iso Lateral Machine Rows",
     "muscleGroup": "Upper Back",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Upper Back","percent":55},{"group":"Lats","percent":30},{"group":"Rear Delts","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Upper Back",
+        "percent": 45
+      },
+      {
+        "group": "Lats",
+        "percent": 30
+      },
+      {
+        "group": "Rear Delts",
+        "percent": 10
+      },
+      {
+        "group": "Biceps",
+        "percent": 10
+      },
+      {
+        "group": "Forearms",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "ub10",
     "name": "Iso Lateral Low Rows",
     "muscleGroup": "Upper Back",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Upper Back","percent":55},{"group":"Lats","percent":30},{"group":"Rear Delts","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Upper Back",
+        "percent": 45
+      },
+      {
+        "group": "Lats",
+        "percent": 30
+      },
+      {
+        "group": "Rear Delts",
+        "percent": 10
+      },
+      {
+        "group": "Biceps",
+        "percent": 10
+      },
+      {
+        "group": "Forearms",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "la1",
     "name": "Pull Ups",
     "muscleGroup": "Lats",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Lats","percent":70},{"group":"Biceps","percent":20},{"group":"Upper Back","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Lats",
+        "percent": 60
+      },
+      {
+        "group": "Upper Back",
+        "percent": 15
+      },
+      {
+        "group": "Biceps",
+        "percent": 15
+      },
+      {
+        "group": "Forearms",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "la2",
     "name": "Chin Ups",
     "muscleGroup": "Lats",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Lats","percent":60},{"group":"Biceps","percent":30},{"group":"Upper Back","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Lats",
+        "percent": 60
+      },
+      {
+        "group": "Biceps",
+        "percent": 25
+      },
+      {
+        "group": "Upper Back",
+        "percent": 5
+      },
+      {
+        "group": "Forearms",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "la3",
     "name": "Lat Pulldowns",
     "muscleGroup": "Lats",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Lats","percent":70},{"group":"Biceps","percent":20},{"group":"Upper Back","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Lats",
+        "percent": 65
+      },
+      {
+        "group": "Biceps",
+        "percent": 20
+      },
+      {
+        "group": "Upper Back",
+        "percent": 10
+      },
+      {
+        "group": "Forearms",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "la4",
     "name": "Single Arm Lat Pulldown",
     "muscleGroup": "Lats",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Lats","percent":70},{"group":"Biceps","percent":20},{"group":"Upper Back","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Lats",
+        "percent": 65
+      },
+      {
+        "group": "Biceps",
+        "percent": 20
+      },
+      {
+        "group": "Upper Back",
+        "percent": 10
+      },
+      {
+        "group": "Forearms",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "la5",
     "name": "Straight Arm Pulldown",
     "muscleGroup": "Lats",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Lats","percent":80},{"group":"Upper Back","percent":20}]
+    "muscleDistribution": [
+      {
+        "group": "Lats",
+        "percent": 80
+      },
+      {
+        "group": "Upper Back",
+        "percent": 10
+      },
+      {
+        "group": "Triceps",
+        "percent": 5
+      },
+      {
+        "group": "Core",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "la6",
     "name": "Machine Pullover",
     "muscleGroup": "Lats",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Lats","percent":80},{"group":"Upper Back","percent":20}]
+    "muscleDistribution": [
+      {
+        "group": "Lats",
+        "percent": 80
+      },
+      {
+        "group": "Upper Back",
+        "percent": 10
+      },
+      {
+        "group": "Triceps",
+        "percent": 5
+      },
+      {
+        "group": "Core",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "la7",
     "name": "Cable Pullover",
     "muscleGroup": "Lats",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Lats","percent":80},{"group":"Upper Back","percent":20}]
+    "muscleDistribution": [
+      {
+        "group": "Lats",
+        "percent": 80
+      },
+      {
+        "group": "Upper Back",
+        "percent": 10
+      },
+      {
+        "group": "Triceps",
+        "percent": 5
+      },
+      {
+        "group": "Core",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "tr1",
     "name": "DB Trap Shrug",
     "muscleGroup": "Traps",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Traps","percent":85},{"group":"Upper Back","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Traps",
+        "percent": 80
+      },
+      {
+        "group": "Upper Back",
+        "percent": 10
+      },
+      {
+        "group": "Forearms",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "tr2",
     "name": "Barbell Shrug",
     "muscleGroup": "Traps",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Traps","percent":85},{"group":"Upper Back","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Traps",
+        "percent": 80
+      },
+      {
+        "group": "Upper Back",
+        "percent": 10
+      },
+      {
+        "group": "Forearms",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "tr3",
     "name": "Smith Shrug",
     "muscleGroup": "Traps",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Traps","percent":85},{"group":"Upper Back","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Traps",
+        "percent": 80
+      },
+      {
+        "group": "Upper Back",
+        "percent": 10
+      },
+      {
+        "group": "Forearms",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "tr4",
     "name": "Trap Raises",
     "muscleGroup": "Traps",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Traps","percent":60},{"group":"Upper Back","percent":25},{"group":"Rear Delts","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Traps",
+        "percent": 60
+      },
+      {
+        "group": "Upper Back",
+        "percent": 25
+      },
+      {
+        "group": "Rear Delts",
+        "percent": 15
+      }
+    ]
   },
   {
     "id": "lb1",
     "name": "Deadlift",
     "muscleGroup": "Lower Back",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Lower Back","percent":25},{"group":"Hamstrings","percent":25},{"group":"Glutes","percent":25},{"group":"Upper Back","percent":15},{"group":"Forearms","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Lower Back",
+        "percent": 25
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 25
+      },
+      {
+        "group": "Glutes",
+        "percent": 25
+      },
+      {
+        "group": "Upper Back",
+        "percent": 15
+      },
+      {
+        "group": "Forearms",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "lb2",
     "name": "Rack Pull",
     "muscleGroup": "Lower Back",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Lower Back","percent":35},{"group":"Traps","percent":35},{"group":"Hamstrings","percent":20},{"group":"Forearms","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Lower Back",
+        "percent": 35
+      },
+      {
+        "group": "Traps",
+        "percent": 35
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 20
+      },
+      {
+        "group": "Forearms",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "lb3",
     "name": "Good Morning",
     "muscleGroup": "Lower Back",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Lower Back","percent":35},{"group":"Hamstrings","percent":35},{"group":"Glutes","percent":20},{"group":"Core","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Lower Back",
+        "percent": 35
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 35
+      },
+      {
+        "group": "Glutes",
+        "percent": 20
+      },
+      {
+        "group": "Core",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "lb4",
     "name": "Back Extension",
     "muscleGroup": "Lower Back",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Lower Back","percent":45},{"group":"Hamstrings","percent":25},{"group":"Glutes","percent":20},{"group":"Core","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Lower Back",
+        "percent": 45
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 25
+      },
+      {
+        "group": "Glutes",
+        "percent": 20
+      },
+      {
+        "group": "Core",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "lb5",
     "name": "45 Degree Back Extension",
     "muscleGroup": "Lower Back",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Lower Back","percent":45},{"group":"Hamstrings","percent":25},{"group":"Glutes","percent":20},{"group":"Core","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Lower Back",
+        "percent": 45
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 25
+      },
+      {
+        "group": "Glutes",
+        "percent": 20
+      },
+      {
+        "group": "Core",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "q1",
     "name": "Back Squat",
     "muscleGroup": "Quads",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Quads","percent":45},{"group":"Glutes","percent":25},{"group":"Core","percent":15},{"group":"Hamstrings","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Quads",
+        "percent": 45
+      },
+      {
+        "group": "Glutes",
+        "percent": 25
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 15
+      },
+      {
+        "group": "Core",
+        "percent": 10
+      },
+      {
+        "group": "Lower Back",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "q2",
     "name": "Front Squat",
     "muscleGroup": "Quads",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Quads","percent":55},{"group":"Glutes","percent":15},{"group":"Core","percent":20},{"group":"Hamstrings","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Quads",
+        "percent": 50
+      },
+      {
+        "group": "Glutes",
+        "percent": 20
+      },
+      {
+        "group": "Core",
+        "percent": 15
+      },
+      {
+        "group": "Upper Back",
+        "percent": 10
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "q3",
     "name": "Hack Squat",
     "muscleGroup": "Quads",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Quads","percent":70},{"group":"Glutes","percent":20},{"group":"Hamstrings","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Quads",
+        "percent": 70
+      },
+      {
+        "group": "Glutes",
+        "percent": 20
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "q4",
     "name": "Belt Squat",
     "muscleGroup": "Quads",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Quads","percent":65},{"group":"Glutes","percent":25},{"group":"Hamstrings","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Quads",
+        "percent": 65
+      },
+      {
+        "group": "Glutes",
+        "percent": 25
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "q5",
     "name": "Leg Press",
     "muscleGroup": "Quads",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Quads","percent":60},{"group":"Glutes","percent":25},{"group":"Hamstrings","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Quads",
+        "percent": 60
+      },
+      {
+        "group": "Glutes",
+        "percent": 25
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 15
+      }
+    ]
   },
   {
     "id": "q6",
     "name": "Smith Machine Squat",
     "muscleGroup": "Quads",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Quads","percent":50},{"group":"Glutes","percent":35},{"group":"Hamstrings","percent":10},{"group":"Core","percent":5}]
+    "muscleDistribution": [
+      {
+        "group": "Quads",
+        "percent": 50
+      },
+      {
+        "group": "Glutes",
+        "percent": 35
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 10
+      },
+      {
+        "group": "Core",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "q7",
     "name": "Leg Extensions",
     "muscleGroup": "Quads",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Quads","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Quads",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "q8",
     "name": "Bulgarian Split Squat",
     "muscleGroup": "Quads",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Quads","percent":45},{"group":"Glutes","percent":30},{"group":"Hamstrings","percent":10},{"group":"Hip Flexors","percent":10},{"group":"Core","percent":5}]
+    "muscleDistribution": [
+      {
+        "group": "Quads",
+        "percent": 45
+      },
+      {
+        "group": "Glutes",
+        "percent": 30
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 10
+      },
+      {
+        "group": "Hip Flexors",
+        "percent": 10
+      },
+      {
+        "group": "Core",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "q9",
     "name": "Zercher Bulgarian Split Squat",
     "muscleGroup": "Quads",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Quads","percent":40},{"group":"Glutes","percent":25},{"group":"Core","percent":20},{"group":"Hamstrings","percent":10},{"group":"Hip Flexors","percent":5}]
+    "muscleDistribution": [
+      {
+        "group": "Quads",
+        "percent": 35
+      },
+      {
+        "group": "Glutes",
+        "percent": 20
+      },
+      {
+        "group": "Upper Back",
+        "percent": 15
+      },
+      {
+        "group": "Core",
+        "percent": 10
+      },
+      {
+        "group": "Biceps",
+        "percent": 10
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 5
+      },
+      {
+        "group": "Hip Flexors",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "q10",
     "name": "DB Lunges",
     "muscleGroup": "Quads",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Quads","percent":45},{"group":"Glutes","percent":25},{"group":"Hip Flexors","percent":10},{"group":"Hamstrings","percent":10},{"group":"Core","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Quads",
+        "percent": 40
+      },
+      {
+        "group": "Glutes",
+        "percent": 25
+      },
+      {
+        "group": "Hip Flexors",
+        "percent": 10
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 10
+      },
+      {
+        "group": "Core",
+        "percent": 10
+      },
+      {
+        "group": "Forearms",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "q11",
     "name": "KB Lunges",
     "muscleGroup": "Quads",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Quads","percent":45},{"group":"Glutes","percent":25},{"group":"Hip Flexors","percent":10},{"group":"Hamstrings","percent":10},{"group":"Core","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Quads",
+        "percent": 40
+      },
+      {
+        "group": "Glutes",
+        "percent": 25
+      },
+      {
+        "group": "Hip Flexors",
+        "percent": 10
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 10
+      },
+      {
+        "group": "Core",
+        "percent": 10
+      },
+      {
+        "group": "Forearms",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "q12",
     "name": "Walking Lunges",
     "muscleGroup": "Quads",
     "trackingMode": "distance",
-    "muscleDistribution": [{"group":"Quads","percent":40},{"group":"Glutes","percent":30},{"group":"Hip Flexors","percent":10},{"group":"Hamstrings","percent":10},{"group":"Core","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Quads",
+        "percent": 40
+      },
+      {
+        "group": "Glutes",
+        "percent": 30
+      },
+      {
+        "group": "Hip Flexors",
+        "percent": 10
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 10
+      },
+      {
+        "group": "Core",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "q13",
     "name": "Step Ups",
     "muscleGroup": "Quads",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Quads","percent":45},{"group":"Glutes","percent":30},{"group":"Hip Flexors","percent":10},{"group":"Hamstrings","percent":10},{"group":"Core","percent":5}]
+    "muscleDistribution": [
+      {
+        "group": "Quads",
+        "percent": 40
+      },
+      {
+        "group": "Glutes",
+        "percent": 30
+      },
+      {
+        "group": "Hip Flexors",
+        "percent": 10
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 10
+      },
+      {
+        "group": "Core",
+        "percent": 5
+      },
+      {
+        "group": "Forearms",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "ha1",
     "name": "Hamstring Curls",
     "muscleGroup": "Hamstrings",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Hamstrings","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Hamstrings",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "ha2",
     "name": "Seated Leg Curl",
     "muscleGroup": "Hamstrings",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Hamstrings","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Hamstrings",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "ha3",
     "name": "Lying Leg Curl",
     "muscleGroup": "Hamstrings",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Hamstrings","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Hamstrings",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "ha4",
     "name": "Single Leg Curls",
     "muscleGroup": "Hamstrings",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Hamstrings","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Hamstrings",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "ha5",
     "name": "Nordic Curl",
     "muscleGroup": "Hamstrings",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Hamstrings","percent":85},{"group":"Glutes","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Hamstrings",
+        "percent": 80
+      },
+      {
+        "group": "Glutes",
+        "percent": 10
+      },
+      {
+        "group": "Calves",
+        "percent": 5
+      },
+      {
+        "group": "Core",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "ha6",
     "name": "RDL",
     "muscleGroup": "Hamstrings",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Hamstrings","percent":45},{"group":"Glutes","percent":25},{"group":"Lower Back","percent":20},{"group":"Forearms","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Hamstrings",
+        "percent": 45
+      },
+      {
+        "group": "Glutes",
+        "percent": 25
+      },
+      {
+        "group": "Lower Back",
+        "percent": 20
+      },
+      {
+        "group": "Forearms",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "ha7",
     "name": "Stiff Leg Deadlift",
     "muscleGroup": "Hamstrings",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Hamstrings","percent":45},{"group":"Lower Back","percent":25},{"group":"Glutes","percent":20},{"group":"Forearms","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Hamstrings",
+        "percent": 45
+      },
+      {
+        "group": "Lower Back",
+        "percent": 25
+      },
+      {
+        "group": "Glutes",
+        "percent": 20
+      },
+      {
+        "group": "Forearms",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "ha8",
     "name": "GHR",
     "muscleGroup": "Hamstrings",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Hamstrings","percent":70},{"group":"Glutes","percent":20},{"group":"Lower Back","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Hamstrings",
+        "percent": 70
+      },
+      {
+        "group": "Glutes",
+        "percent": 20
+      },
+      {
+        "group": "Lower Back",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "ha9",
     "name": "Cable Pull Throughs",
     "muscleGroup": "Hamstrings",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Glutes","percent":65},{"group":"Hamstrings","percent":25},{"group":"Lower Back","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Glutes",
+        "percent": 65
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 25
+      },
+      {
+        "group": "Lower Back",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "gl1",
     "name": "Hip Thrust",
     "muscleGroup": "Glutes",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Glutes","percent":80},{"group":"Hamstrings","percent":20}]
+    "muscleDistribution": [
+      {
+        "group": "Glutes",
+        "percent": 80
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 20
+      }
+    ]
   },
   {
     "id": "gl2",
     "name": "Barbell Glute Bridge",
     "muscleGroup": "Glutes",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Glutes","percent":80},{"group":"Hamstrings","percent":20}]
+    "muscleDistribution": [
+      {
+        "group": "Glutes",
+        "percent": 80
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 20
+      }
+    ]
   },
   {
     "id": "gl3",
     "name": "Glute Drive Machine",
     "muscleGroup": "Glutes",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Glutes","percent":80},{"group":"Hamstrings","percent":20}]
+    "muscleDistribution": [
+      {
+        "group": "Glutes",
+        "percent": 80
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 20
+      }
+    ]
   },
   {
     "id": "gl4",
     "name": "Cable Kickbacks",
     "muscleGroup": "Glutes",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Glutes","percent":90},{"group":"Hamstrings","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Glutes",
+        "percent": 90
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "gl5",
     "name": "Sumo Deadlift",
     "muscleGroup": "Glutes",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Quads","percent":30},{"group":"Glutes","percent":30},{"group":"Hamstrings","percent":20},{"group":"Lower Back","percent":20}]
+    "muscleDistribution": [
+      {
+        "group": "Glutes",
+        "percent": 30
+      },
+      {
+        "group": "Quads",
+        "percent": 25
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 20
+      },
+      {
+        "group": "Lower Back",
+        "percent": 15
+      },
+      {
+        "group": "Forearms",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "ca1",
     "name": "Standing Calf Raises",
     "muscleGroup": "Calves",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Calves","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Calves",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "ca2",
     "name": "Seated Calf Raises",
     "muscleGroup": "Calves",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Calves","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Calves",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "ca3",
     "name": "Leg Press Calf Raises",
     "muscleGroup": "Calves",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Calves","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Calves",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "ca4",
     "name": "Smith Calf Raises",
     "muscleGroup": "Calves",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Calves","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Calves",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "ca5",
     "name": "Single Leg Calf Raises",
     "muscleGroup": "Calves",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Calves","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Calves",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "co1",
     "name": "Hanging Leg Raises",
     "muscleGroup": "Core",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Core","percent":60},{"group":"Hip Flexors","percent":40}]
+    "muscleDistribution": [
+      {
+        "group": "Hip Flexors",
+        "percent": 50
+      },
+      {
+        "group": "Core",
+        "percent": 35
+      },
+      {
+        "group": "Forearms",
+        "percent": 10
+      },
+      {
+        "group": "Lats",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "co2",
     "name": "Ab Wheel",
     "muscleGroup": "Core",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Core","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Core",
+        "percent": 85
+      },
+      {
+        "group": "Shoulders",
+        "percent": 10
+      },
+      {
+        "group": "Lats",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "co3",
     "name": "Cable Crunch",
     "muscleGroup": "Core",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Core","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Core",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "co4",
     "name": "Decline Sit Ups",
     "muscleGroup": "Core",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Core","percent":65},{"group":"Hip Flexors","percent":35}]
+    "muscleDistribution": [
+      {
+        "group": "Core",
+        "percent": 65
+      },
+      {
+        "group": "Hip Flexors",
+        "percent": 35
+      }
+    ]
   },
   {
     "id": "co5",
     "name": "Weighted Sit Ups",
     "muscleGroup": "Core",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Core","percent":70},{"group":"Hip Flexors","percent":30}]
+    "muscleDistribution": [
+      {
+        "group": "Core",
+        "percent": 70
+      },
+      {
+        "group": "Hip Flexors",
+        "percent": 30
+      }
+    ]
   },
   {
     "id": "co6",
     "name": "GHD Sit Ups",
     "muscleGroup": "Core",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Core","percent":55},{"group":"Hip Flexors","percent":45}]
+    "muscleDistribution": [
+      {
+        "group": "Core",
+        "percent": 55
+      },
+      {
+        "group": "Hip Flexors",
+        "percent": 45
+      }
+    ]
   },
   {
     "id": "co7",
     "name": "Plank",
     "muscleGroup": "Core",
     "trackingMode": "time",
-    "muscleDistribution": [{"group":"Core","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Core",
+        "percent": 85
+      },
+      {
+        "group": "Shoulders",
+        "percent": 10
+      },
+      {
+        "group": "Glutes",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "co8",
     "name": "Side Plank",
     "muscleGroup": "Core",
     "trackingMode": "time",
-    "muscleDistribution": [{"group":"Core","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Core",
+        "percent": 90
+      },
+      {
+        "group": "Shoulders",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "co9",
     "name": "Pallof Press",
     "muscleGroup": "Core",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Core","percent":85},{"group":"Hip Flexors","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Core",
+        "percent": 85
+      },
+      {
+        "group": "Shoulders",
+        "percent": 15
+      }
+    ]
   },
   {
     "id": "co10",
     "name": "Dead Bug",
     "muscleGroup": "Core",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Core","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Core",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "co11",
     "name": "Russian Twists",
     "muscleGroup": "Core",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Core","percent":70},{"group":"Hip Flexors","percent":30}]
+    "muscleDistribution": [
+      {
+        "group": "Core",
+        "percent": 65
+      },
+      {
+        "group": "Hip Flexors",
+        "percent": 25
+      },
+      {
+        "group": "Forearms",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "co12",
     "name": "Ab Rollouts",
     "muscleGroup": "Core",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Core","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Core",
+        "percent": 85
+      },
+      {
+        "group": "Shoulders",
+        "percent": 10
+      },
+      {
+        "group": "Lats",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "ll1",
     "name": "Tib Raises",
     "muscleGroup": "Lower Legs",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Lower Legs","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Lower Legs",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "ll2",
     "name": "Seated Tib Raises",
     "muscleGroup": "Lower Legs",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Lower Legs","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Lower Legs",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "ll3",
     "name": "KB Seated Tibial Raises",
     "muscleGroup": "Lower Legs",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Lower Legs","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Lower Legs",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "ll4",
     "name": "Ankle Rotations",
     "muscleGroup": "Lower Legs",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Lower Legs","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Lower Legs",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "fu1",
     "name": "Farmer's Carries",
     "muscleGroup": "Functional",
     "trackingMode": "distance",
-    "muscleDistribution": [{"group":"Functional","percent":40},{"group":"Forearms","percent":25},{"group":"Traps","percent":20},{"group":"Core","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Forearms",
+        "percent": 30
+      },
+      {
+        "group": "Traps",
+        "percent": 25
+      },
+      {
+        "group": "Core",
+        "percent": 25
+      },
+      {
+        "group": "Functional",
+        "percent": 20
+      }
+    ]
   },
   {
     "id": "fu2",
     "name": "Suitcase Carry",
     "muscleGroup": "Functional",
     "trackingMode": "distance",
-    "muscleDistribution": [{"group":"Functional","percent":45},{"group":"Core","percent":35},{"group":"Forearms","percent":20}]
+    "muscleDistribution": [
+      {
+        "group": "Core",
+        "percent": 40
+      },
+      {
+        "group": "Forearms",
+        "percent": 25
+      },
+      {
+        "group": "Functional",
+        "percent": 25
+      },
+      {
+        "group": "Traps",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "fu3",
     "name": "Front Rack Carry",
     "muscleGroup": "Functional",
     "trackingMode": "distance",
-    "muscleDistribution": [{"group":"Functional","percent":45},{"group":"Core","percent":35},{"group":"Upper Back","percent":20}]
+    "muscleDistribution": [
+      {
+        "group": "Core",
+        "percent": 30
+      },
+      {
+        "group": "Upper Back",
+        "percent": 25
+      },
+      {
+        "group": "Biceps",
+        "percent": 15
+      },
+      {
+        "group": "Functional",
+        "percent": 20
+      },
+      {
+        "group": "Quads",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "fu4",
     "name": "Sled Push",
     "muscleGroup": "Functional",
     "trackingMode": "distance",
-    "muscleDistribution": [{"group":"Functional","percent":40},{"group":"Quads","percent":25},{"group":"Glutes","percent":20},{"group":"Lower Legs","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Functional",
+        "percent": 40
+      },
+      {
+        "group": "Quads",
+        "percent": 25
+      },
+      {
+        "group": "Glutes",
+        "percent": 20
+      },
+      {
+        "group": "Lower Legs",
+        "percent": 15
+      }
+    ]
   },
   {
     "id": "fu5",
     "name": "Sled Pull",
     "muscleGroup": "Functional",
     "trackingMode": "distance",
-    "muscleDistribution": [{"group":"Functional","percent":40},{"group":"Hamstrings","percent":20},{"group":"Glutes","percent":20},{"group":"Forearms","percent":20}]
+    "muscleDistribution": [
+      {
+        "group": "Functional",
+        "percent": 35
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 20
+      },
+      {
+        "group": "Glutes",
+        "percent": 20
+      },
+      {
+        "group": "Forearms",
+        "percent": 15
+      },
+      {
+        "group": "Upper Back",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "fu6",
     "name": "Prowler March",
     "muscleGroup": "Functional",
     "trackingMode": "distance",
-    "muscleDistribution": [{"group":"Functional","percent":40},{"group":"Glutes","percent":20},{"group":"Quads","percent":20},{"group":"Lower Legs","percent":20}]
+    "muscleDistribution": [
+      {
+        "group": "Functional",
+        "percent": 40
+      },
+      {
+        "group": "Glutes",
+        "percent": 20
+      },
+      {
+        "group": "Quads",
+        "percent": 20
+      },
+      {
+        "group": "Lower Legs",
+        "percent": 20
+      }
+    ]
   },
   {
     "id": "pl1",
     "name": "Box Jumps",
     "muscleGroup": "Plyos",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Plyos","percent":60},{"group":"Quads","percent":20},{"group":"Glutes","percent":20}]
+    "muscleDistribution": [
+      {
+        "group": "Plyos",
+        "percent": 60
+      },
+      {
+        "group": "Quads",
+        "percent": 20
+      },
+      {
+        "group": "Glutes",
+        "percent": 20
+      }
+    ]
   },
   {
     "id": "pl2",
     "name": "Broad Jumps",
     "muscleGroup": "Plyos",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Plyos","percent":60},{"group":"Glutes","percent":25},{"group":"Hamstrings","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Plyos",
+        "percent": 60
+      },
+      {
+        "group": "Glutes",
+        "percent": 25
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 15
+      }
+    ]
   },
   {
     "id": "pl3",
     "name": "Split Squat Plyos",
     "muscleGroup": "Plyos",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Plyos","percent":50},{"group":"Quads","percent":30},{"group":"Glutes","percent":20}]
+    "muscleDistribution": [
+      {
+        "group": "Plyos",
+        "percent": 45
+      },
+      {
+        "group": "Quads",
+        "percent": 25
+      },
+      {
+        "group": "Glutes",
+        "percent": 20
+      },
+      {
+        "group": "Hip Flexors",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "pl4",
     "name": "Explosive Split Jump Switches",
     "muscleGroup": "Plyos",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Plyos","percent":50},{"group":"Quads","percent":30},{"group":"Glutes","percent":20}]
+    "muscleDistribution": [
+      {
+        "group": "Plyos",
+        "percent": 45
+      },
+      {
+        "group": "Quads",
+        "percent": 25
+      },
+      {
+        "group": "Glutes",
+        "percent": 20
+      },
+      {
+        "group": "Hip Flexors",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "ot1",
     "name": "Burpees",
     "muscleGroup": "Other",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Conditioning","percent":50},{"group":"Shoulders","percent":25},{"group":"Quads","percent":25}]
+    "muscleDistribution": [
+      {
+        "group": "Functional",
+        "percent": 40
+      },
+      {
+        "group": "Chest",
+        "percent": 20
+      },
+      {
+        "group": "Triceps",
+        "percent": 15
+      },
+      {
+        "group": "Shoulders",
+        "percent": 15
+      },
+      {
+        "group": "Quads",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "ot2",
     "name": "Battle Ropes",
     "muscleGroup": "Other",
     "trackingMode": "time",
-    "muscleDistribution": [{"group":"Conditioning","percent":60},{"group":"Shoulders","percent":25},{"group":"Core","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Functional",
+        "percent": 50
+      },
+      {
+        "group": "Shoulders",
+        "percent": 20
+      },
+      {
+        "group": "Forearms",
+        "percent": 15
+      },
+      {
+        "group": "Core",
+        "percent": 15
+      }
+    ]
   },
   {
     "id": "c17",
     "name": "Push Ups",
     "muscleGroup": "Chest",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Chest","percent":55},{"group":"Triceps","percent":25},{"group":"Shoulders","percent":15},{"group":"Core","percent":5}]
+    "muscleDistribution": [
+      {
+        "group": "Chest",
+        "percent": 55
+      },
+      {
+        "group": "Triceps",
+        "percent": 25
+      },
+      {
+        "group": "Shoulders",
+        "percent": 15
+      },
+      {
+        "group": "Core",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "c18",
     "name": "Cable Crossover",
     "muscleGroup": "Chest",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Chest","percent":85},{"group":"Shoulders","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Chest",
+        "percent": 85
+      },
+      {
+        "group": "Shoulders",
+        "percent": 15
+      }
+    ]
   },
   {
     "id": "c19",
     "name": "Svend Press",
     "muscleGroup": "Chest",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Chest","percent":80},{"group":"Shoulders","percent":15},{"group":"Triceps","percent":5}]
+    "muscleDistribution": [
+      {
+        "group": "Chest",
+        "percent": 80
+      },
+      {
+        "group": "Shoulders",
+        "percent": 15
+      },
+      {
+        "group": "Triceps",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "ub11",
     "name": "Meadows Row",
     "muscleGroup": "Upper Back",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Upper Back","percent":50},{"group":"Lats","percent":35},{"group":"Rear Delts","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Upper Back",
+        "percent": 45
+      },
+      {
+        "group": "Lats",
+        "percent": 30
+      },
+      {
+        "group": "Rear Delts",
+        "percent": 10
+      },
+      {
+        "group": "Biceps",
+        "percent": 10
+      },
+      {
+        "group": "Forearms",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "ub12",
     "name": "Kroc Row",
     "muscleGroup": "Upper Back",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Upper Back","percent":40},{"group":"Lats","percent":40},{"group":"Forearms","percent":10},{"group":"Rear Delts","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Lats",
+        "percent": 45
+      },
+      {
+        "group": "Upper Back",
+        "percent": 25
+      },
+      {
+        "group": "Forearms",
+        "percent": 15
+      },
+      {
+        "group": "Biceps",
+        "percent": 10
+      },
+      {
+        "group": "Rear Delts",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "ub13",
     "name": "Landmine Row",
     "muscleGroup": "Upper Back",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Upper Back","percent":50},{"group":"Lats","percent":35},{"group":"Rear Delts","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Upper Back",
+        "percent": 45
+      },
+      {
+        "group": "Lats",
+        "percent": 30
+      },
+      {
+        "group": "Rear Delts",
+        "percent": 10
+      },
+      {
+        "group": "Biceps",
+        "percent": 10
+      },
+      {
+        "group": "Forearms",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "ub14",
     "name": "Inverted Row",
     "muscleGroup": "Upper Back",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Upper Back","percent":45},{"group":"Lats","percent":30},{"group":"Biceps","percent":15},{"group":"Rear Delts","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Upper Back",
+        "percent": 40
+      },
+      {
+        "group": "Lats",
+        "percent": 30
+      },
+      {
+        "group": "Biceps",
+        "percent": 15
+      },
+      {
+        "group": "Rear Delts",
+        "percent": 10
+      },
+      {
+        "group": "Forearms",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "la8",
     "name": "Neutral Grip Pulldown",
     "muscleGroup": "Lats",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Lats","percent":70},{"group":"Biceps","percent":20},{"group":"Upper Back","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Lats",
+        "percent": 65
+      },
+      {
+        "group": "Biceps",
+        "percent": 20
+      },
+      {
+        "group": "Upper Back",
+        "percent": 10
+      },
+      {
+        "group": "Forearms",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "s9",
     "name": "Push Press",
     "muscleGroup": "Shoulders",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Shoulders","percent":45},{"group":"Triceps","percent":25},{"group":"Quads","percent":15},{"group":"Core","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Shoulders",
+        "percent": 50
+      },
+      {
+        "group": "Triceps",
+        "percent": 25
+      },
+      {
+        "group": "Quads",
+        "percent": 10
+      },
+      {
+        "group": "Core",
+        "percent": 10
+      },
+      {
+        "group": "Upper Back",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "s10",
     "name": "Z Press",
     "muscleGroup": "Shoulders",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Shoulders","percent":55},{"group":"Triceps","percent":25},{"group":"Core","percent":20}]
+    "muscleDistribution": [
+      {
+        "group": "Shoulders",
+        "percent": 50
+      },
+      {
+        "group": "Triceps",
+        "percent": 25
+      },
+      {
+        "group": "Core",
+        "percent": 20
+      },
+      {
+        "group": "Upper Back",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "s11",
     "name": "Landmine Press",
     "muscleGroup": "Shoulders",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Shoulders","percent":55},{"group":"Triceps","percent":20},{"group":"Chest","percent":15},{"group":"Core","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Shoulders",
+        "percent": 55
+      },
+      {
+        "group": "Triceps",
+        "percent": 20
+      },
+      {
+        "group": "Chest",
+        "percent": 15
+      },
+      {
+        "group": "Core",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "rd5",
     "name": "Y Raises",
     "muscleGroup": "Rear Delts",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Rear Delts","percent":60},{"group":"Upper Back","percent":25},{"group":"Traps","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Rear Delts",
+        "percent": 60
+      },
+      {
+        "group": "Upper Back",
+        "percent": 25
+      },
+      {
+        "group": "Traps",
+        "percent": 15
+      }
+    ]
   },
   {
     "id": "ha10",
     "name": "Single Leg RDL",
     "muscleGroup": "Hamstrings",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Hamstrings","percent":45},{"group":"Glutes","percent":30},{"group":"Lower Back","percent":15},{"group":"Core","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Hamstrings",
+        "percent": 45
+      },
+      {
+        "group": "Glutes",
+        "percent": 30
+      },
+      {
+        "group": "Lower Back",
+        "percent": 10
+      },
+      {
+        "group": "Core",
+        "percent": 10
+      },
+      {
+        "group": "Forearms",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "q14",
     "name": "Reverse Lunge",
     "muscleGroup": "Quads",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Quads","percent":40},{"group":"Glutes","percent":35},{"group":"Hamstrings","percent":10},{"group":"Hip Flexors","percent":10},{"group":"Core","percent":5}]
+    "muscleDistribution": [
+      {
+        "group": "Quads",
+        "percent": 40
+      },
+      {
+        "group": "Glutes",
+        "percent": 35
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 10
+      },
+      {
+        "group": "Hip Flexors",
+        "percent": 10
+      },
+      {
+        "group": "Core",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "q15",
     "name": "Curtsy Lunge",
     "muscleGroup": "Glutes",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Glutes","percent":55},{"group":"Quads","percent":25},{"group":"Hip Flexors","percent":10},{"group":"Core","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Glutes",
+        "percent": 55
+      },
+      {
+        "group": "Quads",
+        "percent": 25
+      },
+      {
+        "group": "Hip Flexors",
+        "percent": 10
+      },
+      {
+        "group": "Core",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "q16",
     "name": "Cyclist Squat",
     "muscleGroup": "Quads",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Quads","percent":80},{"group":"Glutes","percent":15},{"group":"Core","percent":5}]
+    "muscleDistribution": [
+      {
+        "group": "Quads",
+        "percent": 80
+      },
+      {
+        "group": "Glutes",
+        "percent": 15
+      },
+      {
+        "group": "Core",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "q17",
     "name": "Sissy Squat",
     "muscleGroup": "Quads",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Quads","percent":90},{"group":"Core","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Quads",
+        "percent": 90
+      },
+      {
+        "group": "Core",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "q18",
     "name": "Reverse Hack Squat",
     "muscleGroup": "Hamstrings",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Hamstrings","percent":50},{"group":"Glutes","percent":35},{"group":"Quads","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Hamstrings",
+        "percent": 50
+      },
+      {
+        "group": "Glutes",
+        "percent": 35
+      },
+      {
+        "group": "Quads",
+        "percent": 15
+      }
+    ]
   },
   {
     "id": "q19",
     "name": "ATG Split Squat",
     "muscleGroup": "Quads",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Quads","percent":55},{"group":"Glutes","percent":25},{"group":"Hamstrings","percent":10},{"group":"Hip Flexors","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Quads",
+        "percent": 55
+      },
+      {
+        "group": "Glutes",
+        "percent": 25
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 10
+      },
+      {
+        "group": "Hip Flexors",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "q20",
     "name": "Pistol Squat",
     "muscleGroup": "Quads",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Quads","percent":50},{"group":"Glutes","percent":25},{"group":"Hamstrings","percent":10},{"group":"Hip Flexors","percent":10},{"group":"Core","percent":5}]
+    "muscleDistribution": [
+      {
+        "group": "Quads",
+        "percent": 50
+      },
+      {
+        "group": "Glutes",
+        "percent": 25
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 10
+      },
+      {
+        "group": "Hip Flexors",
+        "percent": 10
+      },
+      {
+        "group": "Core",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "gl6",
     "name": "Hip Abduction Machine",
     "muscleGroup": "Glutes",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Glutes","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Glutes",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "co13",
     "name": "L Sit",
     "muscleGroup": "Core",
     "trackingMode": "time",
-    "muscleDistribution": [{"group":"Core","percent":55},{"group":"Hip Flexors","percent":35},{"group":"Lats","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Core",
+        "percent": 50
+      },
+      {
+        "group": "Hip Flexors",
+        "percent": 35
+      },
+      {
+        "group": "Lats",
+        "percent": 10
+      },
+      {
+        "group": "Triceps",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "co14",
     "name": "Dragon Flag",
     "muscleGroup": "Core",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Core","percent":65},{"group":"Hip Flexors","percent":25},{"group":"Lats","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Core",
+        "percent": 65
+      },
+      {
+        "group": "Hip Flexors",
+        "percent": 25
+      },
+      {
+        "group": "Lats",
+        "percent": 5
+      },
+      {
+        "group": "Shoulders",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "co15",
     "name": "Medicine Ball Slams",
     "muscleGroup": "Core",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Core","percent":70},{"group":"Lats","percent":15},{"group":"Shoulders","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Core",
+        "percent": 60
+      },
+      {
+        "group": "Lats",
+        "percent": 20
+      },
+      {
+        "group": "Shoulders",
+        "percent": 20
+      }
+    ]
   },
   {
     "id": "co16",
     "name": "Cable Woodchop",
     "muscleGroup": "Core",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Core","percent":80},{"group":"Hip Flexors","percent":10},{"group":"Shoulders","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Core",
+        "percent": 80
+      },
+      {
+        "group": "Shoulders",
+        "percent": 10
+      },
+      {
+        "group": "Lats",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "co17",
     "name": "Kneeling Cable Crunch",
     "muscleGroup": "Core",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Core","percent":100}]
+    "muscleDistribution": [
+      {
+        "group": "Core",
+        "percent": 100
+      }
+    ]
   },
   {
     "id": "co18",
     "name": "Flutter Kicks",
     "muscleGroup": "Core",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Core","percent":45},{"group":"Hip Flexors","percent":55}]
+    "muscleDistribution": [
+      {
+        "group": "Hip Flexors",
+        "percent": 65
+      },
+      {
+        "group": "Core",
+        "percent": 35
+      }
+    ]
   },
   {
     "id": "fu7",
     "name": "Kettlebell Swing",
     "muscleGroup": "Functional",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Glutes","percent":35},{"group":"Hamstrings","percent":25},{"group":"Core","percent":20},{"group":"Functional","percent":10},{"group":"Lower Back","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Glutes",
+        "percent": 35
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 25
+      },
+      {
+        "group": "Lower Back",
+        "percent": 15
+      },
+      {
+        "group": "Core",
+        "percent": 15
+      },
+      {
+        "group": "Functional",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "fu8",
     "name": "Kettlebell Snatch",
     "muscleGroup": "Functional",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Functional","percent":30},{"group":"Glutes","percent":25},{"group":"Shoulders","percent":20},{"group":"Hamstrings","percent":15},{"group":"Core","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Functional",
+        "percent": 25
+      },
+      {
+        "group": "Glutes",
+        "percent": 20
+      },
+      {
+        "group": "Shoulders",
+        "percent": 20
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 15
+      },
+      {
+        "group": "Core",
+        "percent": 10
+      },
+      {
+        "group": "Forearms",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "fu9",
     "name": "Kettlebell Clean",
     "muscleGroup": "Functional",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Functional","percent":30},{"group":"Glutes","percent":25},{"group":"Upper Back","percent":15},{"group":"Hamstrings","percent":15},{"group":"Core","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Functional",
+        "percent": 25
+      },
+      {
+        "group": "Glutes",
+        "percent": 20
+      },
+      {
+        "group": "Upper Back",
+        "percent": 15
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 15
+      },
+      {
+        "group": "Core",
+        "percent": 15
+      },
+      {
+        "group": "Forearms",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "fu10",
     "name": "Yoke Carry",
     "muscleGroup": "Functional",
     "trackingMode": "distance",
-    "muscleDistribution": [{"group":"Functional","percent":35},{"group":"Traps","percent":25},{"group":"Core","percent":20},{"group":"Quads","percent":20}]
+    "muscleDistribution": [
+      {
+        "group": "Traps",
+        "percent": 30
+      },
+      {
+        "group": "Core",
+        "percent": 25
+      },
+      {
+        "group": "Quads",
+        "percent": 20
+      },
+      {
+        "group": "Functional",
+        "percent": 15
+      },
+      {
+        "group": "Lower Back",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "fu11",
     "name": "Zercher Carry",
     "muscleGroup": "Functional",
     "trackingMode": "distance",
-    "muscleDistribution": [{"group":"Functional","percent":35},{"group":"Core","percent":30},{"group":"Upper Back","percent":20},{"group":"Biceps","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Core",
+        "percent": 25
+      },
+      {
+        "group": "Upper Back",
+        "percent": 25
+      },
+      {
+        "group": "Biceps",
+        "percent": 20
+      },
+      {
+        "group": "Functional",
+        "percent": 20
+      },
+      {
+        "group": "Quads",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "fu12",
     "name": "Bear Crawl",
     "muscleGroup": "Functional",
     "trackingMode": "time",
-    "muscleDistribution": [{"group":"Functional","percent":35},{"group":"Core","percent":30},{"group":"Shoulders","percent":20},{"group":"Hip Flexors","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Functional",
+        "percent": 35
+      },
+      {
+        "group": "Core",
+        "percent": 30
+      },
+      {
+        "group": "Shoulders",
+        "percent": 20
+      },
+      {
+        "group": "Hip Flexors",
+        "percent": 15
+      }
+    ]
   },
   {
     "id": "fu13",
     "name": "Turkish Get Up",
     "muscleGroup": "Functional",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Functional","percent":30},{"group":"Core","percent":25},{"group":"Shoulders","percent":20},{"group":"Glutes","percent":15},{"group":"Hip Flexors","percent":10}]
+    "muscleDistribution": [
+      {
+        "group": "Functional",
+        "percent": 30
+      },
+      {
+        "group": "Core",
+        "percent": 25
+      },
+      {
+        "group": "Shoulders",
+        "percent": 20
+      },
+      {
+        "group": "Glutes",
+        "percent": 15
+      },
+      {
+        "group": "Hip Flexors",
+        "percent": 10
+      }
+    ]
   },
   {
     "id": "pl5",
     "name": "Depth Jumps",
     "muscleGroup": "Plyos",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Plyos","percent":55},{"group":"Quads","percent":25},{"group":"Glutes","percent":20}]
+    "muscleDistribution": [
+      {
+        "group": "Plyos",
+        "percent": 55
+      },
+      {
+        "group": "Quads",
+        "percent": 25
+      },
+      {
+        "group": "Glutes",
+        "percent": 20
+      }
+    ]
   },
   {
     "id": "pl6",
     "name": "Pogo Hops",
     "muscleGroup": "Plyos",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Plyos","percent":60},{"group":"Calves","percent":25},{"group":"Lower Legs","percent":15}]
+    "muscleDistribution": [
+      {
+        "group": "Plyos",
+        "percent": 60
+      },
+      {
+        "group": "Calves",
+        "percent": 25
+      },
+      {
+        "group": "Lower Legs",
+        "percent": 15
+      }
+    ]
   },
   {
     "id": "pl7",
     "name": "Bounds",
     "muscleGroup": "Plyos",
     "trackingMode": "distance",
-    "muscleDistribution": [{"group":"Plyos","percent":55},{"group":"Glutes","percent":25},{"group":"Quads","percent":15},{"group":"Hamstrings","percent":5}]
+    "muscleDistribution": [
+      {
+        "group": "Plyos",
+        "percent": 50
+      },
+      {
+        "group": "Glutes",
+        "percent": 25
+      },
+      {
+        "group": "Quads",
+        "percent": 15
+      },
+      {
+        "group": "Hamstrings",
+        "percent": 5
+      },
+      {
+        "group": "Hip Flexors",
+        "percent": 5
+      }
+    ]
   },
   {
     "id": "pl8",
     "name": "Tuck Jumps",
     "muscleGroup": "Plyos",
     "trackingMode": "reps",
-    "muscleDistribution": [{"group":"Plyos","percent":55},{"group":"Quads","percent":25},{"group":"Hip Flexors","percent":20}]
+    "muscleDistribution": [
+      {
+        "group": "Plyos",
+        "percent": 50
+      },
+      {
+        "group": "Quads",
+        "percent": 25
+      },
+      {
+        "group": "Hip Flexors",
+        "percent": 15
+      },
+      {
+        "group": "Core",
+        "percent": 10
+      }
+    ]
   }
 ]
