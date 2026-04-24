@@ -79,7 +79,7 @@ const getTargetForSlug = (slug: string, targets: Record<string, number> = BASE_V
   return totalTarget;
 };
 
-export function BodyMap({ muscleGroupData, heatMode = 'relative', volumeTargets, onMuscleClick }: BodyMapProps) {
+export function BodyMap({ muscleGroupData, heatMode = 'target', volumeTargets, onMuscleClick }: BodyMapProps) {
   const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 

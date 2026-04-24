@@ -59,8 +59,8 @@ export default function Progress() {
   const { user } = useFirebase();
   const [view, setView] = useState<'weekly-volume' | 'session-volume' | 'strength' | 'conditioning' | 'battery'>('weekly-volume');
   const [volumeRange, setVolumeRange] = useState<'24h' | '72h' | '1w' | '2w' | '1m' | '3m'>('1w');
-  const [heatMode, setHeatMode] = useState<'relative' | 'target'>('relative');
-  const [sessionHeatMode, setSessionHeatMode] = useState<'relative' | 'target'>('relative');
+  const [heatMode, setHeatMode] = useState<'relative' | 'target'>('target');
+  const [sessionHeatMode, setSessionHeatMode] = useState<'relative' | 'target'>('target');
   const [conditioningRange, setConditioningRange] = useState<'24h' | '72h' | '1w' | '2w' | '1m' | '3m' | 'all'>('all');
   const [selectedExercise, setSelectedExercise] = useState(INITIAL_EXERCISES[5].name); // Flat Bench Press
   const [selectedWorkoutId, setSelectedWorkoutId] = useState<string | null>(null);
@@ -76,6 +76,12 @@ export default function Progress() {
   const [muscleDrilldown, setMuscleDrilldown] = useState<{
     open: boolean;
     muscleGroup: string;
+    context: 'weekly' | 'session';
+  } | null>(null);
+
+  const [exerciseDrilldown, setExerciseDrilldown] = useState<{
+    open: boolean;
+    exerciseName: string;
     context: 'weekly' | 'session';
   } | null>(null);
 
@@ -449,6 +455,112 @@ export default function Progress() {
     };
   }, [
     muscleDrilldown,
+    selectedWorkout,
+    history,
+    volumeRange,
+    useCustomRange,
+    customStartDate,
+    customEndDate,
+  ]);
+
+  const exerciseDrilldownData = useMemo(() => {
+    if (!exerciseDrilldown?.open || !exerciseDrilldown.exerciseName) return null;
+
+    const targetExercise = exerciseDrilldown.exerciseName;
+
+    const sourceWorkouts =
+      exerciseDrilldown.context === 'session' && selectedWorkout
+        ? [selectedWorkout]
+        : (() => {
+            if (history.length === 0) return [];
+
+            let cutoffDate = new Date();
+            let endDate = new Date();
+
+            if (useCustomRange && customStartDate && customEndDate) {
+              cutoffDate = startOfDay(parseISO(customStartDate));
+              endDate = endOfDay(parseISO(customEndDate));
+            } else {
+              switch (volumeRange) {
+                case '24h':
+                  cutoffDate = subDays(new Date(), 1);
+                  break;
+                case '72h':
+                  cutoffDate = subDays(new Date(), 3);
+                  break;
+                case '1w':
+                  cutoffDate = startOfWeek(new Date(), { weekStartsOn: 0 });
+                  break;
+                case '2w':
+                  cutoffDate = startOfDay(subDays(new Date(), 14));
+                  break;
+                case '1m':
+                  cutoffDate = startOfDay(subDays(new Date(), 30));
+                  break;
+                case '3m':
+                  cutoffDate = startOfDay(subDays(new Date(), 90));
+                  break;
+              }
+            }
+
+            return history.filter(w => {
+              const date = new Date(w.date);
+              return isAfter(date, cutoffDate) && (useCustomRange ? date <= endDate : true);
+            });
+          })();
+
+    const muscleMap: Record<string, { name: string; volume: number }> = {};
+    const entries: { workoutName: string; date: string; volume: number }[] = [];
+    let totalVolume = 0;
+
+    sourceWorkouts.forEach(w => {
+      (w.exercises || []).forEach(ex => {
+        if (ex.name !== targetExercise) return;
+
+        const exerciseVolume = calculateVolume(ex);
+        if (exerciseVolume <= 0) return;
+
+        totalVolume += exerciseVolume;
+        entries.push({
+          workoutName: w.workoutName || 'Workout',
+          date: w.date,
+          volume: exerciseVolume,
+        });
+
+        const distribution = getExerciseDistribution(ex);
+
+        distribution.forEach((d: any) => {
+          const group = d.group || 'Other';
+          const percent = Number(d.percent || 0);
+          const contribution = exerciseVolume * (percent / 100);
+
+          if (contribution <= 0) return;
+
+          if (!muscleMap[group]) {
+            muscleMap[group] = { name: group, volume: 0 };
+          }
+
+          muscleMap[group].volume += contribution;
+        });
+      });
+    });
+
+    const muscleGroups = Object.values(muscleMap)
+      .map(mg => ({
+        ...mg,
+        percent: totalVolume > 0 ? (mg.volume / totalVolume) * 100 : 0,
+      }))
+      .sort((a, b) => b.volume - a.volume);
+
+    return {
+      exerciseName: targetExercise,
+      context: exerciseDrilldown.context,
+      totalVolume,
+      muscleGroups,
+      entries,
+    };
+  }, [
+    exerciseDrilldown,
     selectedWorkout,
     history,
     volumeRange,
@@ -930,7 +1042,16 @@ export default function Progress() {
                 <CardContent>
                   <div className="space-y-3">
                     {weeklyVolume.exerciseData.slice(0, 4).map((ex, i) => (
-                      <div key={i} className="space-y-1">
+                      <button 
+                        key={i} 
+                        className="w-full text-left space-y-1 cursor-pointer hover:border-maroon/40 hover:bg-maroon/5 rounded p-1 transition-colors border border-transparent"
+                        onClick={() => setExerciseDrilldown({
+                          open: true,
+                          exerciseName: ex.name,
+                          context: 'weekly',
+                        })}
+                        type="button"
+                      >
                         <div className="flex justify-between text-xs">
                           <span className="text-muted-foreground font-medium truncate w-32">{ex.name}</span>
                           <span className="text-muted-foreground">{((ex.value / weeklyVolume.totalBodyVolume) * 100).toFixed(1)}%</span>
@@ -941,7 +1062,7 @@ export default function Progress() {
                             style={{ width: `${(ex.value / weeklyVolume.totalBodyVolume) * 100}%` }}
                           />
                         </div>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </CardContent>
@@ -1195,10 +1316,19 @@ export default function Progress() {
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {(latestWorkoutSummary.exercises || []).map((ex, i) => (
-                      <div key={i} className="flex justify-between items-center p-3 bg-muted rounded-lg border border-border">
+                      <button 
+                        key={i} 
+                        className="flex justify-between items-center p-3 bg-muted rounded-lg border border-border cursor-pointer hover:border-maroon/40 hover:bg-maroon/5 transition-all w-full"
+                        onClick={() => setExerciseDrilldown({
+                          open: true,
+                          exerciseName: ex.name,
+                          context: 'session',
+                        })}
+                        type="button"
+                      >
                         <span className="font-medium text-foreground truncate mr-2">{ex.name}</span>
                         <span className="text-maroon font-bold">{ex.volume.toLocaleString()} <span className="text-[10px] text-muted-foreground font-normal uppercase">Vol</span></span>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </CardContent>
@@ -1309,7 +1439,16 @@ export default function Progress() {
                   <CardContent>
                     <div className="space-y-3">
                       {latestWorkoutSummary.exerciseData.slice(0, 4).map((ex, i) => (
-                        <div key={i} className="space-y-1">
+                        <button 
+                          key={i} 
+                          className="w-full text-left space-y-1 cursor-pointer hover:border-maroon/40 hover:bg-maroon/5 rounded p-1 transition-colors border border-transparent"
+                          onClick={() => setExerciseDrilldown({
+                            open: true,
+                            exerciseName: ex.name,
+                            context: 'session',
+                          })}
+                          type="button"
+                        >
                           <div className="flex justify-between text-xs">
                             <span className="text-muted-foreground font-medium truncate w-32">{ex.name}</span>
                             <span className="text-muted-foreground">{((ex.value / latestWorkoutSummary.totalVolume) * 100).toFixed(1)}%</span>
@@ -1320,7 +1459,7 @@ export default function Progress() {
                               style={{ width: `${(ex.value / latestWorkoutSummary.totalVolume) * 100}%` }}
                             />
                           </div>
-                        </div>
+                        </button>
                       ))}
                     </div>
                   </CardContent>
@@ -1908,6 +2047,101 @@ export default function Progress() {
               ) : (
                 <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
                   No contributing exercises found for this muscle group in the selected context.
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={!!exerciseDrilldown?.open}
+        onOpenChange={(open) => {
+          if (!open) setExerciseDrilldown(null);
+        }}
+      >
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {exerciseDrilldownData?.exerciseName || 'Exercise'} Muscle Breakdown
+            </DialogTitle>
+            <DialogDescription>
+              {exerciseDrilldownData?.context === 'session'
+                ? 'Muscle-group contribution from the selected session.'
+                : 'Muscle-group contribution across the selected weekly/range view.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          {exerciseDrilldownData && (
+            <div className="space-y-4">
+              <div className="rounded-lg border border-border bg-muted/40 p-4">
+                <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+                  Total Exercise Volume
+                </div>
+                <div className="text-2xl font-extrabold text-maroon tabular-nums">
+                  {Math.round(exerciseDrilldownData.totalVolume).toLocaleString()} lbs
+                </div>
+              </div>
+
+              {exerciseDrilldownData.muscleGroups.length > 0 ? (
+                <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+                  {exerciseDrilldownData.muscleGroups.map((mg) => (
+                    <div
+                      key={mg.name}
+                      className="rounded-lg border border-border bg-card p-3 space-y-2"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="font-semibold text-foreground truncate">
+                          {mg.name}
+                        </div>
+                        <div className="text-sm font-bold text-maroon tabular-nums shrink-0">
+                          {Math.round(mg.volume).toLocaleString()} lbs
+                        </div>
+                      </div>
+
+                      <div className="h-2 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className="h-full bg-maroon rounded-full"
+                          style={{ width: `${Math.min(100, mg.percent)}%` }}
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                        <span>{mg.percent.toFixed(1)}% of exercise volume</span>
+                        <span>{Math.round(mg.volume).toLocaleString()} lbs</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+                  No muscle distribution found for this exercise.
+                </div>
+              )}
+
+              {exerciseDrilldownData.context === 'weekly' && exerciseDrilldownData.entries.length > 0 && (
+                <div className="rounded-lg border border-border bg-card p-3 space-y-2">
+                  <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+                    Entries
+                  </div>
+                  {exerciseDrilldownData.entries.slice(0, 6).map((entry, idx) => (
+                    <div
+                      key={`${entry.date}-${entry.workoutName}-${idx}`}
+                      className="flex items-center justify-between text-xs text-muted-foreground"
+                    >
+                      <span className="truncate">
+                        {entry.workoutName} · {format(new Date(entry.date), 'MMM d')}
+                      </span>
+                      <span className="tabular-nums shrink-0">
+                        {Math.round(entry.volume).toLocaleString()} lbs
+                      </span>
+                    </div>
+                  ))}
+                  {exerciseDrilldownData.entries.length > 6 && (
+                    <div className="text-[11px] text-muted-foreground italic">
+                      + {exerciseDrilldownData.entries.length - 6} more entries
+                    </div>
+                  )}
                 </div>
               )}
             </div>

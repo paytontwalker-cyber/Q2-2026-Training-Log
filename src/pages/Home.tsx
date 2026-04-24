@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { LayoutDashboard, History, Dumbbell, LineChart, HeartPulse, Users, Settings, X, Hash } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useDashboardData } from '@/src/lib/hooks';
 import { BodyMap } from '@/src/components/BodyMap';
 import { format } from 'date-fns';
@@ -44,6 +45,7 @@ const getExerciseDistribution = (ex: any) => {
 export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) => void }) {
   const { weeklyVolume, recentPRs, recentActivity, loading, weeklyWorkouts } = useDashboardData();
   const [drilldownMuscle, setDrilldownMuscle] = useState<string | null>(null);
+  const [homeHeatMode, setHomeHeatMode] = useState<'target' | 'relative'>('target');
   
   const today = format(new Date(), 'EEEE, MMMM d');
 
@@ -120,6 +122,7 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* TODO: Wire Home exercise drilldown once weekly workout entries are exposed to Home. */}
         <Card className="border-border">
           <CardHeader><CardTitle className="text-lg">Recent PRs</CardTitle></CardHeader>
           <CardContent>
@@ -149,10 +152,28 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
       </div>
 
       <Card className="border-border">
-        <CardHeader><CardTitle className="text-lg">Weekly Training Intensity</CardTitle></CardHeader>
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <CardTitle className="text-lg">Weekly Training Intensity</CardTitle>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+              Heat Mode
+            </span>
+            <Select value={homeHeatMode} onValueChange={(value) => setHomeHeatMode(value as 'target' | 'relative')}>
+              <SelectTrigger className="h-8 w-[130px] text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="target">Target</SelectItem>
+                <SelectItem value="relative">Relative</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
         <CardContent>
+          {/* TODO: Pass personalized volumeTargets into Home BodyMap once profile targets are exposed to Home. */}
           <BodyMap 
             muscleGroupData={sortedMuscleGroupData} 
+            heatMode={homeHeatMode}
             onMuscleClick={setDrilldownMuscle} 
           />
         </CardContent>
