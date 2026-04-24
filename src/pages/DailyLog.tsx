@@ -1494,6 +1494,21 @@ export default function DailyLog() {
     return { currentSplit, sanitizedSplit };
   }, [library, splits]);
 
+  const formatMirrorExerciseDetails = (ex: ExerciseEntry): string => {
+    let details = '';
+    if (ex.trackingMode === 'distance') {
+      details = `${ex.sets} sets x ${ex.distance || 0}${ex.distanceUnit || 'm'} @ ${ex.weight || 0} lbs`;
+    } else if (ex.usePerSetWeights && ex.perSetWeights && ex.perSetWeights.length > 0) {
+      details = `${ex.sets}x${ex.reps || '-'} (${ex.perSetWeights.join(', ')}) lbs`;
+    } else {
+      details = `${ex.sets}x${ex.reps || '-'} @ ${ex.weight || 0} lbs`;
+    }
+    if (ex.rpe) {
+      details += ` · RPE ${ex.rpe}`;
+    }
+    return details;
+  };
+
   // Smart-pick: the most recent past workout that best matches the current day
   const smartMatchWorkout = useMemo<Workout | null>(() => {
     if (!allWorkouts.length) return null;
@@ -2647,12 +2662,21 @@ export default function DailyLog() {
                     <div className="space-y-1.5">
                       <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Exercises</Label>
                       {exList.map((ex: ExerciseEntry) => (
-                        <div key={ex.id} className="text-sm flex justify-between items-baseline py-1 border-b border-border/40 last:border-b-0">
-                          <span className="font-medium">{ex.name}</span>
-                          <span className="text-muted-foreground text-xs tabular-nums">
-                            {ex.sets}×{ex.reps || '-'} @ {ex.weight || 0} lbs
-                            {ex.rpe ? ` · RPE ${ex.rpe}` : ''}
-                          </span>
+                        <div key={ex.id} className="text-sm py-1 border-b border-border/40 last:border-b-0 space-y-1">
+                          <div className="flex justify-between items-baseline">
+                            <span className="font-medium">{ex.name}</span>
+                            <span className="text-muted-foreground text-xs tabular-nums">
+                              {formatMirrorExerciseDetails(ex)}
+                            </span>
+                          </div>
+                          {ex.superset && (
+                            <div className="flex justify-between items-baseline pl-3 border-l-2 border-maroon/30 text-xs">
+                              <span className="font-medium text-maroon/80">+ {ex.superset.name}</span>
+                              <span className="text-muted-foreground tabular-nums">
+                                {formatMirrorExerciseDetails(ex.superset)}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -2662,20 +2686,155 @@ export default function DailyLog() {
                 {/* Conditioning */}
                 {(() => {
                   const condBlocks = (mirrorViewWorkout.blocks || []).filter((b: any) => b.kind === 'cardio' || b.kind === 'hiit');
-                  if (condBlocks.length === 0 && !mirrorViewWorkout.conditioning?.name) return null;
+                  if (condBlocks.length === 0 && !mirrorViewWorkout.conditioning?.name && !mirrorViewWorkout.conditioning?.type) return null;
                   return (
-                    <div className="space-y-1.5">
-                      <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Conditioning</Label>
-                      {condBlocks.length > 0 ? condBlocks.map((b: any, i: number) => (
-                        <div key={b.id || i} className="text-sm text-muted-foreground">
-                          {b.kind === 'hiit' ? (b.programmedName || b.hiitType || 'HIIT') : (b.programmedName || b.subtype || 'Cardio')}
-                          {b.programmedDistance ? ` — ${b.programmedDistance}${b.programmedUnits || ''}` : ''}
-                          {b.programmedDuration ? ` / ${b.programmedDuration}` : ''}
-                        </div>
-                      )) : (
-                        <div className="text-sm text-muted-foreground">
-                          {mirrorViewWorkout.conditioning?.name}
-                          {mirrorViewWorkout.conditioning?.workDistance ? ` — ${mirrorViewWorkout.conditioning.workDistance}${mirrorViewWorkout.conditioning.workUnits || ''}` : ''}
+                    <div className="space-y-3">
+                      <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Session Details</Label>
+                      {condBlocks.length > 0 ? condBlocks.map((block: any, i: number) => {
+                        const subtype = block.kind === 'hiit' ? (block.hiitType || block.subtype || 'HIIT') : (block.subtype || 'Cardio');
+                        return (
+                          <div key={block.id || i} className="bg-muted/50 p-3 rounded border border-border space-y-2">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[10px] py-0.5 px-1.5 rounded uppercase font-bold bg-maroon/5 text-maroon border border-maroon/10">
+                                {subtype}
+                              </span>
+                              {(block.programmedName || (block.kind === 'cardio' && block.subtype)) && (
+                                <span className="text-xs text-muted-foreground">{block.programmedName || block.subtype}</span>
+                              )}
+                            </div>
+                            
+                            {block.subtype === 'Repeats' && (
+                              <div className="space-y-2">
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                                  {block.splitCount !== undefined && (
+                                    <div className="flex justify-between"><span className="text-muted-foreground">Reps:</span><span className="text-foreground font-medium">{block.splitCount}</span></div>
+                                  )}
+                                  {block.restValue !== undefined && block.restValue > 0 && (
+                                    <div className="flex justify-between"><span className="text-muted-foreground">Rest:</span><span className="text-foreground font-medium">{block.restValue} {block.restUnit || 'sec'}</span></div>
+                                  )}
+                                  {block.averageHeartRate !== undefined && block.averageHeartRate > 0 && (
+                                    <div className="flex justify-between col-span-2"><span className="text-muted-foreground">Avg HR:</span><span className="text-foreground font-medium">{block.averageHeartRate}</span></div>
+                                  )}
+                                </div>
+                                {block.splits && block.splits.length > 0 && block.splits.some((s: any) => s.timeStr || s.distanceVal) && (
+                                  <div className="pt-2 border-t border-border/50">
+                                    <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">Splits</span>
+                                    <div className="flex flex-wrap gap-1">
+                                      {block.splits.map((s: any, j: number) => (
+                                        (s.timeStr || s.distanceVal) && (
+                                          <span key={j} className="bg-card px-1.5 py-0.5 rounded border border-border text-[10px] text-muted-foreground">
+                                            {s.distanceVal || ''}{s.distanceUnit ? s.distanceUnit : ''} {s.timeStr || ''}
+                                          </span>
+                                        )
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                {block.programmedNotes && (
+                                  <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-border/50 whitespace-pre-wrap break-words">{block.programmedNotes}</p>
+                                )}
+                              </div>
+                            )}
+
+                            {block.subtype === 'Zone 2' && (
+                              <div className="space-y-2">
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                                  {block.programmedDistanceVal !== undefined && block.programmedDistanceVal > 0 && (
+                                    <div className="flex justify-between"><span className="text-muted-foreground">Distance:</span><span className="text-foreground font-medium">{block.programmedDistanceVal} {block.programmedDistanceUnit || 'mi'}</span></div>
+                                  )}
+                                  {block.zone2TimeStr && (
+                                    <div className="flex justify-between"><span className="text-muted-foreground">Time:</span><span className="text-foreground font-medium">{block.zone2TimeStr}</span></div>
+                                  )}
+                                  {block.zone2AverageHeartRate !== undefined && block.zone2AverageHeartRate > 0 && (
+                                    <div className="flex justify-between"><span className="text-muted-foreground">Avg HR:</span><span className="text-foreground font-medium">{block.zone2AverageHeartRate}</span></div>
+                                  )}
+                                </div>
+                                {block.programmedNotes && (
+                                  <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-border/50 whitespace-pre-wrap break-words">{block.programmedNotes}</p>
+                                )}
+                              </div>
+                            )}
+
+                            {block.subtype !== 'Repeats' && block.subtype !== 'Zone 2' && block.kind === 'cardio' && (
+                              <div className="space-y-2">
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                                  {(block.programmedDistanceVal || block.programmedDistance) && (
+                                    <div className="flex justify-between"><span className="text-muted-foreground">Distance:</span><span className="text-foreground font-medium">{block.programmedDistanceVal || block.programmedDistance} {block.programmedDistanceUnit || ''}</span></div>
+                                  )}
+                                  {(block.programmedDurationVal || block.programmedDuration) && (
+                                    <div className="flex justify-between"><span className="text-muted-foreground">Time:</span><span className="text-foreground font-medium">{block.programmedDurationVal || block.programmedDuration} {block.programmedDurationUnit || ''}</span></div>
+                                  )}
+                                </div>
+                                {block.programmedNotes && (
+                                  <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-border/50 whitespace-pre-wrap break-words">{block.programmedNotes}</p>
+                                )}
+                              </div>
+                            )}
+
+                            {block.kind === 'hiit' && (
+                              <div className="space-y-2">
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                                  {block.programmedReps !== undefined && block.programmedReps > 0 && (
+                                    <div className="flex justify-between"><span className="text-muted-foreground">Rounds:</span><span className="text-foreground font-medium">{block.programmedReps}</span></div>
+                                  )}
+                                  {(block.programmedWorkDistanceVal || block.programmedWorkDistance) && (
+                                    <div className="flex justify-between"><span className="text-muted-foreground">Work Dist:</span><span className="text-foreground font-medium">{block.programmedWorkDistanceVal || block.programmedWorkDistance} {block.programmedWorkDistanceUnit || ''}</span></div>
+                                  )}
+                                  {(block.programmedWorkDurationVal || block.programmedWorkDuration) && (
+                                    <div className="flex justify-between"><span className="text-muted-foreground">Work Time:</span><span className="text-foreground font-medium">{block.programmedWorkDurationVal || block.programmedWorkDuration} {block.programmedWorkDurationUnit || ''}</span></div>
+                                  )}
+                                </div>
+                                {block.structureNotes && (
+                                  <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-border/50 whitespace-pre-wrap break-words">{block.structureNotes}</p>
+                                )}
+                                {block.programmedNotes && block.programmedNotes !== block.structureNotes && (
+                                  <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-border/50 whitespace-pre-wrap break-words">{block.programmedNotes}</p>
+                                )}
+                              </div>
+                            )}
+
+                          </div>
+                        );
+                      }) : (
+                        <div className="bg-muted/50 p-3 rounded border border-border space-y-2">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] py-0.5 px-1.5 rounded uppercase font-bold bg-maroon/5 text-maroon border border-maroon/10">
+                              {mirrorViewWorkout.conditioning?.type || 'CONDITIONING'}
+                            </span>
+                            {mirrorViewWorkout.conditioning?.name && (
+                              <span className="text-xs text-muted-foreground">{mirrorViewWorkout.conditioning.name}</span>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                            {(mirrorViewWorkout.conditioning?.workDistance || mirrorViewWorkout.conditioning?.workDuration) && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Work:</span>
+                                <span className="text-foreground font-medium">{mirrorViewWorkout.conditioning.workDistance || mirrorViewWorkout.conditioning.workDuration} {mirrorViewWorkout.conditioning.workUnits || ''}</span>
+                              </div>
+                            )}
+                            {mirrorViewWorkout.conditioning?.reps && (
+                              <div className="flex justify-between"><span className="text-muted-foreground">Reps:</span><span className="text-foreground font-medium">{mirrorViewWorkout.conditioning.reps}</span></div>
+                            )}
+                            {mirrorViewWorkout.conditioning?.restType !== 'none' && mirrorViewWorkout.conditioning?.restValue && (
+                              <div className="flex justify-between"><span className="text-muted-foreground">Rest:</span><span className="text-foreground font-medium">{mirrorViewWorkout.conditioning.restValue}</span></div>
+                            )}
+                            {mirrorViewWorkout.conditioning?.targetSplit && (
+                              <div className="flex justify-between"><span className="text-muted-foreground">Target:</span><span className="text-foreground font-medium">{mirrorViewWorkout.conditioning.targetSplit}</span></div>
+                            )}
+                          </div>
+                          {mirrorViewWorkout.conditioning?.actualSplits && mirrorViewWorkout.conditioning.actualSplits.some((s: any) => s) && (
+                            <div className="pt-2 border-t border-border/50">
+                              <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">Splits</span>
+                              <div className="flex flex-wrap gap-1">
+                                {mirrorViewWorkout.conditioning.actualSplits.map((split: any, i: number) => split && (
+                                  <span key={i} className="bg-card px-1.5 py-0.5 rounded border border-border text-[10px] text-muted-foreground">{split}</span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {mirrorViewWorkout.conditioning?.notes && (
+                            <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-border/50 whitespace-pre-wrap break-words">{mirrorViewWorkout.conditioning.notes}</p>
+                          )}
                         </div>
                       )}
                     </div>
