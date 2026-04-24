@@ -363,17 +363,17 @@ export const storage = {
           d.id === ex.id || d.name.toLowerCase() === ex.name.toLowerCase()
         );
         if (def) {
-          if (
-            !ex.muscleDistribution || ex.muscleDistribution.length === 0 ||
-            ex.muscleGroup !== def.muscleGroup ||
-            ex.trackingMode !== def.trackingMode
-          ) {
+          const needsMuscleDistribution = !ex.muscleDistribution || ex.muscleDistribution.length === 0;
+          const needsMuscleGroup = !ex.muscleGroup;
+          const needsTrackingMode = !ex.trackingMode;
+
+          if (needsMuscleDistribution || needsMuscleGroup || needsTrackingMode) {
             changed = true;
             return { 
               ...ex, 
-              muscleDistribution: def.muscleDistribution,
-              muscleGroup: def.muscleGroup,
-              trackingMode: def.trackingMode
+              ...(needsMuscleDistribution ? { muscleDistribution: def.muscleDistribution } : {}),
+              ...(needsMuscleGroup ? { muscleGroup: def.muscleGroup } : {}),
+              ...(needsTrackingMode ? { trackingMode: def.trackingMode } : {})
             };
           }
         }
@@ -410,11 +410,10 @@ export const storage = {
           );
           if (!def) return false;
           
-          // Check if any of the fields differ
           return (
             !ex.muscleDistribution || ex.muscleDistribution.length === 0 ||
-            ex.muscleGroup !== def.muscleGroup ||
-            ex.trackingMode !== def.trackingMode
+            !ex.muscleGroup ||
+            !ex.trackingMode
           );
         });
 
@@ -431,11 +430,16 @@ export const storage = {
             );
             if (def) {
               const docRef = doc(db, 'exercises', libDocId(uid, ex.id));
+              
+              const needsMuscleDistribution = !ex.muscleDistribution || ex.muscleDistribution.length === 0;
+              const needsMuscleGroup = !ex.muscleGroup;
+              const needsTrackingMode = !ex.trackingMode;
+
               await setDoc(docRef, deepRemoveUndefined({ 
                 ...ex, 
-                muscleDistribution: def.muscleDistribution,
-                muscleGroup: def.muscleGroup,
-                trackingMode: def.trackingMode,
+                ...(needsMuscleDistribution ? { muscleDistribution: def.muscleDistribution } : {}),
+                ...(needsMuscleGroup ? { muscleGroup: def.muscleGroup } : {}),
+                ...(needsTrackingMode ? { trackingMode: def.trackingMode } : {}),
                 uid 
               }));
             }

@@ -53,6 +53,8 @@ import { db } from '../firebase';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
 import { getDistanceInMeters, normalizeConditioning } from '../lib/workoutUtils';
+import { resolveExerciseDistribution } from '@/src/lib/exerciseDistribution';
+import { ExerciseLibraryEntry } from '@/src/types';
 import { BodyMap, getVolumeColor, THERMAL_COLORS } from '@/src/components/BodyMap';
 
 export default function Progress() {
@@ -72,6 +74,7 @@ export default function Progress() {
   const [customEndDate, setCustomEndDate] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [library, setLibrary] = useState<ExerciseLibraryEntry[]>([]);
 
   const [muscleDrilldown, setMuscleDrilldown] = useState<{
     open: boolean;
@@ -108,6 +111,14 @@ export default function Progress() {
     if (!user) return;
     const unsubscribe = storage.subscribeToWorkouts(user.uid, (data) => {
       setHistory(data);
+    });
+    return () => unsubscribe();
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    const unsubscribe = storage.subscribeToLibrary(user.uid, (data) => {
+      setLibrary(data);
     });
     return () => unsubscribe();
   }, [user]);
@@ -155,20 +166,7 @@ export default function Progress() {
   };
 
   const getExerciseDistribution = (ex: any) => {
-    let distribution = ex.muscleDistribution;
-
-    if (!distribution || distribution.length === 0) {
-      const libraryEx = INITIAL_EXERCISES.find(le => le.name === ex.name);
-      if (libraryEx?.muscleDistribution?.length) {
-        distribution = libraryEx.muscleDistribution;
-      } else if (ex.muscleGroup) {
-        distribution = [{ group: ex.muscleGroup, percent: 100 }];
-      } else {
-        distribution = [{ group: 'Other', percent: 100 }];
-      }
-    }
-
-    return distribution;
+    return resolveExerciseDistribution(ex, library);
   };
 
   const chartData = useMemo(() => {
@@ -253,7 +251,7 @@ export default function Progress() {
       muscleGroupData,
       exerciseData
     };
-  }, [selectedWorkout]);
+  }, [selectedWorkout, library]);
 
   const sessionVolumeTargets = useMemo(() => {
     if (!latestWorkoutSummary) return null;
@@ -365,7 +363,8 @@ export default function Progress() {
     volumeRange,
     useCustomRange,
     customStartDate,
-    customEndDate
+    customEndDate,
+    library
   ]);
 
   const muscleDrilldownData = useMemo(() => {
@@ -467,6 +466,7 @@ export default function Progress() {
     useCustomRange,
     customStartDate,
     customEndDate,
+    library,
   ]);
 
   const exerciseDrilldownData = useMemo(() => {
@@ -573,6 +573,7 @@ export default function Progress() {
     useCustomRange,
     customStartDate,
     customEndDate,
+    library,
   ]);
 
   const volumeTargets = useMemo(() => {

@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useFirebase } from '@/src/components/FirebaseProvider';
 import { storage } from '@/src/services/storage';
-import { Workout, ExerciseEntry } from '@/src/types';
+import { Workout, ExerciseEntry, ExerciseLibraryEntry } from '@/src/types';
 import { format, startOfWeek, endOfWeek } from 'date-fns';
 import { INITIAL_EXERCISES } from '@/src/constants';
+import { resolveExerciseDistribution } from '@/src/lib/exerciseDistribution';
 
 export function useMediaQuery(query: string): boolean {
   const [matches, setMatches] = useState(false);
@@ -53,6 +54,7 @@ export function useDashboardData() {
     workouts: [],
     loading: true,
   });
+  const [library, setLibrary] = useState<ExerciseLibraryEntry[]>([]);
 
   useEffect(() => {
     if (!user) {
@@ -60,11 +62,18 @@ export function useDashboardData() {
       return;
     }
 
-    const unsubscribe = storage.subscribeToWorkouts(user.uid, (workouts) => {
+    const unsubscribeWorkouts = storage.subscribeToWorkouts(user.uid, (workouts) => {
       setData({ workouts, loading: false });
     });
 
-    return () => unsubscribe();
+    const unsubscribeLibrary = storage.subscribeToLibrary(user.uid, (data) => {
+      setLibrary(data);
+    });
+
+    return () => {
+      unsubscribeWorkouts();
+      unsubscribeLibrary();
+    };
   }, [user]);
 
   const weeklyWorkouts = data.workouts.filter(w => {
@@ -79,15 +88,7 @@ export function useDashboardData() {
       const volume = calculateExerciseVolume(ex);
       if (volume === 0) return;
 
-      let distribution = ex.muscleDistribution;
-      if (!distribution || distribution.length === 0) {
-        const libraryEx = INITIAL_EXERCISES.find(le => le.name === ex.name);
-        if (libraryEx && libraryEx.muscleDistribution && libraryEx.muscleDistribution.length > 0) {
-          distribution = libraryEx.muscleDistribution;
-        } else {
-          distribution = [{ group: ex.muscleGroup, percent: 100 }];
-        }
-      }
+      const distribution = resolveExerciseDistribution(ex, library);
 
       distribution.forEach(d => {
         const groupVol = volume * (d.percent / 100);
