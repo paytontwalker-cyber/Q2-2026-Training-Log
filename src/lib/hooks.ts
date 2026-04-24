@@ -128,5 +128,6 @@ export function useDashboardData() {
     weeklyVolume,
     recentPRs,
     recentActivity,
+    library,
   };
 }

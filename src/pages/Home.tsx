@@ -31,25 +31,20 @@ const calculateVolume = (ex: any) => {
   return ex.sets * (ex.reps || 0) * (ex.weight || 0);
 };
 
-const getExerciseDistribution = (ex: any) => {
-  let distribution = ex.muscleDistribution;
-  if (!distribution || distribution.length === 0) {
-    const libraryEx = INITIAL_EXERCISES.find(le => le.name === ex.name);
-    if (libraryEx?.muscleDistribution?.length) {
-      distribution = libraryEx.muscleDistribution;
-    } else if (ex.muscleGroup) {
-      distribution = [{ group: ex.muscleGroup, percent: 100 }];
-    } else {
-      distribution = [{ group: 'Other', percent: 100 }];
-    }
-  }
-  return distribution;
+import { resolveExerciseDistribution } from '@/src/lib/exerciseDistribution';
+
+const normalizeMuscleName = (name: string) => String(name || '').trim().toLowerCase();
+
+const getExerciseAndSupersetEntries = (ex: any): any[] => {
+  const entries = [ex];
+  if (ex?.superset) entries.push(ex.superset);
+  return entries.filter(Boolean);
 };
 
 export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) => void }) {
   const { user } = useFirebase();
   const [userProfile, setUserProfile] = useState<any>(null);
-  const { weeklyVolume, recentPRs, recentActivity, loading, weeklyWorkouts } = useDashboardData();
+  const { weeklyVolume, recentPRs, recentActivity, loading, weeklyWorkouts, library } = useDashboardData();
   const [drilldownMuscle, setDrilldownMuscle] = useState<string | null>(null);
   const [homeHeatMode, setHomeHeatMode] = useState<'target' | 'relative'>('target');
   
@@ -81,26 +76,37 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
     if (!drilldownMuscle) return null;
 
     const exerciseMap: Record<string, { name: string; volume: number; sessions: any[] }> = {};
+    const targetNormalized = normalizeMuscleName(drilldownMuscle);
 
     weeklyWorkouts.forEach(w => {
-      (w.exercises || []).forEach(ex => {
-        const totalExerciseVolume = calculateVolume(ex);
-        const distribution = getExerciseDistribution(ex);
+      (w.exercises || []).forEach(parentEx => {
+        getExerciseAndSupersetEntries(parentEx).forEach(ex => {
+          const totalExerciseVolume = calculateVolume(ex);
+          if (totalExerciseVolume <= 0) return;
 
-        distribution.forEach((d: any) => {
-          if (d.group !== drilldownMuscle) return;
+          const distribution = resolveExerciseDistribution(ex, library);
 
-          const contributedVolume = totalExerciseVolume * ((d.percent || 0) / 100);
-          if (contributedVolume <= 0) return;
+          distribution.forEach((d: any) => {
+            const groupName = d.group || '';
+            if (normalizeMuscleName(groupName) !== targetNormalized) return;
 
-          if (!exerciseMap[ex.name]) {
-            exerciseMap[ex.name] = { name: ex.name, volume: 0, sessions: [] };
-          }
-          exerciseMap[ex.name].volume += contributedVolume;
-          exerciseMap[ex.name].sessions.push({
-            workoutName: w.workoutName || 'Workout',
-            date: w.date,
-            volume: contributedVolume,
+            const percent = Number(d.percent || 0);
+            if (percent <= 0) return;
+
+            const contributedVolume = totalExerciseVolume * (percent / 100);
+            if (contributedVolume <= 0) return;
+
+            const exerciseName = ex.name || 'Unnamed Exercise';
+
+            if (!exerciseMap[exerciseName]) {
+              exerciseMap[exerciseName] = { name: exerciseName, volume: 0, sessions: [] };
+            }
+            exerciseMap[exerciseName].volume += contributedVolume;
+            exerciseMap[exerciseName].sessions.push({
+              workoutName: w.workoutName || 'Workout',
+              date: w.date,
+              volume: contributedVolume,
+            });
           });
         });
       });
@@ -110,7 +116,7 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
     const totalVolume = exercises.reduce((sum, ex) => sum + ex.volume, 0);
 
     return { muscleGroup: drilldownMuscle, totalVolume, exercises };
-  }, [drilldownMuscle, weeklyWorkouts]);
+  }, [drilldownMuscle, weeklyWorkouts, library]);
 
   if (loading) return <div>Loading...</div>;
 

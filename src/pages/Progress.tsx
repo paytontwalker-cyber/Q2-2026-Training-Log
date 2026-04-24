@@ -142,6 +142,14 @@ export default function Progress() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const normalizeMuscleName = (name: string) => String(name || '').trim().toLowerCase();
+
+  const getExerciseAndSupersetEntries = (ex: any): any[] => {
+    const entries = [ex];
+    if (ex?.superset) entries.push(ex.superset);
+    return entries.filter(Boolean);
+  };
+
   const calculateVolume = (ex: any) => {
     if (ex.trackingMode === 'distance') {
       // Distance-based volume: sets * (distance / 100) * weight
@@ -418,30 +426,42 @@ export default function Progress() {
       sessions: { workoutName: string; date: string; volume: number }[];
     }> = {};
 
+    const targetNormalized = normalizeMuscleName(targetMuscle);
+
     sourceWorkouts.forEach(w => {
-      (w.exercises || []).forEach(ex => {
-        const totalExerciseVolume = calculateVolume(ex);
-        const distribution = getExerciseDistribution(ex);
+      (w.exercises || []).forEach(parentEx => {
+        getExerciseAndSupersetEntries(parentEx).forEach(ex => {
+          const totalExerciseVolume = calculateVolume(ex);
+          if (totalExerciseVolume <= 0) return;
 
-        distribution.forEach((d: any) => {
-          if (d.group !== targetMuscle) return;
+          const distribution = getExerciseDistribution(ex);
 
-          const contributedVolume = totalExerciseVolume * ((d.percent || 0) / 100);
-          if (contributedVolume <= 0) return;
+          distribution.forEach((d: any) => {
+            const groupName = d.group || '';
+            if (normalizeMuscleName(groupName) !== targetNormalized) return;
 
-          if (!exerciseMap[ex.name]) {
-            exerciseMap[ex.name] = {
-              name: ex.name,
-              volume: 0,
-              sessions: [],
-            };
-          }
+            const percent = Number(d.percent || 0);
+            if (percent <= 0) return;
 
-          exerciseMap[ex.name].volume += contributedVolume;
-          exerciseMap[ex.name].sessions.push({
-            workoutName: w.workoutName || 'Workout',
-            date: w.date,
-            volume: contributedVolume,
+            const contributedVolume = totalExerciseVolume * (percent / 100);
+            if (contributedVolume <= 0) return;
+
+            const exerciseName = ex.name || 'Unnamed Exercise';
+
+            if (!exerciseMap[exerciseName]) {
+              exerciseMap[exerciseName] = {
+                name: exerciseName,
+                volume: 0,
+                sessions: [],
+              };
+            }
+
+            exerciseMap[exerciseName].volume += contributedVolume;
+            exerciseMap[exerciseName].sessions.push({
+              workoutName: w.workoutName || 'Workout',
+              date: w.date,
+              volume: contributedVolume,
+            });
           });
         });
       });
@@ -520,33 +540,35 @@ export default function Progress() {
     let totalVolume = 0;
 
     sourceWorkouts.forEach(w => {
-      (w.exercises || []).forEach(ex => {
-        if (ex.name !== targetExercise) return;
+      (w.exercises || []).forEach(parentEx => {
+        getExerciseAndSupersetEntries(parentEx).forEach(ex => {
+          if (ex.name !== targetExercise) return;
 
-        const exerciseVolume = calculateVolume(ex);
-        if (exerciseVolume <= 0) return;
+          const exerciseVolume = calculateVolume(ex);
+          if (exerciseVolume <= 0) return;
 
-        totalVolume += exerciseVolume;
-        entries.push({
-          workoutName: w.workoutName || 'Workout',
-          date: w.date,
-          volume: exerciseVolume,
-        });
+          totalVolume += exerciseVolume;
+          entries.push({
+            workoutName: w.workoutName || 'Workout',
+            date: w.date,
+            volume: exerciseVolume,
+          });
 
-        const distribution = getExerciseDistribution(ex);
+          const distribution = getExerciseDistribution(ex);
 
-        distribution.forEach((d: any) => {
-          const group = d.group || 'Other';
-          const percent = Number(d.percent || 0);
-          const contribution = exerciseVolume * (percent / 100);
+          distribution.forEach((d: any) => {
+            const group = d.group || 'Other';
+            const percent = Number(d.percent || 0);
+            const contribution = exerciseVolume * (percent / 100);
 
-          if (contribution <= 0) return;
+            if (contribution <= 0) return;
 
-          if (!muscleMap[group]) {
-            muscleMap[group] = { name: group, volume: 0 };
-          }
+            if (!muscleMap[group]) {
+              muscleMap[group] = { name: group, volume: 0 };
+            }
 
-          muscleMap[group].volume += contribution;
+            muscleMap[group].volume += contribution;
+          });
         });
       });
     });
