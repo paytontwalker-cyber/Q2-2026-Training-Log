@@ -154,8 +154,8 @@ export default function AIBuilder() {
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
+    <div className="space-y-6 w-full">
+      <Card className="card-shell">
         <CardHeader>
           <CardTitle>AI Guided Program Builder</CardTitle>
           <CardDescription>Fill out your preferences and let Gemini build your program. Programs are generated as complete 7-day weeks, including rest/recovery days.</CardDescription>
@@ -189,7 +189,7 @@ export default function AIBuilder() {
             <Label>Additional Instructions</Label>
             <Textarea value={formData.additionalInstructions} onChange={(e) => setFormData({...formData, additionalInstructions: e.target.value})} placeholder="e.g. I want more upper chest and shoulders, keep squats light because of knee pain..." />
           </div>
-          <Button onClick={generateSplit} disabled={loading} className="w-full bg-maroon hover:bg-maroon-light text-white">
+          <Button onClick={generateSplit} disabled={loading} className="w-full btn-primary">
             <Sparkles className="mr-2" size={16} />
             {loading ? 'Generating...' : 'Generate Program'}
           </Button>
@@ -214,7 +214,7 @@ export default function AIBuilder() {
                 </ul>
               </div>
             ))}
-            <Button onClick={saveAsCustomSplit} disabled={saving} className="w-full mt-4 bg-maroon hover:bg-maroon-light text-white">
+            <Button onClick={saveAsCustomSplit} disabled={saving} className="w-full mt-4 btn-primary">
               <Save className="mr-2" size={16} />
               {saving ? 'Saving...' : 'Save as Custom Program'}
             </Button>

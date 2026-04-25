@@ -435,19 +435,21 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
   }, [history, searchQuery, filterDate]);
 
   return (
-    <div className="space-y-6">
-      <header>
-        <h2 className="text-3xl font-bold text-foreground tracking-tight">Workout History</h2>
-        <p className="text-muted-foreground">Review and manage your past training sessions</p>
+    <div className="page-shell">
+      <header className="page-header items-start">
+        <div>
+          <h2 className="page-title">Workout History</h2>
+          <p className="page-subtitle">Review and manage your past training sessions</p>
+        </div>
       </header>
 
-      <div className="flex gap-2 mb-4">
+      <div className="flex bg-card p-1 rounded-xl border border-border w-fit overflow-x-auto max-w-full shadow-sm mb-4">
         <button
           onClick={() => setView('history')}
           className={cn(
-            "px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-md transition-all",
+            "px-4 py-2 text-xs font-bold transition-all rounded-lg whitespace-nowrap",
             view === 'history'
-              ? "bg-card text-maroon shadow-sm"
+              ? "bg-maroon text-primary-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground"
           )}
         >
@@ -457,9 +459,9 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
         <button
           onClick={() => setView('deleted')}
           className={cn(
-            "px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-md transition-all",
+            "px-4 py-2 text-xs font-bold transition-all rounded-lg whitespace-nowrap",
             view === 'deleted'
-              ? "bg-card text-maroon shadow-sm"
+              ? "bg-maroon text-primary-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground"
           )}
         >
@@ -469,24 +471,24 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
 
       {view === 'history' && (
         <div className="space-y-4">
-          <div className="bg-card border border-border rounded-lg p-4 mb-4 space-y-3">
+          <div className="card-shell p-4 mb-4 space-y-3">
             <div className="flex flex-col md:flex-row gap-3">
               <div className="flex-1 space-y-1">
-                <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Search</Label>
+                <Label className="label-micro">Search</Label>
                 <Input
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   placeholder="Search by workout name, exercise name, or notes..."
-                  className="h-9 text-sm"
+                  className="input-standard h-9 text-sm"
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Date</Label>
+                <Label className="label-micro">Date</Label>
                 <Input
                   type="date"
                   value={filterDate}
                   onChange={e => setFilterDate(e.target.value)}
-                  className="h-9 text-sm"
+                  className="input-standard h-9 text-sm"
                 />
               </div>
               {(searchQuery || filterDate) && (
@@ -522,7 +524,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
               if (dateDiff !== 0) return dateDiff;
               return (a.timestamp || 0) - (b.timestamp || 0); // Within same date, earliest first (matches session numbering)
             }).map(workout => (
-              <Card key={workout.id} className="border-border shadow-sm hover:border-maroon/30 transition-colors group">
+              <Card key={workout.id} className="card-shell hover:border-maroon/30 transition-colors group">
                 <CardHeader className="pb-3">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
@@ -725,7 +727,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
               </Card>
             ))
           ) : (
-            <Card className="border-border shadow-sm py-20 text-center">
+            <Card className="card-shell py-20 text-center">
               <CardContent>
                 <HistoryIcon size={48} className="mx-auto text-muted mb-4" />
                 <h3 className="text-xl font-semibold text-foreground">No History Yet</h3>
@@ -740,7 +742,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
         <div className="space-y-4">
           {deletedWorkouts.length > 0 ? (
             deletedWorkouts.map(workout => (
-              <Card key={workout.id} className="border-border shadow-sm bg-muted/50">
+              <Card key={workout.id} className="card-shell bg-muted/50">
                 <CardHeader className="py-3">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
@@ -776,7 +778,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
               </Card>
             ))
           ) : (
-            <Card className="border-border shadow-sm py-20 text-center">
+            <Card className="card-shell py-20 text-center">
               <CardContent>
                 <Trash2 size={48} className="mx-auto text-muted mb-4" />
                 <h3 className="text-xl font-semibold text-foreground">No recently deleted workouts.</h3>
@@ -840,7 +842,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
             <Button
               onClick={performMerge}
               disabled={!parentSessionId}
-              className="bg-maroon hover:bg-maroon-light text-white"
+              className="btn-primary"
             >
               Merge Sessions
             </Button>

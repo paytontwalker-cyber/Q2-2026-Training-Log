@@ -152,16 +152,16 @@ export default function Exercises() {
   };
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="page-shell">
+      <header className="page-header">
         <div>
-          <h2 className="text-3xl font-bold text-foreground tracking-tight">Exercise Library</h2>
-          <p className="text-muted-foreground">Manage your custom exercises and muscle groups</p>
+          <h2 className="page-title">Exercise Library</h2>
+          <p className="page-subtitle">Manage your custom exercises and muscle groups</p>
         </div>
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger
             render={
-              <Button className="bg-maroon hover:bg-maroon-light text-white">
+              <Button className="btn-primary">
                 <Plus size={18} className="mr-2" />
                 Add New Exercise
               </Button>
@@ -434,7 +434,7 @@ export default function Exercises() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
         <Input 
           placeholder="Search exercises or muscle groups..." 
-          className="pl-10 h-12 text-lg border-border shadow-sm"
+          className="pl-10 h-12 text-lg card-shell"
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
@@ -442,7 +442,7 @@ export default function Exercises() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {(Object.entries(groupedExercises) as [string, ExerciseLibraryEntry[]][]).map(([group, exercises]) => (
-          <Card key={group} className="border-border shadow-sm">
+          <Card key={group} className="card-shell">
             <CardHeader className="bg-muted/50 border-b border-border py-3">
               <CardTitle className="text-sm font-bold uppercase tracking-wider text-maroon flex items-center justify-between">
                 {group}

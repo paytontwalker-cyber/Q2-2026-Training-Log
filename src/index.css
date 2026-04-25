@@ -150,11 +150,76 @@
 }
 
 @layer utilities {
-  .card-hero {
-    background: linear-gradient(135deg, oklch(1 0 0) 0%, oklch(0.98 0.01 60) 100%);
-    border: 1px solid oklch(0.88 0.01 60);
-    box-shadow: 0 1px 3px oklch(0.18 0.01 60 / 0.04), 0 1px 2px oklch(0.18 0.01 60 / 0.06);
+  .page-shell {
+    @apply space-y-6 pb-20 relative px-4 md:px-6;
   }
+  .page-header {
+    @apply py-4 flex flex-col md:flex-row md:items-end justify-between gap-4;
+  }
+  .page-title {
+    @apply text-3xl md:text-4xl font-bold tracking-tight text-foreground;
+  }
+  .page-subtitle {
+    @apply text-sm md:text-base font-medium text-muted-foreground mt-1;
+  }
+  
+  .section-title {
+    @apply text-lg md:text-xl font-bold text-foreground;
+  }
+  .section-kicker {
+    @apply text-xs font-bold uppercase tracking-wider text-muted-foreground;
+  }
+  
+  .card-shell {
+    @apply rounded-2xl border border-border bg-card shadow-sm overflow-hidden;
+  }
+  .card-hero {
+    @apply rounded-2xl border border-border shadow-sm overflow-hidden;
+    background: linear-gradient(135deg, oklch(1 0 0) 0%, oklch(0.98 0.01 60) 100%);
+  }
+  .card-muted {
+    @apply rounded-2xl border border-border bg-muted/50 p-4 shadow-sm;
+  }
+  .soft-panel {
+    @apply rounded-xl border border-border bg-muted/30 p-4;
+  }
+  
+  .metric-card {
+    @apply rounded-2xl border border-border bg-card shadow-sm overflow-hidden p-4 flex flex-col justify-between;
+  }
+  .metric-label {
+    @apply text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1;
+  }
+  .metric-value {
+    @apply text-2xl md:text-3xl font-black text-foreground tabular-nums;
+  }
+  
+  .action-row {
+    @apply flex items-center justify-between gap-3;
+  }
+  
+  .btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-sm;
+  }
+  .btn-secondary {
+    @apply bg-card border border-border text-foreground hover:bg-muted font-medium shadow-sm transition-colors;
+  }
+  .btn-ghost-soft {
+    @apply bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors;
+  }
+  
+  .tab-pill {
+    @apply h-9 px-4 rounded-full text-sm font-medium transition-colors border border-border shadow-sm bg-card text-muted-foreground hover:text-foreground hover:bg-muted data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary;
+  }
+  
+  .input-standard {
+    @apply h-10 rounded-xl border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 transition-colors;
+  }
+  
+  .divider-soft {
+    @apply border-border/60;
+  }
+
   .metric-display {
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.02em;
@@ -164,11 +229,7 @@
     background: linear-gradient(90deg, var(--app-primary) 0%, var(--app-primary-light) 100%);
   }
   .label-micro {
-    font-size: 10px;
-    line-height: 1.2;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--muted-foreground);
+    @apply text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground leading-[1.2];
   }
 }
+

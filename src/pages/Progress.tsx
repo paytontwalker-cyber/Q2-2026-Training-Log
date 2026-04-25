@@ -803,19 +803,19 @@ export default function Progress() {
   ];
 
   return (
-    <div className="space-y-10 pb-20">
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div className="page-shell">
+      <header className="page-header">
         <div>
-          <h2 className="text-3xl font-bold text-foreground tracking-tight">Progress Dashboard</h2>
-          <p className="text-muted-foreground">Comprehensive analysis of your training data</p>
+          <h2 className="page-title">Progress Dashboard</h2>
+          <p className="page-subtitle">Comprehensive analysis of your training data</p>
         </div>
         
-        <div className="flex bg-muted p-1 rounded-lg border border-border w-fit">
+        <div className="flex bg-muted p-1 rounded-xl border border-border w-fit overflow-x-auto max-w-full">
           <button 
             onClick={() => setView('weekly-volume')}
             className={cn(
-              "px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-md transition-all",
-              view === 'weekly-volume' ? "bg-card text-maroon shadow-sm" : "text-muted-foreground hover:text-foreground"
+              "px-4 py-2 text-xs font-bold transition-all rounded-lg whitespace-nowrap",
+              view === 'weekly-volume' ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
             )}
           >
             Weekly Volume
@@ -823,8 +823,8 @@ export default function Progress() {
           <button 
             onClick={() => setView('session-volume')}
             className={cn(
-              "px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-md transition-all",
-              view === 'session-volume' ? "bg-card text-maroon shadow-sm" : "text-muted-foreground hover:text-foreground"
+              "px-4 py-2 text-xs font-bold transition-all rounded-lg whitespace-nowrap",
+              view === 'session-volume' ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
             )}
           >
             Session Volume
@@ -832,8 +832,8 @@ export default function Progress() {
           <button 
             onClick={() => setView('strength')}
             className={cn(
-              "px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-md transition-all",
-              view === 'strength' ? "bg-card text-maroon shadow-sm" : "text-muted-foreground hover:text-foreground"
+              "px-4 py-2 text-xs font-bold transition-all rounded-lg whitespace-nowrap",
+              view === 'strength' ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
             )}
           >
             Strength
@@ -841,8 +841,8 @@ export default function Progress() {
           <button 
             onClick={() => setView('conditioning')}
             className={cn(
-              "px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-md transition-all",
-              view === 'conditioning' ? "bg-card text-maroon shadow-sm" : "text-muted-foreground hover:text-foreground"
+              "px-4 py-2 text-xs font-bold transition-all rounded-lg whitespace-nowrap",
+              view === 'conditioning' ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
             )}
           >
             Conditioning
@@ -850,8 +850,8 @@ export default function Progress() {
           <button 
             onClick={() => setView('battery')}
             className={cn(
-              "px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-md transition-all",
-              view === 'battery' ? "bg-card text-maroon shadow-sm" : "text-muted-foreground hover:text-foreground"
+              "px-4 py-2 text-xs font-bold transition-all rounded-lg whitespace-nowrap",
+              view === 'battery' ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
             )}
           >
             Body Battery
@@ -930,7 +930,7 @@ export default function Progress() {
             </div>
           )}
 
-          <Card className="border-border shadow-sm mt-4">
+          <Card className="card-shell mt-4">
             <CardContent className="py-3 px-4 text-xs text-muted-foreground">
               <span className="font-bold text-foreground">Data Notes:</span> {
                 useCustomRange ? 'Data is calculated from your selected custom start and end dates.' :
@@ -939,7 +939,7 @@ export default function Progress() {
               }
             </CardContent>
           </Card>
-          <Card className="border-border shadow-sm">
+          <Card className="card-shell">
             <CardHeader>
               <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">
                 Weekly Volume Heatmap
@@ -973,7 +973,7 @@ export default function Progress() {
           </Card>
           {weeklyVolume && weeklyVolume.totalBodyVolume > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <Card className="border-border shadow-sm lg:col-span-1">
+              <Card className="card-shell lg:col-span-1">
                 <CardHeader>
                   <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">Total Body Volume</CardTitle>
                 </CardHeader>
@@ -985,7 +985,7 @@ export default function Progress() {
                 </CardContent>
               </Card>
 
-              <Card className="border-border shadow-sm lg:col-span-1">
+              <Card className="card-shell lg:col-span-1">
                 <CardHeader>
                   <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">Muscle Group Split</CardTitle>
                 </CardHeader>
@@ -1037,7 +1037,7 @@ export default function Progress() {
                 </CardContent>
               </Card>
 
-              <Card className="border-border shadow-sm lg:col-span-1">
+              <Card className="card-shell lg:col-span-1">
                 <CardHeader>
                   <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">Top Exercises</CardTitle>
                 </CardHeader>
@@ -1071,7 +1071,7 @@ export default function Progress() {
               </Card>
             </div>
           ) : (
-            <Card className="border-border shadow-sm p-8 text-center text-muted-foreground italic">
+            <Card className="card-shell p-8 text-center text-muted-foreground italic">
               Log workouts in the selected range to see volume breakdowns.
             </Card>
           )}
@@ -1111,19 +1111,19 @@ export default function Progress() {
             {volumeTargets && (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Card className="border-border card-hero">
+                  <Card className="card-hero">
                     <CardHeader className="pb-2"><CardTitle className="label-micro">Groups On Target</CardTitle></CardHeader>
                     <CardContent><div className="text-3xl font-black metric-display text-green-600">{volumeTargets.filter(t => t.status === 'On Target').length}</div></CardContent>
                   </Card>
-                  <Card className="border-border card-hero">
+                  <Card className="card-hero">
                     <CardHeader className="pb-2"><CardTitle className="label-micro">In Growth Zone</CardTitle></CardHeader>
                     <CardContent><div className="text-3xl font-black metric-display text-gold">{volumeTargets.filter(t => t.status === 'Above Zone').length}</div></CardContent>
                   </Card>
-                  <Card className="border-border card-hero">
+                  <Card className="card-hero">
                     <CardHeader className="pb-2"><CardTitle className="label-micro">Lowest Coverage</CardTitle></CardHeader>
                     <CardContent><div className="text-3xl font-black metric-display text-red-600">{volumeTargets.sort((a,b) => a.percentOfTarget - b.percentOfTarget)[0].muscleGroup}</div></CardContent>
                   </Card>
-                  <Card className="border-border card-hero">
+                  <Card className="card-hero">
                     <CardHeader className="pb-2"><CardTitle className="label-micro">Highest Overshoot</CardTitle></CardHeader>
                     <CardContent><div className="text-3xl font-black metric-display text-maroon">{volumeTargets.sort((a,b) => b.percentOfTarget - a.percentOfTarget)[0].muscleGroup}</div></CardContent>
                   </Card>
@@ -1133,7 +1133,7 @@ export default function Progress() {
                   {activeTargets.map((t) => (
                     <div 
                       key={t.muscleGroup} 
-                      className="bg-card p-4 rounded-lg border border-border shadow-sm cursor-pointer hover:border-maroon/40 hover:bg-maroon/5 transition-colors"
+                      className="card-shell p-4 rounded-lg cursor-pointer hover:border-maroon/40 hover:bg-maroon/5 transition-colors"
                       onClick={() => setMuscleDrilldown({
                         open: true,
                         muscleGroup: t.muscleGroup,
@@ -1180,7 +1180,7 @@ export default function Progress() {
                   )}
                 </div>
 
-                <Card className="border-border shadow-sm">
+                <Card className="card-shell">
                   <CardHeader><CardTitle>Detailed Breakdown</CardTitle></CardHeader>
                   <CardContent>
                     <div className="space-y-2">
@@ -1277,7 +1277,7 @@ export default function Progress() {
               </div>
             </div>
           </div>
-          <Card className="border-border shadow-sm mb-6">
+          <Card className="card-shell mb-6">
             <CardHeader>
               <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">
                 Session Volume Heatmap
@@ -1310,7 +1310,7 @@ export default function Progress() {
                 <Hash className="text-maroon" size={20} />
                 <h3 className="text-xl font-bold text-foreground">Individual Exercise Volume</h3>
               </div>
-              <Card className="border-border shadow-sm">
+              <Card className="card-shell">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg">{latestWorkoutSummary.name}</CardTitle>
                   <CardDescription>{latestWorkoutSummary.date}</CardDescription>
@@ -1336,7 +1336,7 @@ export default function Progress() {
                 </CardContent>
               </Card>
 
-              <Card className="border-border shadow-sm">
+              <Card className="card-shell">
                 <CardHeader>
                   <CardTitle>Session Volume Targets</CardTitle>
                   <CardDescription>
@@ -1370,7 +1370,7 @@ export default function Progress() {
               </Card>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <Card className="border-border shadow-sm lg:col-span-1">
+                <Card className="card-shell lg:col-span-1">
                   <CardHeader>
                     <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">Total Volume</CardTitle>
                   </CardHeader>
@@ -1382,7 +1382,7 @@ export default function Progress() {
                   </CardContent>
                 </Card>
 
-                <Card className="border-border shadow-sm lg:col-span-1">
+                <Card className="card-shell lg:col-span-1">
                   <CardHeader>
                     <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">Muscle Group Split</CardTitle>
                   </CardHeader>
@@ -1434,7 +1434,7 @@ export default function Progress() {
                   </CardContent>
                 </Card>
 
-                <Card className="border-border shadow-sm lg:col-span-1">
+                <Card className="card-shell lg:col-span-1">
                   <CardHeader>
                     <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">Top Exercises</CardTitle>
                   </CardHeader>
@@ -1470,7 +1470,7 @@ export default function Progress() {
 
             </div>
           ) : (
-            <Card className="border-border shadow-sm p-8 text-center text-muted-foreground italic">
+            <Card className="card-shell p-8 text-center text-muted-foreground italic">
               No workouts logged yet.
             </Card>
           )}
@@ -1510,7 +1510,7 @@ export default function Progress() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <Card className="border-border shadow-sm lg:col-span-1">
+              <Card className="card-shell lg:col-span-1">
                 <CardHeader>
                   <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">Latest Strength Summary</CardTitle>
                   {latestStrengthSummary && <CardDescription>{latestStrengthSummary.date}</CardDescription>}
@@ -1531,7 +1531,7 @@ export default function Progress() {
                 </CardContent>
               </Card>
 
-              <Card className="border-border shadow-sm lg:col-span-2">
+              <Card className="card-shell lg:col-span-2">
                 <CardHeader>
                   <CardTitle className="text-lg">Strength Progress</CardTitle>
                   <CardDescription>Actual logged weight for {selectedExercise}</CardDescription>
@@ -1609,7 +1609,7 @@ export default function Progress() {
 
             {runningAnalytics ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="border-border shadow-sm">
+                <Card className="card-shell">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Total Distance</CardTitle>
                   </CardHeader>
@@ -1620,7 +1620,7 @@ export default function Progress() {
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="border-border shadow-sm">
+                <Card className="card-shell">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Total Duration</CardTitle>
                   </CardHeader>
@@ -1631,7 +1631,7 @@ export default function Progress() {
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="border-border shadow-sm">
+                <Card className="card-shell">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Total Sessions</CardTitle>
                   </CardHeader>
@@ -1642,7 +1642,7 @@ export default function Progress() {
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="border-border shadow-sm">
+                <Card className="card-shell">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Avg Pace</CardTitle>
                   </CardHeader>
@@ -1661,7 +1661,7 @@ export default function Progress() {
                 </Card>
               </div>
             ) : (
-              <Card className="border-border shadow-sm p-8 text-center text-muted-foreground italic">
+              <Card className="card-shell p-8 text-center text-muted-foreground italic">
                 No conditioning data logged yet.
               </Card>
             )}
@@ -1669,7 +1669,7 @@ export default function Progress() {
 
           {runningAnalytics && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="border-border shadow-sm">
+              <Card className="card-shell">
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <Timer size={16} className="text-maroon" />
@@ -1711,7 +1711,7 @@ export default function Progress() {
                 </CardContent>
               </Card>
 
-              <Card className="border-border shadow-sm">
+              <Card className="card-shell">
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <PieChartIcon size={16} className="text-gold" />
@@ -1743,7 +1743,7 @@ export default function Progress() {
               </Card>
 
               {runningAnalytics.repeatHistory.length > 0 && (
-                <Card className="border-border shadow-sm lg:col-span-2">
+                <Card className="card-shell lg:col-span-2">
                   <CardHeader>
                     <div className="flex items-center gap-2">
                       <TrendingUp size={16} className="text-blue-500" />
@@ -1796,7 +1796,7 @@ export default function Progress() {
                 </Card>
               )}
 
-              <Card className="border-border shadow-sm lg:col-span-2">
+              <Card className="card-shell lg:col-span-2">
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <MapPin size={16} className="text-muted-foreground" />
@@ -1863,7 +1863,7 @@ export default function Progress() {
           {bodyBattery && (
             <div className="space-y-6">
               {/* Main Score Card - Horizontal Gauge */}
-              <Card className="border-border shadow-sm overflow-hidden bg-card">
+              <Card className="card-shell">
                 <CardContent className="p-8">
                   <div className="flex flex-col md:flex-row items-center justify-between gap-8">
                     <div className="flex-1 w-full">
@@ -1904,7 +1904,7 @@ export default function Progress() {
 
               {/* Telemetry Grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="border-border shadow-sm">
+                <Card className="card-shell">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Time Since Last Load</CardTitle>
                   </CardHeader>
@@ -1913,7 +1913,7 @@ export default function Progress() {
                   </CardContent>
                 </Card>
 
-                <Card className="border-border shadow-sm">
+                <Card className="card-shell">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">System State</CardTitle>
                   </CardHeader>
@@ -1927,7 +1927,7 @@ export default function Progress() {
                   </CardContent>
                 </Card>
 
-                <Card className="border-border shadow-sm">
+                <Card className="card-shell">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Time to 100%</CardTitle>
                   </CardHeader>
@@ -1937,7 +1937,7 @@ export default function Progress() {
                 </Card>
               </div>
 
-              <Card className="border-border shadow-sm bg-primary text-primary-foreground mt-4">
+              <Card className="card-shell bg-primary text-primary-foreground mt-4">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-bold flex items-center gap-2">
                     <Info size={16} className="text-gold" />

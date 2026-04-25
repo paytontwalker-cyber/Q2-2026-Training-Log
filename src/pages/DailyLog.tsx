@@ -211,7 +211,7 @@ const SortableExerciseCard = ({
       ref={setNodeRef} 
       style={style} 
       className={cn(
-        "border-border shadow-sm relative group transition-shadow",
+        "card-shell relative group transition-shadow",
         isDragging && "shadow-lg border-maroon/30"
       )}
     >
@@ -788,7 +788,7 @@ const SortableConditioningBlock: React.FC<SortableConditioningBlockProps> = ({
       ref={setNodeRef} 
       style={style} 
       className={cn(
-        "border-border shadow-sm relative group transition-shadow",
+        "card-shell relative group transition-shadow",
         isDragging && "shadow-lg border-maroon/30"
       )}
     >
@@ -2171,11 +2171,11 @@ export default function DailyLog() {
   };
 
   return (
-    <div className="space-y-6 pb-20">
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="page-shell">
+      <header className="page-header items-start">
         <div>
-          <h2 className="text-3xl font-bold text-foreground tracking-tight">Daily Log</h2>
-          <p className="text-muted-foreground">{format(date, 'EEEE, MMMM do, yyyy')}</p>
+          <h2 className="page-title">Daily Log</h2>
+          <p className="page-subtitle">{format(date, 'EEEE, MMMM do, yyyy')}</p>
           {sessionsForCurrentDate.length > 0 && (
             <div className="flex flex-wrap items-center gap-2 mt-2 p-2 rounded-lg bg-muted/50 border border-border">
               <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
@@ -2214,8 +2214,8 @@ export default function DailyLog() {
             </div>
           )}
         </div>
-        <div className="flex flex-col sm:flex-row items-center gap-2">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
             {saveStatus === 'saving' && (
               <Button 
                 variant="outline" 
@@ -2230,8 +2230,8 @@ export default function DailyLog() {
               onClick={handleSave} 
               disabled={saveStatus === 'saving'}
               className={cn(
-                "text-white transition-all",
-                saveStatus === 'success' ? "bg-green-600 hover:bg-green-700" : "bg-maroon hover:bg-maroon-light"
+                "w-full sm:w-auto btn-primary",
+                saveStatus === 'success' ? "bg-green-600 hover:bg-green-700" : ""
               )}
             >
               {saveStatus === 'saving' ? (
@@ -2243,11 +2243,11 @@ export default function DailyLog() {
               )}
             </Button>
           </div>
-          <div className="flex items-center bg-card border border-border rounded-md p-1">
+          <div className="flex items-center bg-card border border-border rounded-lg p-1 shadow-sm w-full sm:w-auto justify-center">
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-8 w-8 text-muted-foreground"
+              className="h-8 w-8 text-muted-foreground hover:bg-muted hover:text-foreground"
               onClick={() => changeDate(-1)}
             >
               <ChevronLeft size={18} />
@@ -2267,12 +2267,12 @@ export default function DailyLog() {
                   onDateChanged(newDate);
                 });
               }}
-              className="w-auto border-none focus-visible:ring-0 h-8 text-sm text-foreground"
+              className="w-auto border-none focus-visible:ring-0 h-8 text-sm text-foreground bg-transparent font-medium"
             />
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-8 w-8 text-muted-foreground"
+              className="h-8 w-8 text-muted-foreground hover:bg-muted hover:text-foreground"
               onClick={() => changeDate(1)}
             >
               <ChevronRight size={18} />
@@ -2298,7 +2298,7 @@ export default function DailyLog() {
       <div className="grid grid-cols-1 gap-6">
         <div className="space-y-6">
           {/* Workout Header Card */}
-          <Card className="border-border shadow-sm overflow-hidden">
+          <Card className="card-shell overflow-hidden">
             <div className="h-2 bg-maroon" />
             <CardHeader>
               <div className="flex flex-col gap-4">
@@ -2378,7 +2378,7 @@ export default function DailyLog() {
                       </DialogHeader>
                       <DialogFooter>
                         <DialogClose render={<Button variant="outline">Cancel</Button>} />
-                        <DialogClose render={<Button onClick={handleReset} className="bg-maroon hover:bg-maroon-light text-white">Reset Workout</Button>} />
+                        <DialogClose render={<Button onClick={handleReset} className="btn-primary">Reset Workout</Button>} />
                       </DialogFooter>
                     </DialogContent>
                   </Dialog>
@@ -2404,7 +2404,7 @@ export default function DailyLog() {
                       </DialogHeader>
                       <DialogFooter>
                         <DialogClose render={<Button variant="outline">Cancel</Button>} />
-                        <DialogClose render={<Button onClick={handleClearSplit} className="bg-maroon hover:bg-maroon-light text-white">Clear Workout</Button>} />
+                        <DialogClose render={<Button onClick={handleClearSplit} className="btn-primary">Clear Workout</Button>} />
                       </DialogFooter>
                     </DialogContent>
                   </Dialog>
@@ -2537,7 +2537,7 @@ export default function DailyLog() {
 
         <div className="space-y-6">
           {/* Post-Workout Energy */}
-          <Card className="border-border shadow-sm">
+          <Card className="card-shell">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg">Post-Workout Energy</CardTitle>
               <CardDescription>How do you feel right now?</CardDescription>
@@ -2567,7 +2567,7 @@ export default function DailyLog() {
           </Card>
 
           {/* General Notes */}
-          <Card className="border-border shadow-sm">
+          <Card className="card-shell">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg">General Notes</CardTitle>
             </CardHeader>

@@ -957,23 +957,25 @@ export default function Split() {
 
   if (showSelector) {
     return (
-      <div className="space-y-6">
-        <header>
-          <h2 className="text-3xl font-bold text-foreground tracking-tight">
-            Weekly Program
-          </h2>
-          <p className="text-muted-foreground">
-            Choose a starting point for your training structure
-          </p>
+      <div className="page-shell">
+        <header className="page-header items-start">
+          <div>
+            <h2 className="page-title">
+              Weekly Program
+            </h2>
+            <p className="page-subtitle">
+              Choose a starting point for your training structure
+            </p>
+          </div>
         </header>
 
-        <div className="max-w-2xl mx-auto space-y-8 pt-4">
+        <div className="max-w-2xl mx-auto space-y-8 pt-4 w-full">
           <div className="space-y-4">
             <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
               New Program
             </h3>
             <Card
-              className="border-border shadow-sm hover:border-maroon/50 cursor-pointer transition-all group"
+              className="card-shell hover:border-maroon/50 cursor-pointer transition-all group"
               onClick={startFromScratch}
             >
               <CardHeader className="flex flex-row items-center gap-4 py-6">
@@ -1000,7 +1002,7 @@ export default function Split() {
               {SPLIT_TEMPLATES.map((template) => (
                 <Card
                   key={template.id}
-                  className="border-border shadow-sm hover:border-maroon/50 cursor-pointer transition-all group"
+                  className="card-shell hover:border-maroon/50 cursor-pointer transition-all group"
                   onClick={() => stageTemplateSplit(template.days)}
                 >
                   <CardHeader className="flex flex-row items-center gap-4 py-6">
@@ -1028,7 +1030,7 @@ export default function Split() {
                 {savedSplits.map((saved) => (
                   <Card
                     key={saved.id}
-                    className="border-border shadow-sm hover:border-maroon/50 cursor-pointer transition-all group"
+                    className="card-shell hover:border-maroon/50 cursor-pointer transition-all group"
                     onClick={() => stageSavedSplit(saved)}
                   >
                     <CardHeader className="flex flex-row items-center justify-between py-6">
@@ -1084,13 +1086,13 @@ export default function Split() {
   const showUnassignButton = hasAssignedSplit;
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="page-shell">
+      <header className="page-header items-start">
         <div>
-          <h2 className="text-3xl font-bold text-foreground tracking-tight">
+          <h2 className="page-title">
             Weekly Program
           </h2>
-          <p className="text-muted-foreground">
+          <p className="page-subtitle">
             Customize your hybrid training structure
           </p>
         </div>
@@ -1098,7 +1100,7 @@ export default function Split() {
           {showAssignButton && (
             <Button
               onClick={assignStagedSplit}
-              className="bg-maroon hover:bg-maroon-light text-white"
+              className="btn-primary"
             >
               Assign Program
             </Button>

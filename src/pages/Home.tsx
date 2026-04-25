@@ -99,10 +99,12 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
     .sort((a, b) => b.value - a.value);
 
   return (
-    <div className="space-y-6 pb-20 relative">
-      <header className="py-4">
-        <h2 className="text-3xl font-bold text-foreground">Dashboard</h2>
-        <p className="text-muted-foreground mt-1 font-medium">{today}</p>
+    <div className="page-shell">
+      <header className="page-header">
+        <div>
+          <h2 className="page-title">Dashboard</h2>
+          <p className="page-subtitle">{today}</p>
+        </div>
       </header>
 
       <div className="grid grid-cols-3 gap-3">
@@ -120,44 +122,45 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* TODO: Wire Home exercise drilldown once weekly workout entries are exposed to Home. */}
-        <Card className="border-border">
-          <CardHeader><CardTitle className="text-lg">Recent PRs</CardTitle></CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
-              {recentPRs.map((pr, i) => (
-                <li key={i} className="flex justify-between text-sm">
-                  <span>{pr.name}</span>
-                  <span className="font-bold text-maroon">{pr.weight} kg</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-        <Card className="border-border">
-          <CardHeader><CardTitle className="text-lg">Recent Activity</CardTitle></CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
-              {recentActivity.map((w, i) => (
-                <li key={i} className="flex justify-between text-sm">
-                  <span>{w.workoutName}</span>
-                  <span className="text-muted-foreground">{format(new Date(w.date), 'MMM d')}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
+        <div className="card-shell p-4">
+          <h3 className="section-title mb-4">Recent PRs</h3>
+          <ul className="space-y-3">
+            {recentPRs.map((pr, i) => (
+              <li key={i} className="flex justify-between items-center text-sm">
+                <span className="font-medium text-foreground">{pr.name}</span>
+                <span className="font-bold text-maroon bg-maroon/5 px-2 py-1 rounded-md">{pr.weight} kg</span>
+              </li>
+            ))}
+            {recentPRs.length === 0 && (
+              <li className="text-sm text-muted-foreground italic">No recent PRs.</li>
+            )}
+          </ul>
+        </div>
+        <div className="card-shell p-4">
+          <h3 className="section-title mb-4">Recent Activity</h3>
+          <ul className="space-y-3">
+            {recentActivity.map((w, i) => (
+              <li key={i} className="flex justify-between items-center text-sm">
+                <span className="font-medium text-foreground line-clamp-1">{w.workoutName}</span>
+                <span className="text-muted-foreground text-xs font-medium whitespace-nowrap bg-muted px-2 py-1 rounded-md">{format(new Date(w.date), 'MMM d')}</span>
+              </li>
+            ))}
+            {recentActivity.length === 0 && (
+              <li className="text-sm text-muted-foreground italic">No recent activity.</li>
+            )}
+          </ul>
+        </div>
       </div>
 
-      <Card className="border-border">
-        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <CardTitle className="text-lg">Weekly Training Intensity</CardTitle>
+      <div className="card-shell">
+        <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-muted/20">
+          <h3 className="section-title">Weekly Training Intensity</h3>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+            <span className="label-micro">
               Heat Mode
             </span>
             <Select value={homeHeatMode} onValueChange={(value) => setHomeHeatMode(value as 'target' | 'relative')}>
-              <SelectTrigger className="h-8 w-[130px] text-xs">
+              <SelectTrigger className="input-standard h-8 w-[130px] font-medium">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -166,16 +169,16 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
               </SelectContent>
             </Select>
           </div>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div className="p-4">
           <BodyMap 
             muscleGroupData={sortedMuscleGroupData} 
             heatMode={homeHeatMode}
             volumeTargets={homeVolumeTargets}
             onMuscleClick={setDrilldownMuscle} 
           />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {drilldownMuscle && muscleDrilldownData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
@@ -201,13 +204,13 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
               </div>
               
               <div className="space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Contributing Exercises</h4>
+                <h4 className="label-micro mb-3">Contributing Exercises</h4>
                 
                 {muscleDrilldownData.exercises.length > 0 ? (
                   muscleDrilldownData.exercises.map(ex => (
-                    <div key={ex.name} className="p-3 rounded-lg border border-border bg-card shadow-sm">
+                    <div key={ex.name} className="soft-panel shadow-sm bg-card">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="font-bold text-sm text-foreground">{ex.name}</span>
+                        <span className="font-semibold text-sm text-foreground">{ex.name}</span>
                         <span className="font-mono text-sm font-bold text-gold">
                           {Math.round(ex.volume).toLocaleString()} lbs
                         </span>

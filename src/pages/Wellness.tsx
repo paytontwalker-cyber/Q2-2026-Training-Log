@@ -3,13 +3,15 @@ import { Activity } from 'lucide-react';
 
 export default function Wellness() {
   return (
-    <div className="space-y-6">
-      <header>
-        <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Health / Wellness</h2>
-        <p className="text-slate-500">Future recovery, sleep, nutrition, and wellness tracking.</p>
+    <div className="page-shell">
+      <header className="page-header">
+        <div>
+          <h2 className="page-title">Health / Wellness</h2>
+          <p className="page-subtitle">Future recovery, sleep, nutrition, and wellness tracking.</p>
+        </div>
       </header>
 
-      <Card className="border-border shadow-sm">
+      <Card className="card-shell">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Activity className="text-maroon" size={20} />

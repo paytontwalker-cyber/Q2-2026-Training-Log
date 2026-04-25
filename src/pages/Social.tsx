@@ -48,14 +48,16 @@ export default function Social() {
   };
 
   return (
-    <div className="space-y-6 pb-20">
-      <header>
-        <h2 className="text-3xl font-bold text-foreground tracking-tight">Social</h2>
-        <p className="text-muted-foreground">Find and view other users' public profiles.</p>
+    <div className="page-shell">
+      <header className="page-header">
+        <div>
+          <h2 className="page-title">Social</h2>
+          <p className="page-subtitle">Find and view other users' public profiles.</p>
+        </div>
       </header>
 
       {view === 'search' && (
-        <Card className="border-border shadow-sm">
+        <Card className="card-shell">
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Search size={18} /> Find Users</CardTitle>
             <CardDescription>Search by username, display name, or email.</CardDescription>
@@ -104,7 +106,7 @@ export default function Social() {
           <Button variant="ghost" onClick={backToSearch} className="gap-2">
             <ArrowLeft size={14} /> Back to search
           </Button>
-          <Card className="border-border shadow-sm">
+          <Card className="card-shell">
             <CardHeader className="flex flex-row items-start gap-4">
               <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
                 {selectedProfile.photoURL 
@@ -119,7 +121,7 @@ export default function Social() {
             </CardHeader>
           </Card>
 
-          <Card className="border-border shadow-sm">
+          <Card className="card-shell">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg"><Calendar size={16} /> Recent Workouts</CardTitle>
             </CardHeader>

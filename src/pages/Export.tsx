@@ -203,16 +203,18 @@ export default function Export({ embedded = false }: { embedded?: boolean } = {}
   };
 
   return (
-    <div className="space-y-6">
+    <div className="page-shell">
       {!embedded && (
-        <header>
-          <h2 className="text-3xl font-bold text-foreground tracking-tight">Export Data</h2>
-          <p className="text-muted-foreground">Take your training data with you</p>
+        <header className="page-header">
+          <div>
+            <h2 className="page-title">Export Data</h2>
+            <p className="page-subtitle">Take your training data with you</p>
+          </div>
         </header>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 no-print">
-        <Card className="border-border shadow-sm">
+        <Card className="card-shell">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="text-maroon" />
@@ -229,7 +231,7 @@ export default function Export({ embedded = false }: { embedded?: boolean } = {}
             <Button 
               onClick={handleExportCSV} 
               disabled={isExporting || history.length === 0}
-              className="w-full bg-maroon hover:bg-maroon-light text-white"
+              className="w-full btn-primary"
             >
               {isExporting ? "Generating..." : "Download CSV"}
               <Download size={18} className="ml-2" />
@@ -246,7 +248,7 @@ export default function Export({ embedded = false }: { embedded?: boolean } = {}
           </CardContent>
         </Card>
 
-        <Card className="border-border shadow-sm">
+        <Card className="card-shell">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Printer className="text-gold" />
@@ -273,7 +275,7 @@ export default function Export({ embedded = false }: { embedded?: boolean } = {}
         </Card>
       </div>
 
-      <Card className="border-border shadow-sm no-print">
+      <Card className="card-shell no-print">
         <CardHeader>
           <CardTitle>Data Privacy</CardTitle>
         </CardHeader>

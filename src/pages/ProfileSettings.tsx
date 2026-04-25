@@ -271,15 +271,17 @@ export default function ProfileSettings() {
   };
 
   return (
-    <div className="space-y-6">
-      <header className="no-print">
-        <h2 className="text-3xl font-bold text-foreground tracking-tight">Profile & Settings</h2>
-        <p className="text-muted-foreground">Manage your account and app preferences</p>
+    <div className="page-shell">
+      <header className="page-header no-print">
+        <div>
+          <h2 className="page-title">Profile & Settings</h2>
+          <p className="page-subtitle">Manage your account and app preferences</p>
+        </div>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* 1. Account / Session */}
-        <Card className="border-border card-hero md:col-span-2 no-print">
+        <Card className="card-hero md:col-span-2 no-print">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="text-maroon" size={20} />
@@ -333,7 +335,7 @@ export default function ProfileSettings() {
               {isGuest ? (
                 <Button 
                   onClick={login}
-                  className="w-full bg-maroon hover:bg-maroon-light text-white h-11"
+                  className="w-full btn-primary h-11"
                 >
                   <LogIn className="mr-2" size={18} />
                   Sign In with Google
@@ -353,7 +355,7 @@ export default function ProfileSettings() {
         </Card>
 
         {/* Social Identity */}
-        <Card className="border-border shadow-sm">
+        <Card className="card-shell">
           <CardHeader>
             <CardTitle>Social Identity</CardTitle>
             <CardDescription>Pick a unique @username so friends can find you. Capital letters OK — we'll match case-insensitively.</CardDescription>
@@ -389,7 +391,7 @@ export default function ProfileSettings() {
                     setUsernameSaving(false);
                   }}
                   disabled={usernameSaving || !username.trim() || username.toLowerCase() === usernameLower}
-                  className="bg-maroon hover:bg-maroon-light text-white"
+                  className="btn-primary"
                 >
                   {usernameSaving ? 'Saving...' : 'Claim'}
                 </Button>
@@ -437,7 +439,7 @@ export default function ProfileSettings() {
         </Card>
 
         {/* 2. Account Details */}
-        <Card className="border-border shadow-sm no-print">
+        <Card className="card-shell no-print">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <UserCircle className="text-maroon" size={20} />
@@ -481,7 +483,7 @@ export default function ProfileSettings() {
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={saveProfile} disabled={saving} className="w-full bg-maroon hover:bg-maroon-light text-white">
+            <Button onClick={saveProfile} disabled={saving} className="w-full btn-primary">
               <Save className="mr-2" size={16} />
               {saving ? 'Saving...' : 'Save Account Details'}
             </Button>
@@ -489,7 +491,7 @@ export default function ProfileSettings() {
         </Card>
 
         {/* Training & Volume Targets */}
-        <Card className="border-border shadow-sm md:col-span-2">
+        <Card className="card-shell md:col-span-2">
           <CardHeader>
             <CardTitle>Training & Volume Targets</CardTitle>
             <CardDescription>
@@ -561,7 +563,7 @@ export default function ProfileSettings() {
             <Button 
               onClick={saveTrainingSettings} 
               disabled={overrideSaving}
-              className="bg-maroon hover:bg-maroon-light text-white w-full"
+              className="btn-primary w-full"
             >
               {overrideSaving ? 'Saving...' : 'Save Training Settings'}
             </Button>
@@ -570,7 +572,7 @@ export default function ProfileSettings() {
 
         {/* 3. App Settings */}
         <div className="space-y-6">
-          <Card className="border-border shadow-sm no-print">
+          <Card className="card-shell no-print">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Settings className="text-gold" size={20} />
@@ -619,7 +621,7 @@ export default function ProfileSettings() {
             </CardContent>
           </Card>
 
-          <Card className="border-border shadow-sm no-print">
+          <Card className="card-shell no-print">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Settings className="text-gold" size={20} />
@@ -688,7 +690,7 @@ export default function ProfileSettings() {
         </div>
 
         {/* Export Workouts */}
-        <Card className="border-border shadow-sm md:col-span-2">
+        <Card className="card-shell md:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Download className="text-muted-foreground" size={20} />
@@ -702,7 +704,7 @@ export default function ProfileSettings() {
         </Card>
 
         {/* Integrations */}
-        <Card className="border-border shadow-sm md:col-span-2 no-print">
+        <Card className="card-shell md:col-span-2 no-print">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Plug className="text-muted-foreground" size={20} />
@@ -725,7 +727,7 @@ export default function ProfileSettings() {
         </Card>
 
         {/* Roadmap */}
-        <Card className="border-border shadow-sm md:col-span-2 no-print">
+        <Card className="card-shell md:col-span-2 no-print">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Map className="text-muted-foreground" size={20} />
@@ -755,7 +757,7 @@ export default function ProfileSettings() {
         </Card>
 
         {/* Completed Updates / Patches */}
-        <Card className="border-border shadow-sm md:col-span-2 no-print">
+        <Card className="card-shell md:col-span-2 no-print">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Info className="text-muted-foreground" size={20} />
@@ -783,7 +785,7 @@ export default function ProfileSettings() {
         </Card>
 
         {/* 4. Application Info */}
-        <Card className="border-border shadow-sm md:col-span-2 no-print">
+        <Card className="card-shell md:col-span-2 no-print">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Info className="text-muted-foreground" size={20} />
