@@ -11,9 +11,10 @@ import { useFirebase } from '@/src/components/FirebaseProvider';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { computeVolumeTargets } from '@/src/lib/volumeTargets';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 import { resolveExerciseDistribution } from '@/src/lib/exerciseDistribution';
-import { calculateLoggedExerciseVolume, flattenLoggedExercises } from '@/src/lib/workoutUtils';
+import { calculateLoggedExerciseVolume, flattenLoggedExercises, normalizeConditioning, classifyConditioningSession, getDistanceInMeters } from '@/src/lib/workoutUtils';
 
 const normalizeMuscleName = (name: string) => String(name || '').trim().toLowerCase();
 
@@ -27,6 +28,7 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
   // Calendar State
   const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()));
   const [selectedDate, setSelectedDate] = useState(startOfToday());
+  const [trendsTab, setTrendsTab] = useState<'volume' | 'strength' | 'running'>('volume');
   
   useEffect(() => {
     if (!user) return;
@@ -39,6 +41,73 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
   }, [user]);
 
   const homeVolumeTargets = useMemo(() => computeVolumeTargets(userProfile), [userProfile]);
+
+  const volumeChartData = useMemo(() => {
+    const map = new Map<string, number>();
+    workouts.forEach(w => {
+      const dateStr = format(new Date(w.date), 'yyyy-MM-dd');
+      let vol = 0;
+      flattenLoggedExercises(w.exercises || []).forEach(ex => {
+        vol += calculateLoggedExerciseVolume(ex);
+      });
+      if (vol > 0) {
+        map.set(dateStr, (map.get(dateStr) || 0) + vol);
+      }
+    });
+    return Array.from(map.entries())
+      .map(([date, vol]) => ({ date, displayDate: format(new Date(`${date}T12:00:00`), 'MMM d'), volume: vol }))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [workouts]);
+
+  const strengthChartData = useMemo(() => {
+    const majorLifts = ['flat barbell bench press', 'deadlift', 'front squat', 'squat', 'pendlay row', 'barbell squat'];
+    const map = new Map<string, number>();
+    workouts.forEach(w => {
+      const dateStr = format(new Date(w.date), 'yyyy-MM-dd');
+      let dailyMax = 0;
+      flattenLoggedExercises(w.exercises || []).forEach(ex => {
+        if (majorLifts.includes(normalizeMuscleName(ex.name))) {
+          let topWeight = Number(ex.weight) || 0;
+          if (ex.usePerSetWeights && ex.perSetWeights && Array.isArray(ex.perSetWeights)) {
+             const mx = Math.max(...ex.perSetWeights.map(n => Number(n)).filter(n => !isNaN(n)));
+             if (mx > topWeight && mx !== Infinity) topWeight = mx;
+          }
+          if (topWeight > dailyMax) {
+            dailyMax = topWeight;
+          }
+        }
+      });
+      if (dailyMax > 0) {
+        map.set(dateStr, Math.max((map.get(dateStr) || 0), dailyMax));
+      }
+    });
+    return Array.from(map.entries())
+      .map(([date, maxW]) => ({ date, displayDate: format(new Date(`${date}T12:00:00`), 'MMM d'), strength: maxW }))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [workouts]);
+
+  const runningChartData = useMemo(() => {
+    const map = new Map<string, number>();
+    workouts.forEach(w => {
+      const dateStr = format(new Date(w.date), 'yyyy-MM-dd');
+      let distMeters = 0;
+      const c = normalizeConditioning(w.conditioning, w.blocks);
+      const classified = classifyConditioningSession(c);
+      
+      if (classified && !['Bike', 'Other', 'METCON', 'AMRAP', 'EMOM'].includes(classified.category)) {
+        if (c) {
+           distMeters += getDistanceInMeters(c);
+        }
+      }
+      if (distMeters > 0) {
+        const distMiles = distMeters / 1609.34;
+        map.set(dateStr, (map.get(dateStr) || 0) + distMiles);
+      }
+    });
+    return Array.from(map.entries())
+      .map(([date, rawDist]) => ({ date, displayDate: format(new Date(`${date}T12:00:00`), 'MMM d'), running: Number(rawDist.toFixed(2)) }))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [workouts]);
 
   const today = format(new Date(), 'EEEE, MMMM d');
 
@@ -348,6 +417,140 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
               </button>
             );
           })}
+        </div>
+      </div>
+
+      <div className="card-shell mt-6 p-4">
+        <div className="border-b border-border pb-4 mb-4">
+          <h3 className="section-title">Performance Trends</h3>
+          <p className="text-sm text-muted-foreground mt-1">Volume, strength, and running trends over time</p>
+        </div>
+        
+        <div className="h-[300px] w-full mb-6">
+          {trendsTab === 'volume' && (
+            volumeChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={volumeChartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorVolume" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#800000" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#800000" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                  <XAxis 
+                    dataKey="displayDate" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 12, fill: '#6B7280' }}
+                    dy={10}
+                  />
+                  <YAxis 
+                    hide
+                  />
+                  <Tooltip 
+                    cursor={{ stroke: '#800000', strokeWidth: 1, strokeDasharray: '4 4' }}
+                    contentStyle={{ borderRadius: '8px', border: '1px solid #E5E7EB', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}
+                    formatter={(val: number) => [`${Math.round(val).toLocaleString()} lbs`, 'Total Volume']}
+                    labelStyle={{ color: '#374151', fontWeight: 600, marginBottom: '4px' }}
+                  />
+                  <Area type="monotone" dataKey="volume" stroke="#800000" strokeWidth={3} fillOpacity={1} fill="url(#colorVolume)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center text-sm text-muted-foreground italic bg-muted/20 rounded-xl border border-dashed border-border/50">
+                No volume data logged yet.
+                {workouts.length === 1 && <span className="block mt-1 text-xs opacity-70">More logs will build the trend.</span>}
+              </div>
+            )
+          )}
+          {trendsTab === 'strength' && (
+            strengthChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={strengthChartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                   <defs>
+                    <linearGradient id="colorStrength" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#d97706" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#d97706" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                  <XAxis 
+                    dataKey="displayDate" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 12, fill: '#6B7280' }}
+                    dy={10}
+                  />
+                  <YAxis 
+                    hide
+                    domain={['dataMin - 20', 'dataMax + 20']}
+                  />
+                  <Tooltip 
+                    cursor={{ stroke: '#d97706', strokeWidth: 1, strokeDasharray: '4 4' }}
+                    contentStyle={{ borderRadius: '8px', border: '1px solid #E5E7EB', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}
+                    formatter={(val: number) => [`${val.toLocaleString()} lbs`, 'Strength Score']}
+                    labelStyle={{ color: '#374151', fontWeight: 600, marginBottom: '4px' }}
+                  />
+                  <Area type="monotone" dataKey="strength" stroke="#d97706" strokeWidth={3} fillOpacity={1} fill="url(#colorStrength)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center text-sm text-muted-foreground italic bg-muted/20 rounded-xl border border-dashed border-border/50">
+                No strength trend data available yet.
+                {workouts.length === 1 && <span className="block mt-1 text-xs opacity-70">More logs will build the trend.</span>}
+              </div>
+            )
+          )}
+          {trendsTab === 'running' && (
+            runningChartData.length > 0 ? (
+               <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={runningChartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                   <defs>
+                    <linearGradient id="colorRunning" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#475569" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#475569" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                  <XAxis 
+                    dataKey="displayDate" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 12, fill: '#6B7280' }}
+                    dy={10}
+                  />
+                  <YAxis 
+                    hide
+                  />
+                  <Tooltip 
+                    cursor={{ stroke: '#475569', strokeWidth: 1, strokeDasharray: '4 4' }}
+                    contentStyle={{ borderRadius: '8px', border: '1px solid #E5E7EB', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}
+                    formatter={(val: number) => [`${val} mi`, 'Running Trend']}
+                    labelStyle={{ color: '#374151', fontWeight: 600, marginBottom: '4px' }}
+                  />
+                  <Area type="monotone" dataKey="running" stroke="#475569" strokeWidth={3} fillOpacity={1} fill="url(#colorRunning)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center text-sm text-muted-foreground italic bg-muted/20 rounded-xl border border-dashed border-border/50">
+                No running data logged yet.
+                {workouts.length === 1 && <span className="block mt-1 text-xs opacity-70">More logs will build the trend.</span>}
+              </div>
+            )
+          )}
+        </div>
+
+        <div className="flex bg-muted/50 p-1 rounded-lg w-full max-w-sm mx-auto">
+          {(['volume', 'strength', 'running'] as const).map(tab => (
+            <button
+              key={tab}
+              onClick={() => setTrendsTab(tab)}
+              className={`flex-1 py-1.5 text-xs font-semibold capitalize rounded-md transition-all ${trendsTab === tab ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}
+            >
+              {tab}
+            </button>
+          ))}
         </div>
       </div>
 
