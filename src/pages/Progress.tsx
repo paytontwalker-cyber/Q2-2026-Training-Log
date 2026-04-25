@@ -52,7 +52,7 @@ import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
-import { getDistanceInMeters, normalizeConditioning, calculateLoggedExerciseVolume, flattenLoggedExercises } from '../lib/workoutUtils';
+import { getDistanceInMeters, normalizeConditioning, calculateLoggedExerciseVolume, flattenLoggedExercises, classifyConditioningSession, formatDistance, formatPace, formatDurationReadable } from '../lib/workoutUtils';
 import { resolveExerciseDistribution } from '@/src/lib/exerciseDistribution';
 import { ExerciseLibraryEntry } from '@/src/types';
 import { BodyMap, getVolumeColor, THERMAL_COLORS } from '@/src/components/BodyMap';
@@ -64,6 +64,8 @@ export default function Progress() {
   const [heatMode, setHeatMode] = useState<'relative' | 'target'>('target');
   const [sessionHeatMode, setSessionHeatMode] = useState<'relative' | 'target'>('target');
   const [conditioningRange, setConditioningRange] = useState<'24h' | '72h' | '1w' | '2w' | '1m' | '3m' | 'all'>('all');
+  const [conditioningCategory, setConditioningCategory] = useState<string>('All');
+  const [conditioningProtocol, setConditioningProtocol] = useState<string>('All');
   const [selectedExercise, setSelectedExercise] = useState(INITIAL_EXERCISES[5].name); // Flat Bench Press
   const [selectedWorkoutId, setSelectedWorkoutId] = useState<string | null>(null);
   const [history, setHistory] = useState<Workout[]>([]);
@@ -651,11 +653,20 @@ export default function Progress() {
             default: return 0;
           }
         })();
-    const runningWorkouts = history.filter(w => {
-      if (!normalizeConditioning(w.conditioning, w.blocks)) return false;
-      if (cutoffMs === 0) return true;
-      return new Date(w.date).getTime() >= cutoffMs;
+
+    let runningWorkouts = history.filter(w => {
+      const c = normalizeConditioning(w.conditioning, w.blocks);
+      if (!c) return false;
+      if (cutoffMs !== 0 && new Date(w.date).getTime() < cutoffMs) return false;
+      
+      const classification = classifyConditioningSession(c);
+      
+      if (conditioningCategory !== 'All' && classification.category !== conditioningCategory) return false;
+      if (conditioningProtocol !== 'All' && conditioningProtocol !== 'All Repeats' && classification.protocolKey !== conditioningProtocol) return false;
+      
+      return true;
     });
+
     if (runningWorkouts.length === 0) return null;
 
     const sortedRunning = [...runningWorkouts].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -666,6 +677,7 @@ export default function Progress() {
     
     const paceHistory = sortedRunning.map(w => {
       const c = normalizeConditioning(w.conditioning, w.blocks)!;
+      const classification = classifyConditioningSession(c);
       const meters = getDistanceInMeters(c);
       const dur = timeToSeconds(c.workDuration || '0') || 0;
       const multiplier = (c.type === 'Repeats' && c.reps && c.reps > 0) ? c.reps : 1;
@@ -675,11 +687,10 @@ export default function Progress() {
       
       totalMetersSum += totalMeters;
       totalDurationSecondsSum += totalDur;
-      if (c.type) typeCounts[c.type] = (typeCounts[c.type] || 0) + 1;
+      typeCounts[classification.label] = (typeCounts[classification.label] || 0) + 1;
 
       let avgPaceSec = 0;
       if (totalMeters > 0 && totalDur > 0) {
-        // Pace per mile
         avgPaceSec = totalDur / (totalMeters / 1609.34);
       } else if (c.averagePace) {
         avgPaceSec = timeToSeconds(c.averagePace) || 0;
@@ -688,31 +699,38 @@ export default function Progress() {
       return {
         date: format(new Date(w.date), 'MMM dd'),
         fullDate: new Date(w.date),
-        type: c.type,
+        type: classification.label,
+        category: classification.category,
         distanceMeters: totalMeters,
         distanceMiles: totalMeters / 1609.34,
         duration: totalDur,
         pace: avgPaceSec,
-        paceStr: avgPaceSec > 0 ? secondsToTime(avgPaceSec) : null
+        paceStr: avgPaceSec > 0 ? formatPace(avgPaceSec) : null,
+        heartRate: c.averageHeartRate || null
       };
     });
 
     const repeatHistory = sortedRunning
       .filter(w => {
         const c = normalizeConditioning(w.conditioning, w.blocks);
-        return c?.type === 'Repeats' && c.actualSplits?.length;
+        const cls = classifyConditioningSession(c);
+        return cls.category === 'Repeats' && c?.actualSplits?.length;
       })
       .map(w => {
         const c = normalizeConditioning(w.conditioning, w.blocks)!;
         const splits = c.actualSplits!.map(s => timeToSeconds(s)).filter((s): s is number => s !== null);
         const avgSplit = splits.length > 0 ? splits.reduce((a, b) => a + b, 0) / splits.length : 0;
         const bestSplit = splits.length > 0 ? Math.min(...splits) : 0;
+        const slowestSplit = splits.length > 0 ? Math.max(...splits) : 0;
+        const consistency = slowestSplit - bestSplit;
 
         return {
           date: format(new Date(w.date), 'MMM dd'),
           fullDate: new Date(w.date),
           avgSplit,
           bestSplit,
+          slowestSplit,
+          consistency,
           avgSplitStr: avgSplit > 0 ? secondsToTime(avgSplit) : null,
           bestSplitStr: bestSplit > 0 ? secondsToTime(bestSplit) : null
         };
@@ -726,9 +744,10 @@ export default function Progress() {
       totalSessions: runningWorkouts.length,
       paceHistory,
       repeatHistory,
-      typeData
+      typeData,
+      isMixed: conditioningCategory === 'All'
     };
-  }, [history, conditioningRange]);
+  }, [history, conditioningRange, conditioningCategory, conditioningProtocol]);
 
   // Body Battery Logic
   const bodyBattery = useMemo(() => {
@@ -1583,27 +1602,68 @@ export default function Progress() {
         <>
           {/* Conditioning View (Renamed from Running) */}
           <section className="space-y-6">
-            <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 flex-wrap">
               <div className="flex items-center gap-2">
                 <Zap className="text-gold" size={20} />
                 <h3 className="text-xl font-bold text-foreground">Conditioning Overview</h3>
               </div>
-              <div className="flex items-center gap-2">
-                <Label className="text-xs uppercase tracking-wider text-muted-foreground font-bold">Range</Label>
-                <Select value={conditioningRange} onValueChange={(v: any) => setConditioningRange(v)}>
-                  <SelectTrigger className="h-9 w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="24h">Last 24h</SelectItem>
-                    <SelectItem value="72h">Last 72h</SelectItem>
-                    <SelectItem value="1w">1 Week</SelectItem>
-                    <SelectItem value="2w">2 Weeks</SelectItem>
-                    <SelectItem value="1m">1 Month</SelectItem>
-                    <SelectItem value="3m">3 Months</SelectItem>
-                    <SelectItem value="all">All Time</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground font-bold">Category</Label>
+                  <Select value={conditioningCategory} onValueChange={(v) => { setConditioningCategory(v); setConditioningProtocol('All'); }}>
+                    <SelectTrigger className="h-9 w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="All">All Categories</SelectItem>
+                      <SelectItem value="Zone 2">Zone 2</SelectItem>
+                      <SelectItem value="Repeats">Repeats</SelectItem>
+                      <SelectItem value="Ladders">Ladders</SelectItem>
+                      <SelectItem value="Intervals">Intervals</SelectItem>
+                      <SelectItem value="Incline Treadmill">Incline Treadmill</SelectItem>
+                      <SelectItem value="Bike">Bike</SelectItem>
+                      <SelectItem value="Ruck">Ruck</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {conditioningCategory === 'Repeats' && (
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs uppercase tracking-wider text-muted-foreground font-bold">Protocol</Label>
+                    <Select value={conditioningProtocol} onValueChange={(v) => setConditioningProtocol(v)}>
+                      <SelectTrigger className="h-9 w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All">All Repeats</SelectItem>
+                        <SelectItem value="Repeats:200m">200m</SelectItem>
+                        <SelectItem value="Repeats:400m">400m</SelectItem>
+                        <SelectItem value="Repeats:800m">800m</SelectItem>
+                        <SelectItem value="Repeats:1mi">1-Mile</SelectItem>
+                        <SelectItem value="Repeats:Mixed">Mixed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground font-bold">Range</Label>
+                  <Select value={conditioningRange} onValueChange={(v: any) => setConditioningRange(v)}>
+                    <SelectTrigger className="h-9 w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="24h">Last 24h</SelectItem>
+                      <SelectItem value="72h">Last 72h</SelectItem>
+                      <SelectItem value="1w">1 Week</SelectItem>
+                      <SelectItem value="2w">2 Weeks</SelectItem>
+                      <SelectItem value="1m">1 Month</SelectItem>
+                      <SelectItem value="3m">3 Months</SelectItem>
+                      <SelectItem value="all">All Time</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
 
@@ -1615,7 +1675,7 @@ export default function Progress() {
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-2xl font-black text-maroon">{runningAnalytics.totalMiles.toFixed(1)}</span>
+                      <span className="text-2xl font-black text-maroon">{formatDistance(runningAnalytics.totalMiles * 1609.34, 'mi')}</span>
                       <span className="text-xs text-muted-foreground font-bold uppercase">Miles</span>
                     </div>
                   </CardContent>
@@ -1626,8 +1686,7 @@ export default function Progress() {
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-2xl font-black text-maroon">{Math.floor(runningAnalytics.totalDurationSeconds / 60)}</span>
-                      <span className="text-xs text-muted-foreground font-bold uppercase">Min</span>
+                      <span className="text-2xl font-black text-maroon">{formatDurationReadable(runningAnalytics.totalDurationSeconds)}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -1638,13 +1697,13 @@ export default function Progress() {
                   <CardContent>
                     <div className="flex items-baseline gap-1">
                       <span className="text-2xl font-black text-maroon">{runningAnalytics.totalSessions}</span>
-                      <span className="text-xs text-muted-foreground font-bold uppercase">Runs</span>
+                      <span className="text-xs text-muted-foreground font-bold uppercase">Sessions</span>
                     </div>
                   </CardContent>
                 </Card>
                 <Card className="card-shell">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Avg Pace</CardTitle>
+                    <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">{runningAnalytics.isMixed ? 'Avg Pace (Mixed)' : 'Avg Pace'}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-baseline gap-1">
@@ -1652,7 +1711,7 @@ export default function Progress() {
                         {(() => {
                           if (runningAnalytics.totalMiles === 0 || runningAnalytics.totalDurationSeconds === 0) return '--';
                           const avgPaceSec = runningAnalytics.totalDurationSeconds / runningAnalytics.totalMiles;
-                          return secondsToTime(avgPaceSec);
+                          return formatPace(avgPaceSec);
                         })()}
                       </span>
                       <span className="text-xs text-muted-foreground font-bold uppercase">/mi</span>
@@ -1675,7 +1734,9 @@ export default function Progress() {
                     <Timer size={16} className="text-maroon" />
                     <CardTitle className="text-lg">Pace Trend</CardTitle>
                   </div>
-                  <CardDescription>Average pace over time (lower is faster)</CardDescription>
+                  <CardDescription>
+                    {conditioningCategory === 'All' ? 'Average pace over time (Mixed Modal)' : `Average pace over time — ${conditioningCategory}`}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="h-[300px] pt-4">
                   <ResponsiveContainer width="100%" height="100%">
@@ -1692,10 +1753,10 @@ export default function Progress() {
                         tickLine={false} 
                         tick={{ fontSize: 12, fill: '#64748b' }}
                         reversed
-                        tickFormatter={(val) => secondsToTime(val)}
+                        tickFormatter={(val) => formatPace(val)}
                       />
                       <Tooltip 
-                        formatter={(val: number) => secondsToTime(val)}
+                        formatter={(val: number) => formatPace(val)}
                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                       />
                       <Area 
@@ -1711,49 +1772,51 @@ export default function Progress() {
                 </CardContent>
               </Card>
 
-              <Card className="card-shell">
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <PieChartIcon size={16} className="text-gold" />
-                    <CardTitle className="text-lg">Conditioning Breakdown</CardTitle>
-                  </div>
-                  <CardDescription>Distribution of cardio types</CardDescription>
-                </CardHeader>
-                <CardContent className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={runningAnalytics.typeData}
-                        cx="50%"
-                        cy="40%"
-                        innerRadius={60}
-                        outerRadius={80}
-                        paddingAngle={5}
-                        dataKey="value"
-                        label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                      >
-                        {runningAnalytics.typeData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
+              {conditioningCategory === 'All' && (
+                <Card className="card-shell">
+                  <CardHeader>
+                    <div className="flex items-center gap-2">
+                      <PieChartIcon size={16} className="text-gold" />
+                      <CardTitle className="text-lg">Conditioning Breakdown</CardTitle>
+                    </div>
+                    <CardDescription>Distribution of cardio types</CardDescription>
+                  </CardHeader>
+                  <CardContent className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={runningAnalytics.typeData}
+                          cx="50%"
+                          cy="40%"
+                          innerRadius={60}
+                          outerRadius={80}
+                          paddingAngle={5}
+                          dataKey="value"
+                          label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                        >
+                          {runningAnalytics.typeData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              )}
 
-              {runningAnalytics.repeatHistory.length > 0 && (
+              {conditioningCategory === 'Zone 2' && runningAnalytics.paceHistory.some(p => p.heartRate) ? (
                 <Card className="card-shell lg:col-span-2">
                   <CardHeader>
                     <div className="flex items-center gap-2">
-                      <TrendingUp size={16} className="text-blue-500" />
-                      <CardTitle className="text-lg">Repeats Performance</CardTitle>
+                      <TrendingUp size={16} className="text-red-500" />
+                      <CardTitle className="text-lg">Heart Rate Trend — Zone 2</CardTitle>
                     </div>
-                    <CardDescription>Average and best split trends for Repeat sessions</CardDescription>
+                    <CardDescription>Average heart rate across Zone 2 sessions</CardDescription>
                   </CardHeader>
                   <CardContent className="h-[350px] pt-4">
                     <ResponsiveContainer width="100%" height="100%">
-                      <RechartsLineChart data={runningAnalytics.repeatHistory}>
+                      <RechartsLineChart data={runningAnalytics.paceHistory.filter(p => p.heartRate)}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                         <XAxis 
                           dataKey="date" 
@@ -1765,42 +1828,112 @@ export default function Progress() {
                           axisLine={false} 
                           tickLine={false} 
                           tick={{ fontSize: 12, fill: '#64748b' }}
-                          reversed
-                          tickFormatter={(val) => secondsToTime(val)}
+                          domain={['dataMin - 5', 'dataMax + 5']}
                         />
                         <Tooltip 
-                          formatter={(val: number) => secondsToTime(val)}
                           contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                         />
                         <Legend wrapperStyle={{ paddingTop: '20px' }} />
                         <Line 
                           type="monotone" 
-                          dataKey="avgSplit" 
-                          stroke="#800000" 
+                          dataKey="heartRate" 
+                          stroke="#ef4444" 
                           strokeWidth={3} 
-                          name="Avg Split"
-                          dot={{ r: 4 }}
-                        />
-                        <Line 
-                          type="monotone" 
-                          dataKey="bestSplit" 
-                          stroke="#D4AF37" 
-                          strokeWidth={2} 
-                          name="Best Split"
-                          strokeDasharray="5 5"
+                          name="Avg Heart Rate (BPM)"
                           dot={{ r: 4 }}
                         />
                       </RechartsLineChart>
                     </ResponsiveContainer>
                   </CardContent>
                 </Card>
-              )}
+              ) : conditioningCategory === 'Zone 2' ? (
+                <Card className="card-shell lg:col-span-2">
+                  <CardHeader>
+                    <div className="flex items-center gap-2">
+                      <TrendingUp size={16} className="text-red-500" />
+                      <CardTitle className="text-lg">Heart Rate Trend — Zone 2</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="h-[350px] flex items-center justify-center">
+                     <p className="text-muted-foreground italic">No heart rate data logged yet.</p>
+                  </CardContent>
+                </Card>
+              ) : null}
 
-              <Card className="card-shell lg:col-span-2">
+              {conditioningCategory === 'Repeats' ? (
+                <Card className="card-shell lg:col-span-2">
+                  <CardHeader>
+                    <div className="flex items-center gap-2">
+                      <TrendingUp size={16} className="text-blue-500" />
+                      <CardTitle className="text-lg">Repeats Performance {conditioningProtocol !== 'All' ? `— ${conditioningProtocol.replace('Repeats:', '')}` : ''}</CardTitle>
+                    </div>
+                    <CardDescription>Average and best split trends for Repeat sessions.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="h-[350px] pt-4">
+                    {runningAnalytics.repeatHistory.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <RechartsLineChart data={runningAnalytics.repeatHistory}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                          <XAxis 
+                            dataKey="date" 
+                            axisLine={false} 
+                            tickLine={false} 
+                            tick={{ fontSize: 12, fill: '#64748b' }}
+                          />
+                          <YAxis 
+                            axisLine={false} 
+                            tickLine={false} 
+                            tick={{ fontSize: 12, fill: '#64748b' }}
+                            reversed
+                            tickFormatter={(val) => secondsToTime(val)}
+                          />
+                          <Tooltip 
+                            formatter={(val: number) => secondsToTime(val)}
+                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                          />
+                          <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                          <Line 
+                            type="monotone" 
+                            dataKey="avgSplit" 
+                            stroke="#800000" 
+                            strokeWidth={3} 
+                            name="Avg Split"
+                            dot={{ r: 4 }}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="bestSplit" 
+                            stroke="#D4AF37" 
+                            strokeWidth={2} 
+                            name="Best Split"
+                            strokeDasharray="5 5"
+                            dot={{ r: 4 }}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="slowestSplit" 
+                            stroke="#64748b" 
+                            strokeWidth={2} 
+                            name="Slowest Split"
+                            strokeDasharray="3 3"
+                            dot={{ r: 3 }}
+                          />
+                        </RechartsLineChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-full flex items-center justify-center text-muted-foreground italic">
+                        {conditioningProtocol === 'All' ? 'Select a Repeats protocol to view split trends.' : 'No split data available for this protocol.'}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ) : null}
+
+              <Card className={`card-shell ${conditioningCategory !== 'All' && conditioningCategory !== 'Repeats' ? 'lg:col-span-1' : 'lg:col-span-2'}`}>
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <MapPin size={16} className="text-muted-foreground" />
-                    <CardTitle className="text-lg">Volume Trends</CardTitle>
+                    <CardTitle className="text-lg">Volume Trends {conditioningCategory !== 'All' ? `— ${conditioningCategory}` : '— All Conditioning'}</CardTitle>
                   </div>
                   <CardDescription>Distance and Duration per session</CardDescription>
                 </CardHeader>
@@ -1830,21 +1963,22 @@ export default function Progress() {
                       <Tooltip 
                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                       />
-                      <Legend />
+                      <Legend wrapperStyle={{ paddingTop: '20px' }} />
                       <Bar 
                         yAxisId="left"
                         dataKey="distanceMiles" 
                         fill="#800000" 
                         name="Distance (mi)" 
                         radius={[4, 4, 0, 0]}
+                        formatter={(val: number) => formatDistance(val * 1609.34, 'mi') + ' mi'}
                       />
                       <Bar 
                         yAxisId="right"
                         dataKey="duration" 
                         fill="#D4AF37" 
-                        name="Duration (sec)" 
+                        name="Duration" 
                         radius={[4, 4, 0, 0]}
-                        formatter={(val: number) => Math.floor(val / 60) + ' min'}
+                        formatter={(val: number) => formatDurationReadable(val)}
                       />
                     </BarChart>
                   </ResponsiveContainer>

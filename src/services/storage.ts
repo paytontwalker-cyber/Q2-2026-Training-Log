@@ -769,7 +769,7 @@ export const storage = {
     }
   },
 
-  // ---------- Social (3.6.0) ----------
+  // ---------- Public Profile (3.6.0) ----------
 
   // Claim or update a username. Enforces uniqueness via the `usernames/{lowercase}` lookup collection.
   // Returns { success: true } on success, or { success: false, error: string } with a human-readable reason.

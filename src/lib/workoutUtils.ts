@@ -160,6 +160,131 @@ export const normalizeHiitBlock = (hb: HiitBlock): Conditioning => {
   } as Conditioning;
 };
 
+export interface ConditioningClassification {
+  category: string;
+  protocolKey: string;
+  repeatDistance?: number;
+  repeatUnit?: string;
+  label: string;
+}
+
+export const formatDistance = (meters: number, unit: 'mi' | 'm' | 'km' = 'mi'): string => {
+  if (meters === 0) return '0';
+  if (unit === 'mi') {
+    const miles = meters / 1609.34;
+    return Number.isInteger(miles) ? miles.toString() : miles.toFixed(2);
+  }
+  if (unit === 'km') {
+    const km = meters / 1000;
+    return Number.isInteger(km) ? km.toString() : km.toFixed(2);
+  }
+  return Number.isInteger(meters) ? meters.toString() : meters.toFixed(0);
+};
+
+export const formatPace = (secondsPerMile: number): string => {
+  if (secondsPerMile <= 0) return '--:--';
+  const mins = Math.floor(secondsPerMile / 60);
+  const secs = Math.round(secondsPerMile % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
+export const formatDurationReadable = (totalSeconds: number): string => {
+  if (totalSeconds <= 0) return '0s';
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = Math.round(totalSeconds % 60);
+
+  if (hours > 0) {
+    if (minutes === 0) return `${hours}h`;
+    return `${hours}h ${minutes}m`;
+  }
+  if (minutes > 0) {
+    if (seconds === 0) return `${minutes}m`;
+    return `${minutes}m ${seconds}s`;
+  }
+  return `${seconds}s`;
+};
+
+export const classifyConditioningSession = (c: Conditioning | null | undefined): ConditioningClassification => {
+  if (!c) {
+    return { category: 'Other', protocolKey: 'Other', label: 'Other Conditioning' };
+  }
+
+  const type = String(c.type || c.name || '').trim();
+  const lowerType = type.toLowerCase();
+  
+  if (lowerType === 'zone 2' || lowerType.includes('zone 2')) {
+    return { category: 'Zone 2', protocolKey: 'Zone 2', label: 'Zone 2' };
+  }
+
+  if (lowerType === 'repeats' || lowerType.includes('repeats') || lowerType === 'sprints') {
+    let distance = 0;
+    let unit = 'm';
+    let mixed = false;
+
+    if (c.actualSplits && c.actualSplits.length > 0) {
+      if (c.workDistance && c.workDistance.trim() !== '') {
+        const d = parseFloat(c.workDistance);
+        if (!isNaN(d)) {
+          distance = d;
+          unit = (c.workUnits || 'm').toLowerCase();
+        }
+      }
+    } else if (c.workDistance && c.workDistance.trim() !== '') {
+        const d = parseFloat(c.workDistance);
+        if (!isNaN(d)) {
+          distance = d;
+          unit = (c.workUnits || 'm').toLowerCase();
+        }
+    }
+
+    if (mixed) {
+      return { category: 'Repeats', protocolKey: 'Repeats:Mixed', label: 'Mixed Repeats' };
+    } else if (distance > 0) {
+      if ((distance === 1600 && (unit === 'm' || unit === 'meters')) || (distance === 1 && (unit === 'mi' || unit === 'mile' || unit === 'miles'))) {
+        return { category: 'Repeats', protocolKey: 'Repeats:1mi', repeatDistance: 1, repeatUnit: 'mi', label: '1-Mile Repeats' };
+      } else if (distance === 400 && (unit === 'm' || unit === 'meters')) {
+        return { category: 'Repeats', protocolKey: 'Repeats:400m', repeatDistance: 400, repeatUnit: 'm', label: '400m Repeats' };
+      } else if (distance === 800 && (unit === 'm' || unit === 'meters')) {
+        return { category: 'Repeats', protocolKey: 'Repeats:800m', repeatDistance: 800, repeatUnit: 'm', label: '800m Repeats' };
+      } else if (distance === 200 && (unit === 'm' || unit === 'meters')) {
+        return { category: 'Repeats', protocolKey: 'Repeats:200m', repeatDistance: 200, repeatUnit: 'm', label: '200m Repeats' };
+      } else {
+        const unitLabel = unit === 'm' || unit === 'meters' ? 'm' : unit === 'mi' || unit === 'mile' || unit === 'miles' ? 'mi' : unit;
+        return { category: 'Repeats', protocolKey: `Repeats:${distance}${unitLabel}`, repeatDistance: distance, repeatUnit: unitLabel, label: `${distance}${unitLabel} Repeats` };
+      }
+    }
+
+    return { category: 'Repeats', protocolKey: 'Repeats:Mixed', label: 'Mixed Repeats' };
+  }
+
+  if (lowerType === 'ladders' || lowerType.includes('ladder')) {
+    return { category: 'Ladders', protocolKey: 'Ladders', label: 'Ladders' };
+  }
+
+  if (lowerType === 'intervals' || lowerType.includes('interval')) {
+    return { category: 'Intervals', protocolKey: 'Intervals', label: 'Intervals' };
+  }
+
+  if (lowerType === 'incline treadmill' || lowerType.includes('treadmill')) {
+    return { category: 'Incline Treadmill', protocolKey: 'Incline Treadmill', label: 'Incline Treadmill' };
+  }
+
+  if (lowerType === 'bike') {
+    return { category: 'Bike', protocolKey: 'Bike', label: 'Bike' };
+  }
+
+  if (lowerType === 'ruck' || lowerType.includes('ruck')) {
+    return { category: 'Ruck', protocolKey: 'Ruck', label: 'Ruck' };
+  }
+
+  if (['metcon', 'amrap', 'emom'].includes(lowerType)) {
+    return { category: type.toUpperCase(), protocolKey: type.toUpperCase(), label: type.toUpperCase() };
+  }
+
+  return { category: 'Other', protocolKey: 'Other', label: type ? type : 'Other Conditioning' };
+};
+
 export const normalizeConditioning = (conditioning: Conditioning | undefined, blocks: Block[] | undefined): Conditioning | null => {
   if (blocks && blocks.length > 0) {
     const conditioningBlock = blocks.find(b => b.kind === 'cardio' || b.kind === 'hiit');

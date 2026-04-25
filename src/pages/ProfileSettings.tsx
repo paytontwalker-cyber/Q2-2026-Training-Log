@@ -46,9 +46,10 @@ const ROADMAP_ITEMS = [
     ],
   },
   {
-    category: 'Vaulted',
+    category: 'Backlog (Tooling)',
     items: [
-      'Social Feed & Friend Requests.',
+      'Exercise library audit tools.',
+      'Cardio protocol filtering expansions.',
     ],
   },
 ];
@@ -354,89 +355,7 @@ export default function ProfileSettings() {
           </CardContent>
         </Card>
 
-        {/* Social Identity */}
-        <Card className="card-shell">
-          <CardHeader>
-            <CardTitle>Social Identity</CardTitle>
-            <CardDescription>Pick a unique @username so friends can find you. Capital letters OK — we'll match case-insensitively.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label>Username</Label>
-              <div className="flex gap-2 items-start">
-                <div className="flex-1">
-                  <div className="flex items-center gap-1">
-                    <span className="text-muted-foreground text-sm">@</span>
-                    <Input
-                      value={username}
-                      onChange={e => { setUsername(e.target.value); setUsernameError(null); }}
-                      placeholder="YourHandle"
-                      maxLength={20}
-                    />
-                  </div>
-                  {usernameError && <p className="text-xs text-red-600 mt-1">{usernameError}</p>}
-                  {!usernameError && username && <p className="text-xs text-muted-foreground mt-1">Others will find you as @{username}</p>}
-                </div>
-                <Button 
-                  onClick={async () => {
-                    if (!user) return;
-                    setUsernameSaving(true);
-                    setUsernameError(null);
-                    const res = await storage.claimUsername(user.uid, username, usernameLower);
-                    if (res.success) {
-                      setUsernameLower(username.toLowerCase());
-                    } else {
-                      setUsernameError(res.error || 'Failed.');
-                    }
-                    setUsernameSaving(false);
-                  }}
-                  disabled={usernameSaving || !username.trim() || username.toLowerCase() === usernameLower}
-                  className="btn-primary"
-                >
-                  {usernameSaving ? 'Saving...' : 'Claim'}
-                </Button>
-              </div>
-            </div>
 
-            <div className="space-y-3 pt-3 border-t border-border">
-              <h4 className="text-xs uppercase font-bold tracking-wider text-muted-foreground">Privacy</h4>
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-sm">Profile visible to others</Label>
-                  <p className="text-xs text-muted-foreground">When off, your profile won't appear in searches.</p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={privacySettings.profileVisible}
-                  onChange={async (e) => {
-                    if (!user) return;
-                    const next = { ...privacySettings, profileVisible: e.target.checked };
-                    setPrivacySettings(next);
-                    await storage.updatePrivacy(user.uid, next);
-                  }}
-                  className="h-5 w-5"
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-sm">Email searchable</Label>
-                  <p className="text-xs text-muted-foreground">When off, others can only find you by username or display name.</p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={privacySettings.emailSearchable}
-                  onChange={async (e) => {
-                    if (!user) return;
-                    const next = { ...privacySettings, emailSearchable: e.target.checked };
-                    setPrivacySettings(next);
-                    await storage.updatePrivacy(user.uid, next);
-                  }}
-                  className="h-5 w-5"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* 2. Account Details */}
         <Card className="card-shell no-print">

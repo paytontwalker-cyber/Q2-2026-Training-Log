@@ -249,7 +249,7 @@ export interface UserProfile {
   goalWeight?: string;
   age?: string;
   sex?: string;
-  // Social (added 3.6.0)
+  // Account identity (added 3.6.0)
   role?: 'user' | 'coach';     // dormant; reserved for future
   privacy?: {
     profileVisible: boolean;   // default true — others can view profile

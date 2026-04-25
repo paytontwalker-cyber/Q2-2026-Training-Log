@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { LayoutDashboard, History, Dumbbell, LineChart, HeartPulse, Users, Settings, X, Hash } from 'lucide-react';
+import { LayoutDashboard, History, Dumbbell, LineChart, HeartPulse, Settings, X, Hash } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -44,8 +44,7 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
     { id: 'progress', label: 'Progress', icon: LineChart },
     { id: 'history', label: 'History', icon: History },
     { id: 'wellness', label: 'Health/Wellness', icon: HeartPulse },
-    { id: 'social', label: 'Social', icon: Users },
-    { id: 'settings', label: 'Settings', icon: Settings, fullWidth: true }
+    { id: 'settings', label: 'Settings', icon: Settings }
   ];
 
   const muscleDrilldownData = useMemo(() => {
@@ -112,7 +111,7 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
           <Button 
             key={item.id} 
             variant="outline" 
-            className={"h-auto py-3 flex flex-col gap-1.5 border-border hover:border-maroon hover:text-maroon " + (item.fullWidth ? "col-span-3 md:col-span-1" : "")}
+            className="h-auto py-3 flex flex-col gap-1.5 border-border hover:border-maroon hover:text-maroon"
             onClick={() => setCurrentPage(item.id)}
           >
             <item.icon size={20} />

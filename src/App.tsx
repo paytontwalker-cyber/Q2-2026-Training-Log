@@ -17,7 +17,6 @@ import {
   ChevronLeft,
   ChevronRight,
   UserCircle,
-  Users,
   Activity,
   ChevronDown
 } from 'lucide-react';
@@ -32,10 +31,9 @@ import Progress from './pages/Progress';
 import History from './pages/History';
 import Programming from './pages/Programming';
 import ProfileSettings from './pages/ProfileSettings';
-import Social from './pages/Social';
 import Wellness from './pages/Wellness';
 
-type Page = 'home' | 'log' | 'progress' | 'history' | 'programming' | 'profile' | 'social' | 'wellness';
+type Page = 'home' | 'log' | 'progress' | 'history' | 'programming' | 'profile' | 'wellness';
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
@@ -44,7 +42,6 @@ function AppContent() {
   const [expandedBuckets, setExpandedBuckets] = useState<Record<string, boolean>>({
     train: true,
     analyze: true,
-    social: true,
     settings: true,
   });
   const { user, loading, login, loginAsGuest, logout, signUpWithEmail, signInWithEmail } = useFirebase();
@@ -132,13 +129,6 @@ function AppContent() {
         { id: 'progress', label: 'Progress', icon: LineChart },
         { id: 'history', label: 'History', icon: HistoryIcon },
         { id: 'wellness', label: 'Health / Wellness', icon: Activity },
-      ],
-    },
-    {
-      id: 'social',
-      label: 'Social',
-      items: [
-        { id: 'social', label: 'Social', icon: Users },
       ],
     },
     {
@@ -236,7 +226,6 @@ function AppContent() {
       case 'progress': return <Progress />;
       case 'history': return <History setCurrentPage={setCurrentPage} />;
       case 'programming': return <Programming />;
-      case 'social': return <Social />;
       case 'profile': return <ProfileSettings />;
       case 'wellness': return <Wellness />;
       default: return <Home setCurrentPage={setCurrentPage} />;
