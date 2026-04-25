@@ -241,7 +241,7 @@ const SortableExerciseBadge = React.memo(
                 "h-7 w-7 flex items-center justify-center rounded border text-[10px] font-bold transition-colors",
                 isParent
                   ? "border-maroon/30 text-maroon hover:bg-maroon/10"
-                  : "border-orange-400/40 text-orange-600 hover:bg-orange-50"
+                  : "border-gold/40 text-gold hover:bg-gold/10"
               )}
               title={isParent ? "Add superset" : "Eject from superset"}
             >
@@ -441,29 +441,11 @@ export default function Split() {
           });
         };
 
-        // Handle potential duplicates from previous buggy versions
-        const dayMap: Record<string, SplitType> = {};
-        data.forEach((s) => {
-          // Rename labels if they match the old pattern
-          let name = s.name;
-          if (name === "DPE-B (Quad Focus)")
-            name = "Quad Biased Leg Day (DPE-B)";
-          if (name === "DPE-D (Posterior)")
-            name = "Posterior Biased Leg Day (DPE-D)";
-
-          const updatedSplit = {
-            ...s,
-            name,
-            exercises: backfillExercises(s.exercises || []),
-            blocks: s.blocks || [],
-          };
-          const isDeterministic = s.id === `${user.uid}_${s.day}`;
-          // Prefer deterministic IDs or the first one found
-          if (!dayMap[s.day] || isDeterministic) {
-            dayMap[s.day] = updatedSplit;
-          }
-        });
-        const uniqueSplits = Object.values(dayMap);
+        const uniqueSplits = data.map((s) => ({
+          ...s,
+          exercises: backfillExercises(s.exercises || []),
+          blocks: s.blocks || [],
+        }));
         const sorted = uniqueSplits.sort(
           (a, b) => days.indexOf(a.day) - days.indexOf(b.day),
         );
@@ -512,14 +494,9 @@ export default function Split() {
         const updatedSavedSplits = data.map((saved) => {
           const updatedDays: Record<string, any> = {};
           Object.entries(saved.days).forEach(([day, data]) => {
-            let name = data.name;
-            if (name === "DPE-B (Quad Focus)")
-              name = "Quad Biased Leg Day (DPE-B)";
-            if (name === "DPE-D (Posterior)")
-              name = "Posterior Biased Leg Day (DPE-D)";
             updatedDays[day] = {
               ...data,
-              name,
+              name: data.name,
               exercises: backfillExercises(data.exercises || []),
               blocks: data.blocks || [],
             };
@@ -1393,8 +1370,8 @@ export default function Split() {
                      <span className={cn(
                        "text-[10px] uppercase font-bold px-2 py-0.5 rounded shrink-0",
                        block.kind === 'hiit'
-                         ? "bg-orange-100 text-orange-700"
-                         : "bg-blue-100 text-blue-700"
+                         ? "bg-maroon/10 text-maroon"
+                         : "bg-gold/20 text-gold"
                      )}>
                        {block.kind === 'hiit' ? 'HIIT' : 'Cardio'}
                      </span>

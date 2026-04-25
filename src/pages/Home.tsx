@@ -231,7 +231,7 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
                  </div>
                ))}
                {completed.length === 0 && day >= startOfToday() && planned && (
-                 <div className="border border-amber-600/30 text-amber-600 bg-amber-50 text-[8px] font-bold px-1 py-0.5 rounded truncate" title={planned.name}>
+                 <div className="border border-border text-muted-foreground bg-muted/40 text-[8px] font-bold px-1 py-0.5 rounded truncate" title={planned.name}>
                    {planned.name}
                  </div>
                )}
@@ -296,7 +296,7 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
             {renderCalendarCells()}
           </div>
 
-          <div className="card-shell p-4 bg-muted/20">
+          <div className="card-shell-accent p-4 bg-muted/20">
             <h4 className="text-xs uppercase font-bold tracking-wider text-muted-foreground mb-3 border-b border-border pb-2">
               {format(selectedDate, "EEEE, MMMM d, yyyy")}
             </h4>
@@ -310,9 +310,9 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
                 ))}
               </div>
             ) : selectedDate >= startOfToday() && selectedPlanned ? (
-              <div className="flex items-center justify-between bg-amber-50 p-3 rounded-md border border-amber-600/30">
-                <span className="font-semibold text-sm text-amber-900">{selectedPlanned.name}</span>
-                <span className="text-[10px] font-bold text-amber-700 bg-amber-600/10 px-2 py-1 rounded">Planned</span>
+              <div className="flex items-center justify-between bg-muted/20 p-3 rounded-md border border-border">
+                <span className="font-semibold text-sm text-foreground">{selectedPlanned.name}</span>
+                <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-1 rounded">Planned</span>
               </div>
             ) : (
               <div className="text-center p-4 text-sm text-muted-foreground italic">
@@ -323,7 +323,7 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
         </div>
 
         <div className="space-y-6">
-          <div className="card-shell p-4">
+          <div className="card-shell-accent p-4">
             <h3 className="section-title mb-4">Recent PRs</h3>
             <ul className="space-y-3">
               {recentPRs.map((pr, i) => (
@@ -337,7 +337,7 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
               )}
             </ul>
           </div>
-          <div className="card-shell p-4">
+          <div className="card-shell-accent p-4">
             <h3 className="section-title mb-4">Recent Activity</h3>
             <ul className="space-y-3">
               {recentActivity.map((w, i) => (
@@ -354,7 +354,7 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
         </div>
       </div>
 
-      <div className="card-shell">
+      <div className="card-shell-accent">
         <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-muted/20">
           <h3 className="section-title">Weekly Training Intensity</h3>
           <div className="flex items-center gap-2">
@@ -382,7 +382,7 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
         </div>
       </div>
 
-      <div className="card-shell mt-6 p-4">
+      <div className="card-shell-accent mt-6 p-4">
         <h4 className="text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wider border-b border-border pb-2">Muscle Group Volumes</h4>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {sortedMuscleGroupData.map(data => {
@@ -420,7 +420,7 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
         </div>
       </div>
 
-      <div className="card-shell mt-6 p-4">
+      <div className="card-shell-accent mt-6 p-4">
         <div className="border-b border-border pb-4 mb-4">
           <h3 className="section-title">Performance Trends</h3>
           <p className="text-sm text-muted-foreground mt-1">Volume, strength, and running trends over time</p>
@@ -433,8 +433,8 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
                 <AreaChart data={volumeChartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorVolume" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#800000" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#800000" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="var(--app-primary)" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="var(--app-primary)" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
@@ -449,12 +449,12 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
                     hide
                   />
                   <Tooltip 
-                    cursor={{ stroke: '#800000', strokeWidth: 1, strokeDasharray: '4 4' }}
+                    cursor={{ stroke: 'var(--app-primary)', strokeWidth: 1, strokeDasharray: '4 4' }}
                     contentStyle={{ borderRadius: '8px', border: '1px solid #E5E7EB', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}
                     formatter={(val: number) => [`${Math.round(val).toLocaleString()} lbs`, 'Total Volume']}
                     labelStyle={{ color: '#374151', fontWeight: 600, marginBottom: '4px' }}
                   />
-                  <Area type="monotone" dataKey="volume" stroke="#800000" strokeWidth={3} fillOpacity={1} fill="url(#colorVolume)" />
+                  <Area type="monotone" dataKey="volume" stroke="var(--app-primary)" strokeWidth={3} fillOpacity={1} fill="url(#colorVolume)" />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
@@ -470,8 +470,8 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
                 <AreaChart data={strengthChartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
                    <defs>
                     <linearGradient id="colorStrength" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#d97706" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#d97706" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="var(--app-secondary)" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="var(--app-secondary)" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
@@ -487,12 +487,12 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
                     domain={['dataMin - 20', 'dataMax + 20']}
                   />
                   <Tooltip 
-                    cursor={{ stroke: '#d97706', strokeWidth: 1, strokeDasharray: '4 4' }}
+                    cursor={{ stroke: 'var(--app-secondary)', strokeWidth: 1, strokeDasharray: '4 4' }}
                     contentStyle={{ borderRadius: '8px', border: '1px solid #E5E7EB', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}
                     formatter={(val: number) => [`${val.toLocaleString()} lbs`, 'Strength Score']}
                     labelStyle={{ color: '#374151', fontWeight: 600, marginBottom: '4px' }}
                   />
-                  <Area type="monotone" dataKey="strength" stroke="#d97706" strokeWidth={3} fillOpacity={1} fill="url(#colorStrength)" />
+                  <Area type="monotone" dataKey="strength" stroke="var(--app-secondary)" strokeWidth={3} fillOpacity={1} fill="url(#colorStrength)" />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (

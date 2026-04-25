@@ -546,6 +546,7 @@ export default function ProfileSettings() {
                 <Settings className="text-gold" size={20} />
                 Appearance
               </CardTitle>
+              <p className="text-xs text-muted-foreground mt-2">Choose the accent colors that affect highlights, buttons, active states, selected cards, and dashboard details. It does not radically recolor backgrounds.</p>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">

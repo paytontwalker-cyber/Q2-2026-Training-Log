@@ -889,7 +889,7 @@ export default function Progress() {
   }, [history]);
 
   const COLORS = [
-    '#800000', '#D4AF37', '#1e293b', '#64748b', '#94a3b8', '#cbd5e1',
+    'var(--app-primary)', 'var(--app-secondary)', '#1e293b', '#64748b', '#94a3b8', '#cbd5e1',
     '#475569', '#94a3b8', '#e2e8f0', '#0f172a', '#334155', '#1e293b',
     '#020617', '#1e1b4b', '#312e81', '#4338ca', '#5850ec'
   ];
@@ -1648,14 +1648,14 @@ export default function Progress() {
                         />
                         <Tooltip 
                           contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                          cursor={{ stroke: '#800000', strokeWidth: 1 }}
+                          cursor={{ stroke: 'var(--app-primary)', strokeWidth: 1 }}
                         />
                         <Line 
                           type="monotone" 
                           dataKey="weight" 
-                          stroke="#800000" 
+                          stroke="var(--app-primary)" 
                           strokeWidth={3} 
-                          dot={{ r: 4, fill: '#800000', strokeWidth: 2, stroke: '#fff' }}
+                          dot={{ r: 4, fill: 'var(--app-primary)', strokeWidth: 2, stroke: '#fff' }}
                           activeDot={{ r: 6, strokeWidth: 0 }}
                           name="Weight (lbs)"
                         />
@@ -1924,8 +1924,8 @@ export default function Progress() {
                         <Area 
                           type="monotone" 
                           dataKey="pace" 
-                          stroke="#800000" 
-                          fill="#80000020" 
+                          stroke="var(--app-primary)" 
+                          fill="var(--app-primary)" fillOpacity={0.2} 
                           strokeWidth={3}
                           name="Pace"
                         />
@@ -1972,7 +1972,7 @@ export default function Progress() {
                 <Card className="card-shell lg:col-span-2">
                   <CardHeader>
                     <div className="flex items-center gap-2">
-                      <TrendingUp size={16} className="text-red-500" />
+                      <TrendingUp size={16} className="text-maroon" />
                       <CardTitle className="text-lg">Heart Rate Trend — Zone 2</CardTitle>
                     </div>
                     <CardDescription>Average heart rate across Zone 2 sessions</CardDescription>
@@ -2000,7 +2000,7 @@ export default function Progress() {
                         <Line 
                           type="monotone" 
                           dataKey="heartRate" 
-                          stroke="#ef4444" 
+                          stroke="var(--app-primary)" 
                           strokeWidth={3} 
                           name="Avg Heart Rate (BPM)"
                           dot={{ r: 4 }}
@@ -2013,7 +2013,7 @@ export default function Progress() {
                 <Card className="card-shell lg:col-span-2">
                   <CardHeader>
                     <div className="flex items-center gap-2">
-                      <TrendingUp size={16} className="text-red-500" />
+                      <TrendingUp size={16} className="text-maroon" />
                       <CardTitle className="text-lg">Heart Rate Trend — Zone 2</CardTitle>
                     </div>
                   </CardHeader>
@@ -2027,7 +2027,7 @@ export default function Progress() {
                 <Card className="card-shell lg:col-span-2">
                   <CardHeader>
                     <div className="flex items-center gap-2">
-                      <TrendingUp size={16} className="text-blue-500" />
+                      <TrendingUp size={16} className="text-maroon" />
                       <CardTitle className="text-lg">Repeats Split Trend {conditioningProtocol !== 'All' ? `— ${conditioningProtocol.replace('Repeats:', '')}` : ''}</CardTitle>
                     </div>
                     <CardDescription>Average and best split trends for Repeat sessions.</CardDescription>
@@ -2058,7 +2058,7 @@ export default function Progress() {
                           <Line 
                             type="monotone" 
                             dataKey="avgSplit" 
-                            stroke="#800000" 
+                            stroke="var(--app-primary)" 
                             strokeWidth={3} 
                             name="Avg Split"
                             dot={{ r: 4 }}
@@ -2066,7 +2066,7 @@ export default function Progress() {
                           <Line 
                             type="monotone" 
                             dataKey="bestSplit" 
-                            stroke="#D4AF37" 
+                            stroke="var(--app-secondary)" 
                             strokeWidth={2} 
                             name="Best Split"
                             strokeDasharray="5 5"
@@ -2130,7 +2130,7 @@ export default function Progress() {
                       <Bar 
                         yAxisId="left"
                         dataKey="distanceMiles" 
-                        fill="#800000" 
+                        fill="var(--app-primary)" 
                         name="Distance (mi)" 
                         radius={[4, 4, 0, 0]}
                         formatter={(val: number) => formatDistance(val * 1609.34, 'mi') + ' mi'}
@@ -2138,7 +2138,7 @@ export default function Progress() {
                       <Bar 
                         yAxisId="right"
                         dataKey="duration" 
-                        fill="#D4AF37" 
+                        fill="var(--app-secondary)" 
                         name="Duration" 
                         radius={[4, 4, 0, 0]}
                         formatter={(val: number) => formatDurationReadable(val)}

@@ -111,13 +111,14 @@ export const sanitizeDraftRecord = (raw: unknown): Partial<Workout> | null => {
 export const sanitizeSplitRecord = (raw: unknown): Split | null => {
   if (!raw || typeof raw !== 'object') return null;
   const s = raw as Partial<Split>;
-  if (typeof s.day !== 'string' || typeof s.name !== 'string' || typeof s.running !== 'string') return null;
+  if (typeof s.day !== 'string' || typeof s.name !== 'string') return null;
   return {
     ...s,
     id: typeof s.id === 'string' ? s.id : crypto.randomUUID(),
     day: s.day,
     name: s.name,
-    running: s.running,
+    running: typeof s.running === 'string' ? s.running : 'None',
+
     exercises: Array.isArray(s.exercises) ? s.exercises : [],
     blocks: Array.isArray(s.blocks) ? s.blocks : [],
     summary: typeof s.summary === 'string' ? s.summary : '',
@@ -572,7 +573,16 @@ export const storage = {
     const q = query(collection(db, 'splits'), where('uid', '==', uid));
     
     return onSnapshot(q, (snapshot) => {
-      const splits = sanitizeSplitList(snapshot.docs.map(doc => doc.data()));
+      const rawSplits = sanitizeSplitList(snapshot.docs.map(doc => doc.data()));
+      const dayMap: Record<string, Split> = {};
+      rawSplits.forEach(s => {
+        const isDeterministic = s.id === `${uid}_${s.day}`;
+        if (!dayMap[s.day] || isDeterministic) {
+          dayMap[s.day] = s;
+        }
+      });
+      const daysOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+      const splits = Object.values(dayMap).sort((a, b) => daysOrder.indexOf(a.day) - daysOrder.indexOf(b.day));
       callback(splits);
     }, (error) => {
       handleFirestoreError(error, OperationType.LIST, 'splits');

@@ -81,7 +81,7 @@ import {
   BlockTemplate
 } from '@/src/types';
 import { INITIAL_EXERCISES, DEFAULT_SPLIT } from '@/src/constants';
-import { generateWorkoutSnapshot, cleanSummary, sanitizeData, deriveBlocksFromLegacy, projectBlocksToLegacy, calculateRepeatsTotals, parseTime, calculateZone2Pace, normalizeEnergyToFivePoint } from '@/src/lib/workoutUtils';
+import { generateWorkoutSnapshot, cleanSummary, sanitizeData, deriveBlocksFromLegacy, projectBlocksToLegacy, calculateRepeatsTotals, parseTime, calculateZone2Pace, normalizeEnergyToFivePoint, calculateRepeatsStats, formatDurationReadable, formatDistance } from '@/src/lib/workoutUtils';
 
 const NO_SPLIT_SENTINEL = '__none__';
 
@@ -949,7 +949,6 @@ const SortableConditioningBlock: React.FC<SortableConditioningBlockProps> = ({
 
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-border mt-4 bg-card p-3 rounded">
                           {(() => {
-                            const { calculateRepeatsStats, formatDurationReadable, formatDistance } = require('../lib/workoutUtils');
                             const stats = calculateRepeatsStats(
                               block.splitCount || 0,
                               block.splits || [],
@@ -1530,20 +1529,7 @@ export default function DailyLog() {
         // Only auto-seed for guests
         storage.seedSplits(user.uid);
       } else {
-        const dayMap: Record<string, Split> = {};
-        data.forEach(s => {
-          // Rename labels if they match the old pattern
-          let name = s.name;
-          if (name === 'DPE-B (Quad Focus)') name = 'Quad Biased Leg Day (DPE-B)';
-          if (name === 'DPE-D (Posterior)') name = 'Posterior Biased Leg Day (DPE-D)';
-          
-          const updatedSplit = { ...s, name };
-          const isDeterministic = s.id === `${user.uid}_${s.day}`;
-          if (!dayMap[s.day] || isDeterministic) {
-            dayMap[s.day] = updatedSplit;
-          }
-        });
-        setSplits(Object.values(dayMap));
+        setSplits(data);
       }
     });
     return () => unsubscribe();

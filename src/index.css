@@ -173,6 +173,9 @@
   .card-shell {
     @apply rounded-2xl border border-border bg-card shadow-sm overflow-hidden;
   }
+  .card-shell-accent {
+    @apply rounded-2xl border border-maroon/20 bg-card shadow-sm overflow-hidden hover:border-maroon/40 transition-colors;
+  }
   .card-hero {
     @apply rounded-2xl border border-border shadow-sm overflow-hidden;
     background: linear-gradient(135deg, oklch(1 0 0) 0%, oklch(0.98 0.01 60) 100%);
