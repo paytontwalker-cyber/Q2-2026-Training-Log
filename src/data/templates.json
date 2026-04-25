@@ -197,104 +197,48 @@
       "summary": "Pull Day\n- Face Pulls: 3x12\n  - Rear Delt Flyes: 3x15\n- Pendlay Row: 3x3\n- Lat Pulldowns: 3x6\n- ISO Lateral Low Rows: 3x8\n- Iso-Lateral Machine Rows: 3x8\n- Hammer Curls: 3x10\n- Seated Incline DB Curls: 3x8\n- DB Trap Shrug: 3x8\n  - Farmer's Carries: 3x50m"
     },
     "Friday": {
-      "name": "SHARMS (Modular)",
+      "name": "Sharms Day",
       "running": "Modular Speed (Ladders / Mile Repeats)",
       "exercises": [
         {
-          "name": "Seated Barbell Press",
-          "sets": "4",
-          "reps": "6-8",
-          "targetNotes": "Main press"
+          "name": "Select Exercise...",
+          "sets": "",
+          "reps": ""
         },
         {
-          "name": "Arnold Press",
-          "sets": "3",
-          "reps": "8"
+          "name": "Select Exercise...",
+          "sets": "",
+          "reps": ""
         },
         {
-          "name": "Seated DB Shoulder Press",
-          "sets": "3",
-          "reps": "8-10"
-        },
-        {
-          "name": "DB Lateral Raises",
-          "sets": "3",
-          "reps": "15"
-        },
-        {
-          "name": "Cable Lateral Raises",
-          "sets": "3",
-          "reps": "15"
-        },
-        {
-          "name": "Skullcrushers",
-          "sets": "3",
-          "reps": "8"
-        },
-        {
-          "name": "Cable Tricep Pushdowns",
-          "sets": "3",
-          "reps": "12"
-        },
-        {
-          "name": "DB Curls",
-          "sets": "3",
-          "reps": "10"
-        },
-        {
-          "name": "Hammer Curls",
-          "sets": "3",
-          "reps": "10"
+          "name": "Select Exercise...",
+          "sets": "",
+          "reps": ""
         }
       ],
-      "summary": "SHARMS (Modular)\n- Seated Barbell Press: 4x6-8\n- Arnold Press: 3x8\n- Seated DB Shoulder Press: 3x8-10\n- DB Lateral Raises: 3x15\n- Cable Lateral Raises: 3x15\n- Skullcrushers: 3x8\n- Cable Tricep Pushdowns: 3x12\n- DB Curls: 3x10\n- Hammer Curls: 3x10"
+      "summary": "- Minimum 6 sets Shoulders\n- Minimum 4 sets Biceps\n- Minimum 4 sets Triceps\n- Optional Core"
     },
     "Saturday": {
-      "name": "Chest & Back (Modular)",
+      "name": "Chest & Back Day",
       "running": "Zone 2 Run (2 to 5 miles)",
       "exercises": [
         {
-          "name": "Flat Barbell Bench Press",
-          "sets": "3",
-          "reps": "6-8"
+          "name": "Select Exercise...",
+          "sets": "",
+          "reps": ""
         },
         {
-          "name": "Incline Barbell Bench Press",
-          "sets": "3",
-          "reps": "6-8"
+          "name": "Select Exercise...",
+          "sets": "",
+          "reps": ""
         },
         {
-          "name": "Machine Chest Press",
-          "sets": "3",
-          "reps": "8"
-        },
-        {
-          "name": "Chest Fly",
-          "sets": "3",
-          "reps": "12"
-        },
-        {
-          "name": "Lat Pulldowns",
-          "sets": "3",
-          "reps": "8"
-        },
-        {
-          "name": "Seated Cable Row",
-          "sets": "3",
-          "reps": "8"
-        },
-        {
-          "name": "Chest Supported Row",
-          "sets": "3",
-          "reps": "8"
-        },
-        {
-          "name": "Machine High Row",
-          "sets": "3",
-          "reps": "8"
+          "name": "Select Exercise...",
+          "sets": "",
+          "reps": ""
         }
       ],
-      "summary": "Chest & Back (Modular)\n- Flat Barbell Bench Press: 3x6-8\n- Incline Barbell Bench Press: 3x6-8\n- Machine Chest Press: 3x8\n- Chest Fly: 3x12\n- Lat Pulldowns: 3x8\n- Seated Cable Row: 3x8\n- Chest Supported Row: 3x8\n- Machine High Row: 3x8"
+      "summary": "- Minimum 6 sets Chest\n- Minimum 6 sets Back"
     },
     "Sunday": {
       "name": "Recovery & Prep",
@@ -506,104 +450,48 @@
           "summary": "Pull Day\n- Face Pulls: 3x12\n  - Rear Delt Flyes: 3x15\n- Pendlay Row: 3x3\n- Lat Pulldowns: 3x6\n- ISO Lateral Low Rows: 3x8\n- Iso-Lateral Machine Rows: 3x8\n- Hammer Curls: 3x10\n- Seated Incline DB Curls: 3x8\n- DB Trap Shrug: 3x8\n  - Farmer's Carries: 3x50m"
         },
         "Friday": {
-          "name": "SHARMS (Modular)",
+          "name": "Sharms Day",
           "running": "Modular Speed (Ladders / Mile Repeats)",
           "exercises": [
             {
-              "name": "Seated Barbell Press",
-              "sets": "4",
-              "reps": "6-8",
-              "targetNotes": "Main press"
+              "name": "Select Exercise...",
+              "sets": "",
+              "reps": ""
             },
             {
-              "name": "Arnold Press",
-              "sets": "3",
-              "reps": "8"
+              "name": "Select Exercise...",
+              "sets": "",
+              "reps": ""
             },
             {
-              "name": "Seated DB Shoulder Press",
-              "sets": "3",
-              "reps": "8-10"
-            },
-            {
-              "name": "DB Lateral Raises",
-              "sets": "3",
-              "reps": "15"
-            },
-            {
-              "name": "Cable Lateral Raises",
-              "sets": "3",
-              "reps": "15"
-            },
-            {
-              "name": "Skullcrushers",
-              "sets": "3",
-              "reps": "8"
-            },
-            {
-              "name": "Cable Tricep Pushdowns",
-              "sets": "3",
-              "reps": "12"
-            },
-            {
-              "name": "DB Curls",
-              "sets": "3",
-              "reps": "10"
-            },
-            {
-              "name": "Hammer Curls",
-              "sets": "3",
-              "reps": "10"
+              "name": "Select Exercise...",
+              "sets": "",
+              "reps": ""
             }
           ],
-          "summary": "SHARMS (Modular)\n- Seated Barbell Press: 4x6-8\n- Arnold Press: 3x8\n- Seated DB Shoulder Press: 3x8-10\n- DB Lateral Raises: 3x15\n- Cable Lateral Raises: 3x15\n- Skullcrushers: 3x8\n- Cable Tricep Pushdowns: 3x12\n- DB Curls: 3x10\n- Hammer Curls: 3x10"
+          "summary": "- Minimum 6 sets Shoulders\n- Minimum 4 sets Biceps\n- Minimum 4 sets Triceps\n- Optional Core"
         },
         "Saturday": {
-          "name": "Chest & Back (Modular)",
+          "name": "Chest & Back Day",
           "running": "Zone 2 Run (2 to 5 miles)",
           "exercises": [
             {
-              "name": "Flat Barbell Bench Press",
-              "sets": "3",
-              "reps": "6-8"
+              "name": "Select Exercise...",
+              "sets": "",
+              "reps": ""
             },
             {
-              "name": "Incline Barbell Bench Press",
-              "sets": "3",
-              "reps": "6-8"
+              "name": "Select Exercise...",
+              "sets": "",
+              "reps": ""
             },
             {
-              "name": "Machine Chest Press",
-              "sets": "3",
-              "reps": "8"
-            },
-            {
-              "name": "Chest Fly",
-              "sets": "3",
-              "reps": "12"
-            },
-            {
-              "name": "Lat Pulldowns",
-              "sets": "3",
-              "reps": "8"
-            },
-            {
-              "name": "Seated Cable Row",
-              "sets": "3",
-              "reps": "8"
-            },
-            {
-              "name": "Chest Supported Row",
-              "sets": "3",
-              "reps": "8"
-            },
-            {
-              "name": "Machine High Row",
-              "sets": "3",
-              "reps": "8"
+              "name": "Select Exercise...",
+              "sets": "",
+              "reps": ""
             }
           ],
-          "summary": "Chest & Back (Modular)\n- Flat Barbell Bench Press: 3x6-8\n- Incline Barbell Bench Press: 3x6-8\n- Machine Chest Press: 3x8\n- Chest Fly: 3x12\n- Lat Pulldowns: 3x8\n- Seated Cable Row: 3x8\n- Chest Supported Row: 3x8\n- Machine High Row: 3x8"
+          "summary": "- Minimum 6 sets Chest\n- Minimum 6 sets Back"
         },
         "Sunday": {
           "name": "Recovery & Prep",

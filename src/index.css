@@ -171,24 +171,42 @@
   }
   
   .card-shell {
-    @apply rounded-2xl border border-border bg-card shadow-sm overflow-hidden;
+    @apply rounded-2xl border border-maroon/30 bg-card shadow-sm overflow-hidden;
   }
   .card-shell-accent {
-    @apply rounded-2xl border border-maroon/20 bg-card shadow-sm overflow-hidden hover:border-maroon/40 transition-colors;
+    @apply rounded-2xl border border-maroon/40 bg-card shadow-sm overflow-hidden hover:border-maroon/60 transition-all;
+  }
+  .accent-card {
+    @apply rounded-2xl border border-maroon/50 bg-card shadow-sm overflow-hidden;
+  }
+  .accent-card-soft {
+    @apply rounded-2xl border border-maroon/35 bg-card shadow-sm overflow-hidden;
+  }
+  .accent-card-strong {
+    @apply rounded-2xl border border-maroon/80 bg-card shadow-sm overflow-hidden ring-1 ring-maroon/40;
+  }
+  .accent-hover {
+    @apply transition-all hover:border-maroon/70 hover:bg-maroon/5;
+  }
+  .accent-selected {
+    @apply border-maroon/85 bg-maroon/10 ring-1 ring-maroon/40;
+  }
+  .accent-badge-soft {
+    @apply bg-maroon/10 text-maroon font-semibold border border-maroon/35 rounded-md px-2 py-1;
   }
   .card-hero {
-    @apply rounded-2xl border border-border shadow-sm overflow-hidden;
+    @apply rounded-2xl border border-maroon/35 shadow-sm overflow-hidden;
     background: linear-gradient(135deg, oklch(1 0 0) 0%, oklch(0.98 0.01 60) 100%);
   }
   .card-muted {
-    @apply rounded-2xl border border-border bg-muted/50 p-4 shadow-sm;
+    @apply rounded-2xl border border-maroon/20 bg-maroon/5 p-4 shadow-sm;
   }
   .soft-panel {
-    @apply rounded-xl border border-border bg-muted/30 p-4;
+    @apply rounded-xl border border-maroon/25 bg-maroon/5 p-4;
   }
   
   .metric-card {
-    @apply rounded-2xl border border-border bg-card shadow-sm overflow-hidden p-4 flex flex-col justify-between;
+    @apply rounded-2xl border border-maroon/35 bg-card shadow-sm overflow-hidden p-4 flex flex-col justify-between hover:border-maroon/50 transition-colors;
   }
   .metric-label {
     @apply text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1;
@@ -205,18 +223,18 @@
     @apply bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-sm;
   }
   .btn-secondary {
-    @apply bg-card border border-border text-foreground hover:bg-muted font-medium shadow-sm transition-colors;
+    @apply bg-card border border-maroon/30 text-foreground hover:bg-maroon/5 hover:border-maroon/60 font-medium shadow-sm transition-all;
   }
   .btn-ghost-soft {
-    @apply bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors;
+    @apply bg-transparent text-muted-foreground hover:text-maroon hover:bg-maroon/10 transition-colors;
   }
   
   .tab-pill {
-    @apply h-9 px-4 rounded-full text-sm font-medium transition-colors border border-border shadow-sm bg-card text-muted-foreground hover:text-foreground hover:bg-muted data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary;
+    @apply h-9 px-4 rounded-full text-sm font-medium transition-all border border-maroon/20 shadow-sm bg-card text-muted-foreground hover:text-maroon hover:border-maroon/50 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary;
   }
   
   .input-standard {
-    @apply h-10 rounded-xl border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 transition-colors;
+    @apply h-10 rounded-xl border border-maroon/25 bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-maroon focus-visible:ring-1 focus-visible:ring-maroon/50 disabled:cursor-not-allowed disabled:opacity-50 transition-colors;
   }
   
   .divider-soft {

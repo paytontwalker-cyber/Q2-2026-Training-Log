@@ -216,9 +216,9 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
         days.push(
           <div
             className={`p-1 min-h-[50px] border rounded-md cursor-pointer transition-colors relative flex flex-col gap-0.5
-              ${!isSameMonthMarker ? "border-transparent bg-muted/10 opacity-50" : "border-border/50 bg-card hover:border-maroon/50"}
-              ${isSelectedMarker ? "ring-1 ring-maroon bg-maroon/5 border-maroon" : ""}
-              ${isTodayMarker && !isSelectedMarker ? "border-maroon/50" : ""}
+              ${!isSameMonthMarker ? "border-transparent bg-muted/10 opacity-50" : "border-border/50 bg-card accent-hover"}
+              ${isSelectedMarker ? "accent-selected" : ""}
+              ${isTodayMarker && !isSelectedMarker ? "border-maroon/75 shadow-sm" : ""}
             `}
             key={day.toString()}
             onClick={() => setSelectedDate(cloneDay)}
@@ -231,7 +231,7 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
                  </div>
                ))}
                {completed.length === 0 && day >= startOfToday() && planned && (
-                 <div className="border border-border text-muted-foreground bg-muted/40 text-[8px] font-bold px-1 py-0.5 rounded truncate" title={planned.name}>
+                 <div className="accent-badge-soft border-0 text-[8px] px-1 py-0.5 truncate" title={planned.name}>
                    {planned.name}
                  </div>
                )}
@@ -269,10 +269,10 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
           <Button 
             key={item.id} 
             variant="outline" 
-            className="h-auto py-3 flex flex-col gap-1.5 border-border hover:border-maroon hover:text-maroon"
+            className="h-auto py-3 flex flex-col gap-1.5 accent-card accent-hover"
             onClick={() => setCurrentPage(item.id)}
           >
-            <item.icon size={20} />
+            <item.icon size={20} className="text-maroon" />
             <span className="text-[10px] font-semibold uppercase">{item.label}</span>
           </Button>
         ))}
@@ -280,39 +280,39 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div className="lg:col-span-2 space-y-4">
-          <div className="card-shell p-4">
+          <div className="accent-card p-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <CalendarIcon className="text-maroon" size={20} />
                 <h3 className="section-title text-base">{format(currentMonth, "MMMM yyyy")}</h3>
               </div>
               <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}><ChevronLeft size={16} /></Button>
-                <Button variant="ghost" size="sm" className="h-8 text-[10px] uppercase font-bold" onClick={() => setCurrentMonth(startOfMonth(new Date()))}>Today</Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}><ChevronRight size={16} /></Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 accent-hover" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}><ChevronLeft size={16} /></Button>
+                <Button variant="ghost" size="sm" className="h-8 text-[10px] uppercase font-bold accent-hover" onClick={() => setCurrentMonth(startOfMonth(new Date()))}>Today</Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 accent-hover" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}><ChevronRight size={16} /></Button>
               </div>
             </div>
             {renderCalendarDays()}
             {renderCalendarCells()}
           </div>
 
-          <div className="card-shell-accent p-4 bg-muted/20">
-            <h4 className="text-xs uppercase font-bold tracking-wider text-muted-foreground mb-3 border-b border-border pb-2">
+          <div className="accent-card p-4 bg-muted/20">
+            <h4 className="text-xs uppercase font-bold tracking-wider text-maroon mb-3 border-b border-border pb-2">
               {format(selectedDate, "EEEE, MMMM d, yyyy")}
             </h4>
             {selectedCompleted.length > 0 ? (
               <div className="space-y-2">
                 {selectedCompleted.map((w, i) => (
-                  <div key={i} className="flex items-center justify-between bg-card p-3 rounded-md border border-border">
+                  <div key={i} className="flex items-center justify-between accent-card p-3 rounded-md">
                     <span className="font-semibold text-sm">{w.workoutName || 'Workout'}</span>
-                    <span className="text-[10px] font-bold text-maroon bg-maroon/5 px-2 py-1 rounded">Logged</span>
+                    <span className="text-[10px] font-bold text-maroon bg-maroon/10 px-2 py-1 rounded">Logged</span>
                   </div>
                 ))}
               </div>
             ) : selectedDate >= startOfToday() && selectedPlanned ? (
-              <div className="flex items-center justify-between bg-muted/20 p-3 rounded-md border border-border">
+              <div className="flex items-center justify-between accent-card p-3 rounded-md">
                 <span className="font-semibold text-sm text-foreground">{selectedPlanned.name}</span>
-                <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-1 rounded">Planned</span>
+                <span className="accent-badge-soft">Planned</span>
               </div>
             ) : (
               <div className="text-center p-4 text-sm text-muted-foreground italic">
@@ -323,13 +323,13 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
         </div>
 
         <div className="space-y-6">
-          <div className="card-shell-accent p-4">
+          <div className="accent-card p-4">
             <h3 className="section-title mb-4">Recent PRs</h3>
             <ul className="space-y-3">
               {recentPRs.map((pr, i) => (
                 <li key={i} className="flex justify-between items-center text-sm">
                   <span className="font-medium text-foreground">{pr.name}</span>
-                  <span className="font-bold text-maroon bg-maroon/5 px-2 py-1 rounded-md">{pr.weight} kg</span>
+                  <span className="accent-badge-soft">{pr.weight} kg</span>
                 </li>
               ))}
               {recentPRs.length === 0 && (
@@ -337,13 +337,13 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
               )}
             </ul>
           </div>
-          <div className="card-shell-accent p-4">
+          <div className="accent-card p-4">
             <h3 className="section-title mb-4">Recent Activity</h3>
             <ul className="space-y-3">
               {recentActivity.map((w, i) => (
                 <li key={i} className="flex justify-between items-center text-sm">
                   <span className="font-medium text-foreground line-clamp-1">{w.workoutName}</span>
-                  <span className="text-muted-foreground text-xs font-medium whitespace-nowrap bg-muted px-2 py-1 rounded-md">{format(new Date(w.date), 'MMM d')}</span>
+                  <span className="accent-badge-soft font-medium whitespace-nowrap">{format(new Date(w.date), 'MMM d')}</span>
                 </li>
               ))}
               {recentActivity.length === 0 && (
@@ -354,7 +354,7 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
         </div>
       </div>
 
-      <div className="card-shell-accent">
+      <div className="accent-card">
         <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-muted/20">
           <h3 className="section-title">Weekly Training Intensity</h3>
           <div className="flex items-center gap-2">
@@ -382,7 +382,7 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
         </div>
       </div>
 
-      <div className="card-shell-accent mt-6 p-4">
+      <div className="accent-card mt-6 p-4">
         <h4 className="text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wider border-b border-border pb-2">Muscle Group Volumes</h4>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {sortedMuscleGroupData.map(data => {
@@ -403,7 +403,7 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
                 key={data.name}
                 type="button"
                 onClick={() => setDrilldownMuscle(data.name)}
-                className={`w-full text-left rounded-xl border border-border bg-card/70 px-4 py-3 shadow-sm transition-all cursor-pointer hover:border-maroon/40 hover:bg-maroon/5`}
+                className={`w-full text-left rounded-xl border border-border bg-card/70 px-4 py-3 shadow-sm accent-hover cursor-pointer`}
               >
                 <div className="flex items-center gap-3">
                   <span className="h-3 w-3 rounded-full shrink-0 shadow-sm border border-border" style={{ backgroundColor: color }} />
@@ -420,7 +420,7 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
         </div>
       </div>
 
-      <div className="card-shell-accent mt-6 p-4">
+      <div className="accent-card mt-6 p-4">
         <div className="border-b border-border pb-4 mb-4">
           <h3 className="section-title">Performance Trends</h3>
           <p className="text-sm text-muted-foreground mt-1">Volume, strength, and running trends over time</p>

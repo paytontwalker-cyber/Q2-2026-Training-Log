@@ -211,8 +211,8 @@ const SortableExerciseCard = ({
       ref={setNodeRef} 
       style={style} 
       className={cn(
-        "card-shell relative group transition-shadow",
-        isDragging && "shadow-lg border-maroon/30"
+        "accent-card relative group transition-shadow",
+        isDragging && "shadow-lg ring-1 ring-maroon/30"
       )}
     >
       <CardContent className="p-4">
@@ -788,8 +788,8 @@ const SortableConditioningBlock: React.FC<SortableConditioningBlockProps> = ({
       ref={setNodeRef} 
       style={style} 
       className={cn(
-        "card-shell relative group transition-shadow",
-        isDragging && "shadow-lg border-maroon/30"
+        "accent-card relative group transition-shadow",
+        isDragging && "shadow-lg ring-1 ring-maroon/30"
       )}
     >
       <CardContent className="p-4">
@@ -2361,7 +2361,7 @@ export default function DailyLog() {
       <div className="grid grid-cols-1 gap-6">
         <div className="space-y-6">
           {/* Workout Header Card */}
-          <Card className="card-shell overflow-hidden">
+          <Card className="accent-card overflow-hidden">
             <div className="h-2 bg-maroon" />
             <CardHeader>
               <div className="flex flex-col gap-4">
@@ -2600,7 +2600,7 @@ export default function DailyLog() {
 
         <div className="space-y-6">
           {/* Post-Workout Energy */}
-          <Card className="card-shell">
+          <Card className="accent-card">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg">Post-Workout Energy</CardTitle>
               <CardDescription>How do you feel right now?</CardDescription>
@@ -2630,7 +2630,7 @@ export default function DailyLog() {
           </Card>
 
           {/* General Notes */}
-          <Card className="card-shell">
+          <Card className="accent-card">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg">General Notes</CardTitle>
             </CardHeader>
