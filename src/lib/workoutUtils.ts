@@ -545,6 +545,68 @@ export const calculateRepeatsTotals = (
   };
 };
 
+export const calculateRepeatsStats = (
+  splitCount: number,
+  splits: { timeStr: string, distanceVal?: number }[],
+  repeatDistance: number | string,
+  repeatUnit: string,
+  restValue: number | string,
+  restUnit: string,
+  averageHeartRate?: number | string
+) => {
+  let totalWorkSeconds = 0;
+  let totalDistance = 0;
+  let bestSplitSeconds = Infinity;
+  let slowestSplitSeconds = 0;
+  let validSplitsCount = 0;
+  
+  const parsedDist = typeof repeatDistance === 'string' ? parseFloat(repeatDistance) : repeatDistance || 0;
+
+  splits.forEach(split => {
+    const splitSecs = parseTime(split.timeStr);
+    if (splitSecs > 0) {
+      totalWorkSeconds += splitSecs;
+      validSplitsCount++;
+      if (splitSecs < bestSplitSeconds) bestSplitSeconds = splitSecs;
+      if (splitSecs > slowestSplitSeconds) slowestSplitSeconds = splitSecs;
+    }
+    
+    // For mixed distance or normal distance
+    const dist = split.distanceVal !== undefined ? split.distanceVal : parsedDist;
+    totalDistance += dist;
+  });
+
+  if (bestSplitSeconds === Infinity) bestSplitSeconds = 0;
+  
+  const avgSplitSeconds = validSplitsCount > 0 ? totalWorkSeconds / validSplitsCount : 0;
+  const splitConsistencySeconds = validSplitsCount > 1 ? slowestSplitSeconds - bestSplitSeconds : 0;
+
+  const parsedRest = typeof restValue === 'string' ? parseFloat(restValue) : restValue || 0;
+  let restPerSplitSeconds = 0;
+  if (restUnit.toLowerCase().startsWith('min')) restPerSplitSeconds = parsedRest * 60;
+  else if (restUnit.toLowerCase().startsWith('sec')) restPerSplitSeconds = parsedRest;
+
+  const restPeriods = Math.max(0, splitCount - 1);
+  const totalRestSeconds = restPeriods * restPerSplitSeconds;
+
+  const totalSessionSeconds = totalWorkSeconds + totalRestSeconds;
+
+  return {
+    repeatCount: splitCount,
+    repeatDistance: parsedDist,
+    repeatUnit: repeatUnit || 'm',
+    totalDistance,
+    totalWorkSeconds,
+    totalRestSeconds,
+    totalSessionSeconds,
+    averageSplitSeconds: avgSplitSeconds,
+    bestSplitSeconds: bestSplitSeconds,
+    slowestSplitSeconds: slowestSplitSeconds,
+    splitConsistencySeconds: splitConsistencySeconds,
+    averageHeartRate: typeof averageHeartRate === 'string' ? parseFloat(averageHeartRate) || null : averageHeartRate || null
+  };
+};
+
 export const calculateZone2Pace = (
   distanceVal: number,
   distanceUnit: string,

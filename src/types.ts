@@ -136,6 +136,9 @@ export interface CardioBlock extends BlockBase {
   programmedNotes?: string;
   // Repeats specific
   splitCount?: number;
+  isMixedDistance?: boolean;
+  repeatDistanceVal?: number;
+  repeatDistanceUnit?: string;
   splits?: {
     distanceVal: number;
     distanceUnit: string;

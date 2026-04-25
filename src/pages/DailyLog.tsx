@@ -840,93 +840,170 @@ const SortableConditioningBlock: React.FC<SortableConditioningBlockProps> = ({
                   <div className="space-y-4">
                     {block.subtype === 'Repeats' ? (
                       <div className="space-y-4 p-4 bg-muted rounded-lg border border-border">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs uppercase font-bold text-muted-foreground">Setup</Label>
+                          <div className="flex items-center space-x-2">
+                            <Label htmlFor={`mixed-${block.id}`} className="text-xs text-muted-foreground mr-1">Mixed distances</Label>
+                            <input
+                              id={`mixed-${block.id}`}
+                              type="checkbox"
+                              checked={block.isMixedDistance || false}
+                              onChange={(e) => {
+                                const checked = e.target.checked;
+                                const newSplits = [...(block.splits || [])].map(s => ({
+                                  ...s,
+                                  distanceVal: checked ? (s.distanceVal || block.repeatDistanceVal || 0) : 0,
+                                  distanceUnit: checked ? (s.distanceUnit || block.repeatDistanceUnit || 'm') : 'm'
+                                }));
+                                onChange({ isMixedDistance: checked, splits: newSplits });
+                              }}
+                              className="h-4 w-4"
+                            />
+                          </div>
+                        </div>
+
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          {!block.isMixedDistance && (
+                            <div>
+                              <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Repeat Dist</Label>
+                              <div className="flex gap-1">
+                                <Input 
+                                  value={block.repeatDistanceVal ?? ''} 
+                                  onChange={(e) => onChange({ repeatDistanceVal: e.target.value === '' ? undefined : parseFloat(e.target.value) })} 
+                                  className="h-9" 
+                                />
+                                <Select value={block.repeatDistanceUnit ?? 'm'} onValueChange={(val) => onChange({ repeatDistanceUnit: val })}>
+                                  <SelectTrigger className="h-9 w-16 px-2"><SelectValue /></SelectTrigger>
+                                  <SelectContent><SelectItem value="m">m</SelectItem><SelectItem value="yd">yd</SelectItem><SelectItem value="km">km</SelectItem><SelectItem value="mi">mi</SelectItem></SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                          )}
                           <div>
-                            <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Splits</Label>
-                            <Input type="number" value={block.splitCount ?? ''} onChange={(e) => {
-                              const count = parseInt(e.target.value) || 0;
-                              const newSplits = Array(count).fill(0).map((_, i) => block.splits?.[i] || { distanceVal: 0, distanceUnit: 'm', timeStr: '0:00' });
-                              onChange({ splitCount: count, splits: newSplits });
-                            }} className="h-9" />
+                            <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Sets (Reps)</Label>
+                            <Input type="number" value={block.splitCount || ''} onChange={(e) => {
+                              const countStr = e.target.value;
+                              const count = parseInt(countStr);
+                              if (isNaN(count)) {
+                                onChange({ splitCount: undefined, splits: [] });
+                              } else {
+                                const currentSplits = block.splits || [];
+                                const newSplits = Array(count).fill(0).map((_, i) => currentSplits[i] || { distanceVal: 0, distanceUnit: 'm', timeStr: '' });
+                                onChange({ splitCount: count, splits: newSplits });
+                              }
+                            }} className="h-9" placeholder="0" />
                           </div>
                           <div>
-                            <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Rest</Label>
-                            <div className="flex gap-2">
-                              <Input type="number" value={block.restValue ?? ''} onChange={(e) => onChange({ restValue: parseFloat(e.target.value) || 0 })} className="h-9" />
+                            <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Rest per split</Label>
+                            <div className="flex gap-1">
+                              <Input type="number" value={block.restValue ?? ''} onChange={(e) => onChange({ restValue: e.target.value === '' ? undefined : parseFloat(e.target.value) })} className="h-9" placeholder="0" />
                               <Select value={block.restUnit ?? 'sec'} onValueChange={(val) => onChange({ restUnit: val })}>
-                                <SelectTrigger className="h-9 w-20"><SelectValue /></SelectTrigger>
-                                <SelectContent><SelectItem value="sec">sec</SelectItem><SelectItem value="min">min</SelectItem><SelectItem value="m">m</SelectItem><SelectItem value="yd">yd</SelectItem><SelectItem value="mi">mi</SelectItem></SelectContent>
+                                <SelectTrigger className="h-9 w-16 px-1"><SelectValue /></SelectTrigger>
+                                <SelectContent><SelectItem value="sec">sec</SelectItem><SelectItem value="min">min</SelectItem></SelectContent>
                               </Select>
                             </div>
                           </div>
                           <div>
                             <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Avg HR</Label>
-                            <Input type="number" value={block.averageHeartRate ?? ''} onChange={(e) => onChange({ averageHeartRate: parseInt(e.target.value) || 0 })} className="h-9" />
+                            <Input type="number" value={block.averageHeartRate ?? ''} onChange={(e) => onChange({ averageHeartRate: e.target.value === '' ? undefined : parseInt(e.target.value) })} className="h-9" placeholder="BPM" />
                           </div>
                         </div>
                         
-                        <div className="space-y-2">
-                          <Label className="text-[10px] uppercase font-bold text-muted-foreground block">Splits</Label>
-                          {block.splits?.map((split, i) => (
-                            <div key={i} className="grid grid-cols-2 md:grid-cols-4 gap-2 items-center bg-card p-2 rounded border border-border">
-                              <div className="text-xs font-bold text-muted-foreground">Split {i + 1}</div>
-                              <div className="flex gap-1">
-                                <Input type="number" value={split.distanceVal} onChange={(e) => {
-                                  const newSplits = [...(block.splits || [])];
-                                  newSplits[i] = { ...split, distanceVal: parseFloat(e.target.value) || 0 };
-                                  onChange({ splits: newSplits });
-                                }} className="h-8" />
-                                <Select value={split.distanceUnit} onValueChange={(val) => {
-                                  const newSplits = [...(block.splits || [])];
-                                  newSplits[i] = { ...split, distanceUnit: val };
-                                  onChange({ splits: newSplits });
-                                }}>
-                                  <SelectTrigger className="h-8 w-16"><SelectValue /></SelectTrigger>
-                                  <SelectContent><SelectItem value="m">m</SelectItem><SelectItem value="yd">yd</SelectItem><SelectItem value="km">km</SelectItem><SelectItem value="mi">mi</SelectItem></SelectContent>
-                                </Select>
+                        {(block.splitCount || 0) > 0 && (
+                          <div className="space-y-3 pt-2">
+                            <Label className="text-[10px] uppercase font-bold text-muted-foreground block border-b border-border pb-1">Times</Label>
+                            {block.splits?.map((split, i) => (
+                              <div key={i} className="flex gap-3 items-center">
+                                <div className="text-xs font-bold text-muted-foreground w-16 shrink-0">Rep {i + 1}</div>
+                                {block.isMixedDistance && (
+                                  <div className="flex gap-1 w-32 shrink-0">
+                                    <Input value={split.distanceVal || ''} onChange={(e) => {
+                                      const newSplits = [...(block.splits || [])];
+                                      newSplits[i] = { ...split, distanceVal: e.target.value === '' ? 0 : parseFloat(e.target.value) };
+                                      onChange({ splits: newSplits });
+                                    }} className="h-8" placeholder="Dist" />
+                                    <Select value={split.distanceUnit || 'm'} onValueChange={(val) => {
+                                      const newSplits = [...(block.splits || [])];
+                                      newSplits[i] = { ...split, distanceUnit: val };
+                                      onChange({ splits: newSplits });
+                                    }}>
+                                      <SelectTrigger className="h-8 w-16 px-1"><SelectValue /></SelectTrigger>
+                                      <SelectContent><SelectItem value="m">m</SelectItem><SelectItem value="yd">yd</SelectItem><SelectItem value="km">km</SelectItem><SelectItem value="mi">mi</SelectItem></SelectContent>
+                                    </Select>
+                                  </div>
+                                )}
+                                <Input 
+                                  value={split.timeStr || ''} 
+                                  onChange={(e) => {
+                                    const newSplits = [...(block.splits || [])];
+                                    newSplits[i] = { ...split, timeStr: e.target.value };
+                                    onChange({ splits: newSplits });
+                                  }} 
+                                  className="h-8 max-w-[120px]" 
+                                  placeholder="e.g. 1:34"
+                                />
                               </div>
-                              <Input value={split.timeStr} onChange={(e) => {
-                                const newSplits = [...(block.splits || [])];
-                                newSplits[i] = { ...split, timeStr: e.target.value };
-                                onChange({ splits: newSplits });
-                              }} placeholder="3:35" className="h-8" />
-                            </div>
-                          ))}
+                            ))}
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-border mt-4 bg-card p-3 rounded">
+                          {(() => {
+                            const { calculateRepeatsStats, formatDurationReadable, formatDistance } = require('../lib/workoutUtils');
+                            const stats = calculateRepeatsStats(
+                              block.splitCount || 0,
+                              block.splits || [],
+                              block.repeatDistanceVal || 0,
+                              block.repeatDistanceUnit || 'm',
+                              block.restValue || 0,
+                              block.restUnit || 'sec',
+                              block.averageHeartRate || 0
+                            );
+                            return (
+                              <>
+                                <div>
+                                  <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Total Work</Label>
+                                  <div className="h-6 flex items-center font-mono text-xs">
+                                    {stats.totalDistance > 0 ? `${parseFloat(stats.totalDistance.toFixed(2))} ${block.isMixedDistance ? 'mixed' : (block.repeatDistanceUnit || 'm')}` : '--'}
+                                  </div>
+                                </div>
+                                <div>
+                                  <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Work Time</Label>
+                                  <div className="h-6 flex items-center font-mono text-xs">
+                                    {stats.totalWorkSeconds > 0 ? formatDurationReadable(stats.totalWorkSeconds) : '--'}
+                                  </div>
+                                </div>
+                                <div>
+                                  <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Total Rest</Label>
+                                  <div className="h-6 flex items-center font-mono text-xs">
+                                    {stats.totalRestSeconds > 0 ? formatDurationReadable(stats.totalRestSeconds) : '--'}
+                                  </div>
+                                </div>
+                                <div>
+                                  <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block text-maroon">Total Session</Label>
+                                  <div className="h-6 flex items-center font-mono text-xs font-bold text-maroon">
+                                    {stats.totalSessionSeconds > 0 ? formatDurationReadable(stats.totalSessionSeconds) : '--'}
+                                  </div>
+                                </div>
+                                <div className="col-span-2 md:col-span-4 grid grid-cols-3 gap-2 mt-2 pt-2 border-t border-border/50">
+                                  <div>
+                                     <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Avg Split</Label>
+                                     <div className="font-mono text-xs">{stats.averageSplitSeconds > 0 ? formatDurationReadable(stats.averageSplitSeconds) : '--'}</div>
+                                  </div>
+                                  <div>
+                                     <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Best</Label>
+                                     <div className="font-mono text-xs text-green-600">{stats.bestSplitSeconds > 0 ? formatDurationReadable(stats.bestSplitSeconds) : '--'}</div>
+                                  </div>
+                                  <div>
+                                     <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Slowest</Label>
+                                     <div className="font-mono text-xs text-amber-600">{stats.slowestSplitSeconds > 0 ? formatDurationReadable(stats.slowestSplitSeconds) : '--'}</div>
+                                  </div>
+                                </div>
+                              </>
+                            );
+                          })()}
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-border">
-                          <div>
-                            <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Total Dist</Label>
-                            <div className="h-9 flex items-center font-mono text-sm">{block.splits?.reduce((sum, s) => sum + s.distanceVal, 0) || 0} {block.splits?.[0]?.distanceUnit || 'm'}</div>
-                          </div>
-                          <div>
-                            <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Total Time</Label>
-                            <div className="h-9 flex items-center font-mono text-sm">
-                              {(() => {
-                                const totals = calculateRepeatsTotals(block.splits || []);
-                                return totals.totalTimeStr;
-                              })()}
-                            </div>
-                          </div>
-                          <div>
-                            <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Avg Time/Split</Label>
-                            <div className="h-9 flex items-center font-mono text-sm">
-                              {(() => {
-                                const totals = calculateRepeatsTotals(block.splits || []);
-                                return totals.avgTimePerSplitStr;
-                              })()}
-                            </div>
-                          </div>
-                          <div>
-                            <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Avg Pace</Label>
-                            <div className="h-9 flex items-center font-mono text-sm">
-                              {(() => {
-                                const totals = calculateRepeatsTotals(block.splits || []);
-                                return `${totals.paceStr} / ${block.splits?.[0]?.distanceUnit || 'm'}`;
-                              })()}
-                            </div>
-                          </div>
-                        </div>
                         <div>
                           <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Notes</Label>
                           <Textarea value={block.programmedNotes ?? ''} onChange={(e) => onChange({ programmedNotes: e.target.value })} placeholder="Repeats notes..." className="min-h-[60px] text-xs" />

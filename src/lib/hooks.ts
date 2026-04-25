@@ -32,21 +32,36 @@ export function useDashboardData() {
   const { user } = useFirebase();
   const [data, setData] = useState<{
     workouts: Workout[];
+    splits: import('@/src/types').Split[];
     loading: boolean;
   }>({
     workouts: [],
+    splits: [],
     loading: true,
   });
   const [library, setLibrary] = useState<ExerciseLibraryEntry[]>([]);
 
   useEffect(() => {
     if (!user) {
-      setData({ workouts: [], loading: false });
+      setData({ workouts: [], splits: [], loading: false });
       return;
     }
 
-    const unsubscribeWorkouts = storage.subscribeToWorkouts(user.uid, (workouts) => {
-      setData({ workouts, loading: false });
+    let currentWorkouts: Workout[] = [];
+    let currentSplits: import('@/src/types').Split[] = [];
+
+    const updateData = () => {
+      setData({ workouts: currentWorkouts, splits: currentSplits, loading: false });
+    };
+
+    const unsubscribeWorkouts = storage.subscribeToWorkouts(user.uid, (w) => {
+      currentWorkouts = w;
+      updateData();
+    });
+
+    const unsubscribeSplits = storage.subscribeToSplits(user.uid, (s) => {
+      currentSplits = s;
+      updateData();
     });
 
     const unsubscribeLibrary = storage.subscribeToLibrary(user.uid, (data) => {
@@ -55,6 +70,7 @@ export function useDashboardData() {
 
     return () => {
       unsubscribeWorkouts();
+      unsubscribeSplits();
       unsubscribeLibrary();
     };
   }, [user]);

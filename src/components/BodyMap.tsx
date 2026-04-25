@@ -254,46 +254,6 @@ export function BodyMap({ muscleGroupData, heatMode = 'target', volumeTargets, o
           <span className="text-xs text-muted-foreground">High</span>
         </div>
       </div>
-
-      {/* Supplemental List */}
-      <div className="mt-8">
-        <h4 className="text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wider border-b pb-2">Muscle Group Volumes</h4>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {muscleGroupData.map(data => {
-            const regions = MUSCLE_GROUP_TO_REGIONS[data.name as MuscleGroup];
-            let color = NO_DATA_COLOR;
-            if (data.value > 0) {
-              if (heatMode === 'target') {
-                const target = (volumeTargets || BASE_VOLUME_TARGETS_180LB_INTERMEDIATE)[data.name] || 0;
-                const ratio = target > 0 ? (data.value / target) * 100 : (maxVolume > 0 ? (data.value / maxVolume) * 100 : 0);
-                color = getVolumeColor(ratio);
-              } else {
-                const ratio = maxVolume > 0 ? (data.value / maxVolume) * 100 : 0;
-                color = getVolumeColor(ratio);
-              }
-            }
-            
-            return (
-              <button
-                key={data.name}
-                type="button"
-                onClick={() => onMuscleClick?.(data.name)}
-                className={`w-full text-left rounded-xl border border-border bg-card/70 px-4 py-3 shadow-sm transition-all ${onMuscleClick ? 'cursor-pointer hover:border-maroon/40 hover:bg-maroon/5' : 'cursor-default'}`}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="h-3 w-3 rounded-full shrink-0 shadow-sm border border-border" style={{ backgroundColor: color }} />
-                  <div className="min-w-0">
-                    <div className="font-bold text-foreground truncate">{data.name}</div>
-                    <div className="text-sm text-muted-foreground tabular-nums">
-                      {data.value.toLocaleString(undefined, { maximumFractionDigits: 1 })} lbs moved
-                    </div>
-                  </div>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
     </div>
   );
 }

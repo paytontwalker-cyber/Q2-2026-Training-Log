@@ -52,7 +52,7 @@ import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
-import { getDistanceInMeters, normalizeConditioning, calculateLoggedExerciseVolume, flattenLoggedExercises, classifyConditioningSession, formatDistance, formatPace, formatDurationReadable } from '../lib/workoutUtils';
+import { getDistanceInMeters, normalizeConditioning, calculateLoggedExerciseVolume, flattenLoggedExercises, classifyConditioningSession, formatDistance, formatPace, formatDurationReadable, calculateRepeatsStats } from '../lib/workoutUtils';
 import { resolveExerciseDistribution } from '@/src/lib/exerciseDistribution';
 import { ExerciseLibraryEntry } from '@/src/types';
 import { BodyMap, getVolumeColor, THERMAL_COLORS } from '@/src/components/BodyMap';
@@ -710,6 +710,16 @@ export default function Progress() {
       };
     });
 
+    let totalReps = 0;
+    let totalRestSecondsSum = 0;
+    let totalWorkDistance = 0;
+    let overallBestSplit = Infinity;
+    let overallSlowestSplit = 0;
+    let sumHR = 0;
+    let countHR = 0;
+    let totalWorkSeconds = 0;
+    let validSplitsCount = 0;
+
     const repeatHistory = sortedRunning
       .filter(w => {
         const c = normalizeConditioning(w.conditioning, w.blocks);
@@ -717,12 +727,62 @@ export default function Progress() {
         return cls.category === 'Repeats' && c?.actualSplits?.length;
       })
       .map(w => {
-        const c = normalizeConditioning(w.conditioning, w.blocks)!;
-        const splits = c.actualSplits!.map(s => timeToSeconds(s)).filter((s): s is number => s !== null);
-        const avgSplit = splits.length > 0 ? splits.reduce((a, b) => a + b, 0) / splits.length : 0;
-        const bestSplit = splits.length > 0 ? Math.min(...splits) : 0;
-        const slowestSplit = splits.length > 0 ? Math.max(...splits) : 0;
-        const consistency = slowestSplit - bestSplit;
+        const block = (w.blocks || []).find(b => b.kind === 'cardio' && b.subtype === 'Repeats') as any;
+        let avgSplit, bestSplit, slowestSplit, consistency, reps = 0, restSecs = 0, hr = null;
+        let c = normalizeConditioning(w.conditioning, w.blocks)!;
+
+        // Block based approach
+        if (block && block.splits && block.splitCount !== undefined) {
+          const stats = calculateRepeatsStats(
+            block.splitCount,
+            block.splits,
+            block.repeatDistanceVal || 0,
+            block.repeatDistanceUnit || 'm',
+            block.restValue || 0,
+            block.restUnit || 'sec',
+            block.averageHeartRate
+          );
+          avgSplit = stats.averageSplitSeconds;
+          bestSplit = stats.bestSplitSeconds;
+          slowestSplit = stats.slowestSplitSeconds;
+          consistency = stats.splitConsistencySeconds;
+          reps = stats.repeatCount;
+          restSecs = stats.totalRestSeconds;
+          hr = stats.averageHeartRate || c.averageHeartRate;
+          
+          totalReps += reps;
+          totalRestSecondsSum += restSecs;
+          totalWorkDistance += stats.totalDistance;
+          totalWorkSeconds += stats.totalWorkSeconds;
+          validSplitsCount += reps;
+
+          if (bestSplit > 0 && bestSplit < overallBestSplit) overallBestSplit = bestSplit;
+          if (slowestSplit > overallSlowestSplit) overallSlowestSplit = slowestSplit;
+          if (hr && hr > 0) {
+            sumHR += hr;
+            countHR++;
+          }
+        } else {
+          // Legacy approach
+          const splits = c.actualSplits!.map(s => timeToSeconds(s)).filter((s): s is number => s !== null);
+          avgSplit = splits.length > 0 ? splits.reduce((a, b) => a + b, 0) / splits.length : 0;
+          bestSplit = splits.length > 0 ? Math.min(...splits) : 0;
+          slowestSplit = splits.length > 0 ? Math.max(...splits) : 0;
+          consistency = slowestSplit > 0 && bestSplit > 0 ? slowestSplit - bestSplit : 0;
+          reps = splits.length;
+          totalReps += reps;
+          validSplitsCount += reps;
+          totalWorkSeconds += splits.reduce((a,b) => a+b, 0);
+
+          if (bestSplit > 0 && bestSplit < overallBestSplit) overallBestSplit = bestSplit;
+          if (slowestSplit > overallSlowestSplit) overallSlowestSplit = slowestSplit;
+
+          hr = c.averageHeartRate;
+          if (hr && hr > 0) {
+            sumHR += hr;
+            countHR++;
+          }
+        }
 
         return {
           date: format(new Date(w.date), 'MMM dd'),
@@ -736,6 +796,8 @@ export default function Progress() {
         };
       });
 
+    if (overallBestSplit === Infinity) overallBestSplit = 0;
+
     const typeData = Object.entries(typeCounts).map(([name, value]) => ({ name, value }));
 
     return {
@@ -745,7 +807,18 @@ export default function Progress() {
       paceHistory,
       repeatHistory,
       typeData,
-      isMixed: conditioningCategory === 'All'
+      isMixed: conditioningCategory === 'All',
+      repeatsStats: conditioningCategory === 'Repeats' ? {
+        totalReps,
+        totalRestSeconds: totalRestSecondsSum,
+        totalWorkDistance,
+        averageHR: countHR > 0 ? Math.round(sumHR / countHR) : null,
+        bestSplit: overallBestSplit,
+        slowestSplit: overallSlowestSplit,
+        averageSplit: validSplitsCount > 0 ? totalWorkSeconds / validSplitsCount : 0,
+        totalSessionTimeSeconds: totalWorkSeconds + totalRestSecondsSum,
+        consistency: (overallSlowestSplit > 0 && overallBestSplit > 0) ? overallSlowestSplit - overallBestSplit : 0
+      } : null
     };
   }, [history, conditioningRange, conditioningCategory, conditioningProtocol]);
 
@@ -1668,57 +1741,145 @@ export default function Progress() {
             </div>
 
             {runningAnalytics ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="card-shell">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Total Distance</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-2xl font-black text-maroon">{formatDistance(runningAnalytics.totalMiles * 1609.34, 'mi')}</span>
-                      <span className="text-xs text-muted-foreground font-bold uppercase">Miles</span>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="card-shell">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Total Duration</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-2xl font-black text-maroon">{formatDurationReadable(runningAnalytics.totalDurationSeconds)}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="card-shell">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Total Sessions</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-2xl font-black text-maroon">{runningAnalytics.totalSessions}</span>
-                      <span className="text-xs text-muted-foreground font-bold uppercase">Sessions</span>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="card-shell">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">{runningAnalytics.isMixed ? 'Avg Pace (Mixed)' : 'Avg Pace'}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-2xl font-black text-maroon">
-                        {(() => {
-                          if (runningAnalytics.totalMiles === 0 || runningAnalytics.totalDurationSeconds === 0) return '--';
-                          const avgPaceSec = runningAnalytics.totalDurationSeconds / runningAnalytics.totalMiles;
-                          return formatPace(avgPaceSec);
-                        })()}
-                      </span>
-                      <span className="text-xs text-muted-foreground font-bold uppercase">/mi</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+              conditioningCategory === 'Repeats' && runningAnalytics.repeatsStats ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  <Card className="card-shell">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Protocol</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-xl font-black text-maroon">{conditioningProtocol === 'All' ? 'All' : conditioningProtocol.replace('Repeats:', '')}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="card-shell">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Total Reps</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-xl font-black text-maroon">{runningAnalytics.repeatsStats.totalReps}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="card-shell">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Work Dist</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-xl font-black text-maroon">{formatDistance(runningAnalytics.repeatsStats.totalWorkDistance, 'm')}</span>
+                        <span className="text-[10px] text-muted-foreground font-bold uppercase">m</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="card-shell">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Avg Split</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-xl font-black text-maroon">{runningAnalytics.repeatsStats.averageSplit > 0 ? formatDurationReadable(runningAnalytics.repeatsStats.averageSplit) : '--'}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="card-shell">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Best / Consist.</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-sm font-black text-green-600">{runningAnalytics.repeatsStats.bestSplit > 0 ? formatDurationReadable(runningAnalytics.repeatsStats.bestSplit) : '--'} best</span>
+                        <span className="text-xs font-medium text-amber-600">{runningAnalytics.repeatsStats.consistency > 0 ? `+${formatDurationReadable(runningAnalytics.repeatsStats.consistency)}` : '--'} spread</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="card-shell">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Total Session</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-xl font-black text-maroon">{runningAnalytics.repeatsStats.totalSessionTimeSeconds > 0 ? formatDurationReadable(runningAnalytics.repeatsStats.totalSessionTimeSeconds) : '--'}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="card-shell">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Total Rest</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-xl font-black text-maroon">{runningAnalytics.repeatsStats.totalRestSeconds > 0 ? formatDurationReadable(runningAnalytics.repeatsStats.totalRestSeconds) : '--'}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="card-shell">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Avg HR</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-xl font-black text-maroon">{runningAnalytics.repeatsStats.averageHR || '--'}</span>
+                        <span className="text-[10px] text-muted-foreground font-bold uppercase">bpm</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <Card className="card-shell">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Total Distance</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-2xl font-black text-maroon">{formatDistance(runningAnalytics.totalMiles * 1609.34, 'mi')}</span>
+                        <span className="text-xs text-muted-foreground font-bold uppercase">Miles</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="card-shell">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Total Duration</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-2xl font-black text-maroon">{formatDurationReadable(runningAnalytics.totalDurationSeconds)}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="card-shell">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Total Sessions</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-2xl font-black text-maroon">{runningAnalytics.totalSessions}</span>
+                        <span className="text-xs text-muted-foreground font-bold uppercase">Sessions</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="card-shell">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">{runningAnalytics.isMixed ? 'Avg Pace (Mixed)' : 'Avg Pace'}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-2xl font-black text-maroon">
+                          {(() => {
+                            if (runningAnalytics.totalMiles === 0 || runningAnalytics.totalDurationSeconds === 0) return '--';
+                            const avgPaceSec = runningAnalytics.totalDurationSeconds / runningAnalytics.totalMiles;
+                            return formatPace(avgPaceSec);
+                          })()}
+                        </span>
+                        <span className="text-xs text-muted-foreground font-bold uppercase">/mi</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )
             ) : (
               <Card className="card-shell p-8 text-center text-muted-foreground italic">
                 No conditioning data logged yet.
@@ -1728,49 +1889,51 @@ export default function Progress() {
 
           {runningAnalytics && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="card-shell">
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Timer size={16} className="text-maroon" />
-                    <CardTitle className="text-lg">Pace Trend</CardTitle>
-                  </div>
-                  <CardDescription>
-                    {conditioningCategory === 'All' ? 'Average pace over time (Mixed Modal)' : `Average pace over time — ${conditioningCategory}`}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="h-[300px] pt-4">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={runningAnalytics.paceHistory.filter(p => p.pace > 0)}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis 
-                        dataKey="date" 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fontSize: 12, fill: '#64748b' }}
-                      />
-                      <YAxis 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fontSize: 12, fill: '#64748b' }}
-                        reversed
-                        tickFormatter={(val) => formatPace(val)}
-                      />
-                      <Tooltip 
-                        formatter={(val: number) => formatPace(val)}
-                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                      />
-                      <Area 
-                        type="monotone" 
-                        dataKey="pace" 
-                        stroke="#800000" 
-                        fill="#80000020" 
-                        strokeWidth={3}
-                        name="Pace"
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
+              {conditioningCategory !== 'Repeats' && (
+                <Card className="card-shell">
+                  <CardHeader>
+                    <div className="flex items-center gap-2">
+                      <Timer size={16} className="text-maroon" />
+                      <CardTitle className="text-lg">Pace Trend</CardTitle>
+                    </div>
+                    <CardDescription>
+                      {conditioningCategory === 'All' ? 'Average pace over time (Mixed Modal)' : `Average pace over time — ${conditioningCategory}`}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="h-[300px] pt-4">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={runningAnalytics.paceHistory.filter(p => p.pace > 0)}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <XAxis 
+                          dataKey="date" 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tick={{ fontSize: 12, fill: '#64748b' }}
+                        />
+                        <YAxis 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tick={{ fontSize: 12, fill: '#64748b' }}
+                          reversed
+                          tickFormatter={(val) => formatPace(val)}
+                        />
+                        <Tooltip 
+                          formatter={(val: number) => formatPace(val)}
+                          contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                        />
+                        <Area 
+                          type="monotone" 
+                          dataKey="pace" 
+                          stroke="#800000" 
+                          fill="#80000020" 
+                          strokeWidth={3}
+                          name="Pace"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              )}
 
               {conditioningCategory === 'All' && (
                 <Card className="card-shell">
@@ -1865,7 +2028,7 @@ export default function Progress() {
                   <CardHeader>
                     <div className="flex items-center gap-2">
                       <TrendingUp size={16} className="text-blue-500" />
-                      <CardTitle className="text-lg">Repeats Performance {conditioningProtocol !== 'All' ? `— ${conditioningProtocol.replace('Repeats:', '')}` : ''}</CardTitle>
+                      <CardTitle className="text-lg">Repeats Split Trend {conditioningProtocol !== 'All' ? `— ${conditioningProtocol.replace('Repeats:', '')}` : ''}</CardTitle>
                     </div>
                     <CardDescription>Average and best split trends for Repeat sessions.</CardDescription>
                   </CardHeader>
