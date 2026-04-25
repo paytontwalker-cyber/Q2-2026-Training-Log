@@ -101,9 +101,7 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
     .map(([name, value]) => ({ name, value }))
     .sort((a, b) => b.value - a.value);
 
-  const maxVolume = useMemo(() => {
-    return Math.max(0, ...sortedMuscleGroupData.map(d => d.value));
-  }, [sortedMuscleGroupData]);
+  const maxVolume = Math.max(0, ...sortedMuscleGroupData.map(d => d.value));
 
   const renderCalendarDays = () => {
     const days = [];
