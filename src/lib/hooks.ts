@@ -22,28 +22,11 @@ export function useMediaQuery(query: string): boolean {
   return matches;
 }
 
+import { calculateLoggedExerciseVolume, flattenLoggedExercises } from './workoutUtils';
+
 export function useIsMobile() {
   return useMediaQuery('(max-width: 768px)');
 }
-
-const calculateExerciseVolume = (ex: ExerciseEntry) => {
-  if (ex.trackingMode === 'distance') {
-    const dist = ex.distance || 0;
-    const weight = ex.weight || 0;
-    const sets = ex.sets || 0;
-    return sets * (dist / 100) * weight;
-  }
-  if (ex.trackingMode === 'time') {
-    const time = ex.time || 0;
-    const weight = ex.weight || 0;
-    const sets = ex.sets || 0;
-    return sets * time * weight;
-  }
-  if (ex.usePerSetWeights && ex.perSetWeights && ex.perSetWeights.length > 0) {
-    return ex.perSetWeights.reduce((sum: number, w: number) => sum + ((ex.reps || 0) * w), 0);
-  }
-  return (ex.sets || 0) * (ex.reps || 0) * (ex.weight || 0);
-};
 
 export function useDashboardData() {
   const { user } = useFirebase();
@@ -84,8 +67,8 @@ export function useDashboardData() {
   // Calculate Weekly Volume
   const weeklyVolume: Record<string, number> = {};
   weeklyWorkouts.forEach(w => {
-    (w.exercises || []).forEach(ex => {
-      const volume = calculateExerciseVolume(ex);
+    flattenLoggedExercises(w.exercises || []).forEach(ex => {
+      const volume = calculateLoggedExerciseVolume(ex);
       if (volume === 0) return;
 
       const distribution = resolveExerciseDistribution(ex, library);
@@ -99,7 +82,7 @@ export function useDashboardData() {
 
   // Calculate Recent PRs (simplified)
   const prs = (data.workouts as Workout[])
-    .flatMap(w => w.exercises)
+    .flatMap(w => flattenLoggedExercises(w.exercises || []))
     .reduce((acc: Record<string, any>, ex: ExerciseEntry) => {
       const key = ex.name;
       const weight = ex.weight || 0;
@@ -109,7 +92,7 @@ export function useDashboardData() {
       return acc;
     }, {} as Record<string, any>);
 
-  const recentPRs = Object.values(prs)
+  const recentPRs = (Object.values(prs) as any[])
     .sort((a, b) => b.weight - a.weight)
     .slice(0, 3);
 

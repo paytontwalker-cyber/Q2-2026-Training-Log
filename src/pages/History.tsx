@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 import { Workout, DeletedWorkout, Block, LiftBlock } from '@/src/types';
 import { storage } from '@/src/services/storage';
 import { useFirebase } from '@/src/components/FirebaseProvider';
-import { normalizeEnergyToFivePoint } from '@/src/lib/workoutUtils';
+import { normalizeEnergyToFivePoint, flattenLoggedExercises } from '@/src/lib/workoutUtils';
 
 const renderCardioBlockDetails = (block: any) => {
   const subtype = block.subtype || 'Cardio';
@@ -286,25 +286,23 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
 
     text += `EXERCISES:\n`;
     if (workout.exercises) {
-      workout.exercises.forEach((ex, i) => {
+      flattenLoggedExercises(workout.exercises).forEach((ex, i) => {
         text += `${i + 1}. ${ex.name}\n`;
-        if (ex.usePerSetWeights && ex.perSetWeights) {
+        
+        if (ex.trackingMode === 'distance') {
+          text += `   ${ex.sets} sets x ${ex.distance || ex.distanceVal}${ex.distanceUnit} @ ${ex.weight} lbs\n`;
+        } else if (ex.trackingMode === 'time') {
+          text += `   ${ex.sets} sets x ${ex.time || ex.timeVal} @ ${ex.weight} lbs\n`;
+        } else if (ex.usePerSetWeights && ex.perSetWeights) {
           text += `   Sets: ${ex.sets} | Reps: ${ex.reps}\n`;
           text += `   Weights: ${ex.perSetWeights.join(', ')} lbs\n`;
         } else {
           text += `   ${ex.sets} sets x ${ex.reps} reps @ ${ex.weight} lbs\n`;
         }
+        
         if (ex.rpe) text += `   RPE: ${ex.rpe}\n`;
         if (ex.rir !== null) text += `   RIR: ${ex.rir}\n`;
         if (ex.notes) text += `   Notes: ${ex.notes}\n`;
-        
-        if (ex.superset) {
-          text += `   + SUPERSET: ${ex.superset.name}\n`;
-          text += `     ${ex.superset.sets} sets x ${ex.superset.reps} reps @ ${ex.superset.weight} lbs\n`;
-          if (ex.superset.rpe) text += `     RPE: ${ex.superset.rpe}\n`;
-          if (ex.superset.rir !== null) text += `     RIR: ${ex.superset.rir}\n`;
-          if (ex.superset.notes) text += `     Notes: ${ex.superset.notes}\n`;
-        }
         
         text += `\n`;
       });

@@ -52,7 +52,7 @@ import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
-import { getDistanceInMeters, normalizeConditioning } from '../lib/workoutUtils';
+import { getDistanceInMeters, normalizeConditioning, calculateLoggedExerciseVolume, flattenLoggedExercises } from '../lib/workoutUtils';
 import { resolveExerciseDistribution } from '@/src/lib/exerciseDistribution';
 import { ExerciseLibraryEntry } from '@/src/types';
 import { BodyMap, getVolumeColor, THERMAL_COLORS } from '@/src/components/BodyMap';
@@ -144,49 +144,20 @@ export default function Progress() {
 
   const normalizeMuscleName = (name: string) => String(name || '').trim().toLowerCase();
 
-  const getExerciseAndSupersetEntries = (ex: any): any[] => {
-    const entries = [ex];
-    if (ex?.superset) entries.push(ex.superset);
-    return entries.filter(Boolean);
-  };
-
-  const calculateVolume = (ex: any) => {
-    if (ex.trackingMode === 'distance') {
-      // Distance-based volume: sets * (distance / 100) * weight
-      // This provides a normalized load metric that isn't overly inflated
-      const dist = ex.distance || 0;
-      const weight = ex.weight || 0;
-      const sets = ex.sets || 0;
-      return sets * (dist / 100) * weight;
-    }
-    if (ex.trackingMode === 'time') {
-      // Time-based volume: sets * time * weight
-      const time = ex.time || 0;
-      const weight = ex.weight || 0;
-      const sets = ex.sets || 0;
-      return sets * time * weight;
-    }
-    if (ex.usePerSetWeights && ex.perSetWeights && ex.perSetWeights.length > 0) {
-      // Use actual logged weights * reps
-      return ex.perSetWeights.reduce((sum: number, w: number) => sum + ((ex.reps || 0) * w), 0);
-    }
-    return ex.sets * (ex.reps || 0) * (ex.weight || 0);
-  };
-
   const getExerciseDistribution = (ex: any) => {
     return resolveExerciseDistribution(ex, library);
   };
 
   const chartData = useMemo(() => {
     return history
-      .filter(w => w && (w.exercises || []).some(ex => ex.name === selectedExercise))
+      .filter(w => w && flattenLoggedExercises(w.exercises || []).some(ex => ex.name === selectedExercise))
       .map(w => {
-        const ex = (w.exercises || []).find(e => e.name === selectedExercise)!;
+        const ex = flattenLoggedExercises(w.exercises || []).find(e => e.name === selectedExercise)!;
         return {
           date: format(new Date(w.date), 'MMM dd'),
           fullDate: new Date(w.date),
           weight: ex.weight,
-          volume: calculateVolume(ex),
+          volume: calculateLoggedExerciseVolume(ex),
           rpe: ex.rpe,
         };
       })
@@ -226,8 +197,8 @@ export default function Progress() {
     const muscleGroupVolume: Record<string, number> = {};
     const exerciseVolume: Record<string, number> = {};
 
-    (latest.exercises || []).forEach(ex => {
-      const vol = calculateVolume(ex);
+    flattenLoggedExercises(latest.exercises || []).forEach(ex => {
+      const vol = calculateLoggedExerciseVolume(ex);
       totalVolume += vol;
       
       const distribution = getExerciseDistribution(ex);
@@ -251,9 +222,9 @@ export default function Progress() {
     return {
       date: format(new Date(latest.date), 'PPP'),
       name: latest.workoutName,
-      exercises: (latest.exercises || []).map(ex => ({
+      exercises: flattenLoggedExercises(latest.exercises || []).map(ex => ({
         name: ex.name,
-        volume: calculateVolume(ex)
+        volume: calculateLoggedExerciseVolume(ex)
       })),
       totalVolume,
       muscleGroupData,
@@ -338,8 +309,8 @@ export default function Progress() {
 
     recentWorkouts.forEach(w => {
       if (!w) return;
-      (w.exercises || []).forEach(ex => {
-        const vol = calculateVolume(ex);
+      flattenLoggedExercises(w.exercises || []).forEach(ex => {
+        const vol = calculateLoggedExerciseVolume(ex);
         totalBodyVolume += vol;
         
         const distribution = getExerciseDistribution(ex);
@@ -429,12 +400,11 @@ export default function Progress() {
     const targetNormalized = normalizeMuscleName(targetMuscle);
 
     sourceWorkouts.forEach(w => {
-      (w.exercises || []).forEach(parentEx => {
-        getExerciseAndSupersetEntries(parentEx).forEach(ex => {
-          const totalExerciseVolume = calculateVolume(ex);
-          if (totalExerciseVolume <= 0) return;
+      flattenLoggedExercises(w.exercises || []).forEach(ex => {
+        const totalExerciseVolume = calculateLoggedExerciseVolume(ex);
+        if (totalExerciseVolume <= 0) return;
 
-          const distribution = getExerciseDistribution(ex);
+        const distribution = getExerciseDistribution(ex);
 
           distribution.forEach((d: any) => {
             const groupName = d.group || '';
@@ -463,7 +433,6 @@ export default function Progress() {
               volume: contributedVolume,
             });
           });
-        });
       });
     });
 
@@ -540,12 +509,11 @@ export default function Progress() {
     let totalVolume = 0;
 
     sourceWorkouts.forEach(w => {
-      (w.exercises || []).forEach(parentEx => {
-        getExerciseAndSupersetEntries(parentEx).forEach(ex => {
-          if (ex.name !== targetExercise) return;
+      flattenLoggedExercises(w.exercises || []).forEach(ex => {
+        if (ex.name !== targetExercise) return;
 
-          const exerciseVolume = calculateVolume(ex);
-          if (exerciseVolume <= 0) return;
+        const exerciseVolume = calculateLoggedExerciseVolume(ex);
+        if (exerciseVolume <= 0) return;
 
           totalVolume += exerciseVolume;
           entries.push({
@@ -569,7 +537,6 @@ export default function Progress() {
 
             muscleMap[group].volume += contribution;
           });
-        });
       });
     });
 

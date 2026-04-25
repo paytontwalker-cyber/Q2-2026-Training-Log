@@ -12,34 +12,10 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { computeVolumeTargets } from '@/src/lib/volumeTargets';
 
-const calculateVolume = (ex: any) => {
-  if (ex.trackingMode === 'distance') {
-    const dist = ex.distance || 0;
-    const weight = ex.weight || 0;
-    const sets = ex.sets || 0;
-    return sets * (dist / 100) * weight;
-  }
-  if (ex.trackingMode === 'time') {
-    const time = ex.time || 0;
-    const weight = ex.weight || 0;
-    const sets = ex.sets || 0;
-    return sets * time * weight;
-  }
-  if (ex.usePerSetWeights && ex.perSetWeights && ex.perSetWeights.length > 0) {
-    return ex.perSetWeights.reduce((sum: number, w: number) => sum + ((ex.reps || 0) * w), 0);
-  }
-  return ex.sets * (ex.reps || 0) * (ex.weight || 0);
-};
-
 import { resolveExerciseDistribution } from '@/src/lib/exerciseDistribution';
+import { calculateLoggedExerciseVolume, flattenLoggedExercises } from '@/src/lib/workoutUtils';
 
 const normalizeMuscleName = (name: string) => String(name || '').trim().toLowerCase();
-
-const getExerciseAndSupersetEntries = (ex: any): any[] => {
-  const entries = [ex];
-  if (ex?.superset) entries.push(ex.superset);
-  return entries.filter(Boolean);
-};
 
 export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) => void }) {
   const { user } = useFirebase();
@@ -79,12 +55,11 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
     const targetNormalized = normalizeMuscleName(drilldownMuscle);
 
     weeklyWorkouts.forEach(w => {
-      (w.exercises || []).forEach(parentEx => {
-        getExerciseAndSupersetEntries(parentEx).forEach(ex => {
-          const totalExerciseVolume = calculateVolume(ex);
-          if (totalExerciseVolume <= 0) return;
+      flattenLoggedExercises(w.exercises || []).forEach(ex => {
+        const totalExerciseVolume = calculateLoggedExerciseVolume(ex);
+        if (totalExerciseVolume <= 0) return;
 
-          const distribution = resolveExerciseDistribution(ex, library);
+        const distribution = resolveExerciseDistribution(ex, library);
 
           distribution.forEach((d: any) => {
             const groupName = d.group || '';
@@ -108,7 +83,6 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
               volume: contributedVolume,
             });
           });
-        });
       });
     });
 

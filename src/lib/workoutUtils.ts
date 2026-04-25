@@ -1,5 +1,74 @@
 import { Split, ProgrammedExercise, Conditioning, Block, BlockTemplate, LiftBlock, CardioBlock, HiitBlock, ExerciseEntry, CardioType, CardioSubtype } from '../types';
 
+export const safeNumber = (value: unknown, fallback = 0) => {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+};
+
+export const calculateLoggedExerciseVolume = (ex: any) => {
+  if (ex.trackingMode === 'distance') {
+    // Distance-based volume: sets * (distance / 100) * weight
+    const dist = safeNumber(ex.distance) || safeNumber(ex.distanceVal) || 0;
+    const weight = safeNumber(ex.weight);
+    const sets = safeNumber(ex.sets);
+    return sets * (dist / 100) * weight;
+  }
+  if (ex.trackingMode === 'time') {
+    // Time-based volume: sets * time * weight
+    const time = safeNumber(ex.time) || safeNumber(ex.timeVal) || 0;
+    const weight = safeNumber(ex.weight);
+    const sets = safeNumber(ex.sets);
+    return sets * time * weight;
+  }
+  if (ex.usePerSetWeights && ex.perSetWeights && Array.isArray(ex.perSetWeights) && ex.perSetWeights.length > 0) {
+    // Use actual logged weights * reps
+    return ex.perSetWeights.reduce((sum: number, w: number) => sum + (safeNumber(ex.reps) * safeNumber(w)), 0);
+  }
+  return safeNumber(ex.sets) * safeNumber(ex.reps) * safeNumber(ex.weight);
+};
+
+export const flattenLoggedExercises = (exercises: any[] = []): any[] => {
+  const flattened: any[] = [];
+  const seen = new Set<string>();
+
+  const getExerciseKey = (exercise: any, path: string) => {
+    return String(
+      exercise?.id ||
+      exercise?.entryId ||
+      exercise?.logId ||
+      `${path}:${exercise?.name || 'unknown'}:${exercise?.sets || ''}:${exercise?.reps || ''}:${exercise?.weight || ''}:${exercise?.distance || ''}`
+    );
+  };
+
+  const getChildren = (exercise: any): any[] => {
+    let children: any[] = [];
+    if (Array.isArray(exercise?.superset)) children = children.concat(exercise.superset);
+    else if (exercise?.superset) children.push(exercise.superset);
+    
+    if (Array.isArray(exercise?.supersetExercises)) children = children.concat(exercise.supersetExercises);
+    if (Array.isArray(exercise?.children)) children = children.concat(exercise.children);
+    return children;
+  };
+
+  const visit = (exercise: any, path: string) => {
+    if (!exercise) return;
+
+    const key = getExerciseKey(exercise, path);
+    if (!seen.has(key)) {
+      seen.add(key);
+      flattened.push(exercise);
+    }
+
+    getChildren(exercise).forEach((child, index) => {
+      visit(child, `${path}.superset.${index}`);
+    });
+  };
+
+  exercises.forEach((exercise, index) => visit(exercise, String(index)));
+
+  return flattened;
+};
+
 export const getDistanceInMeters = (c: Conditioning): number => {
   if (c.distanceInMeters !== undefined && c.distanceInMeters > 0) {
     return c.distanceInMeters;
