@@ -230,7 +230,7 @@
   }
   
   .tab-pill {
-    @apply h-9 px-4 rounded-full text-sm font-medium transition-all border border-maroon/20 shadow-sm bg-card text-muted-foreground hover:text-maroon hover:border-maroon/50 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary;
+    @apply h-9 px-4 rounded-full text-sm font-medium transition-all border border-maroon/20 shadow-sm bg-card text-muted-foreground hover:text-maroon hover:border-maroon/50 data-[state=active]:border-maroon/85 data-[state=active]:bg-maroon/10 data-[state=active]:ring-1 data-[state=active]:ring-maroon/40 data-[state=active]:text-maroon;
   }
   
   .input-standard {

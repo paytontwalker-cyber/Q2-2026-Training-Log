@@ -216,7 +216,7 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
         days.push(
           <div
             className={`p-1 min-h-[50px] border rounded-md cursor-pointer transition-colors relative flex flex-col gap-0.5
-              ${!isSameMonthMarker ? "border-transparent bg-muted/10 opacity-50" : "border-border/50 bg-card accent-hover"}
+              ${!isSameMonthMarker ? "border-transparent bg-muted/10 opacity-50" : "border-maroon/30/50 bg-card accent-hover"}
               ${isSelectedMarker ? "accent-selected" : ""}
               ${isTodayMarker && !isSelectedMarker ? "border-maroon/75 shadow-sm" : ""}
             `}
@@ -297,7 +297,7 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
           </div>
 
           <div className="accent-card p-4 bg-muted/20">
-            <h4 className="text-xs uppercase font-bold tracking-wider text-maroon mb-3 border-b border-border pb-2">
+            <h4 className="text-xs uppercase font-bold tracking-wider text-maroon mb-3 border-b border-maroon/30 pb-2">
               {format(selectedDate, "EEEE, MMMM d, yyyy")}
             </h4>
             {selectedCompleted.length > 0 ? (
@@ -355,7 +355,7 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
       </div>
 
       <div className="accent-card">
-        <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-muted/20">
+        <div className="p-4 border-b border-maroon/30 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-muted/20">
           <h3 className="section-title">Weekly Training Intensity</h3>
           <div className="flex items-center gap-2">
             <span className="label-micro">
@@ -383,7 +383,7 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
       </div>
 
       <div className="accent-card mt-6 p-4">
-        <h4 className="text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wider border-b border-border pb-2">Muscle Group Volumes</h4>
+        <h4 className="text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wider border-b border-maroon/30 pb-2">Muscle Group Volumes</h4>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {sortedMuscleGroupData.map(data => {
             let color = '#E5E7EB'; // NO_DATA_COLOR
@@ -403,10 +403,10 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
                 key={data.name}
                 type="button"
                 onClick={() => setDrilldownMuscle(data.name)}
-                className={`w-full text-left rounded-xl border border-border bg-card/70 px-4 py-3 shadow-sm accent-hover cursor-pointer`}
+                className={`w-full text-left rounded-xl border border-maroon/30 bg-card/70 px-4 py-3 shadow-sm accent-hover cursor-pointer`}
               >
                 <div className="flex items-center gap-3">
-                  <span className="h-3 w-3 rounded-full shrink-0 shadow-sm border border-border" style={{ backgroundColor: color }} />
+                  <span className="h-3 w-3 rounded-full shrink-0 shadow-sm border border-maroon/30" style={{ backgroundColor: color }} />
                   <div className="min-w-0">
                     <div className="font-bold text-foreground truncate">{data.name}</div>
                     <div className="text-sm text-muted-foreground tabular-nums">
@@ -421,7 +421,7 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
       </div>
 
       <div className="accent-card mt-6 p-4">
-        <div className="border-b border-border pb-4 mb-4">
+        <div className="border-b border-maroon/30 pb-4 mb-4">
           <h3 className="section-title">Performance Trends</h3>
           <p className="text-sm text-muted-foreground mt-1">Volume, strength, and running trends over time</p>
         </div>
@@ -458,7 +458,7 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center text-sm text-muted-foreground italic bg-muted/20 rounded-xl border border-dashed border-border/50">
+              <div className="w-full h-full flex flex-col items-center justify-center text-sm text-muted-foreground italic bg-muted/20 rounded-xl border border-dashed border-maroon/30/50">
                 No volume data logged yet.
                 {workouts.length === 1 && <span className="block mt-1 text-xs opacity-70">More logs will build the trend.</span>}
               </div>
@@ -496,7 +496,7 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center text-sm text-muted-foreground italic bg-muted/20 rounded-xl border border-dashed border-border/50">
+              <div className="w-full h-full flex flex-col items-center justify-center text-sm text-muted-foreground italic bg-muted/20 rounded-xl border border-dashed border-maroon/30/50">
                 No strength trend data available yet.
                 {workouts.length === 1 && <span className="block mt-1 text-xs opacity-70">More logs will build the trend.</span>}
               </div>
@@ -533,7 +533,7 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center text-sm text-muted-foreground italic bg-muted/20 rounded-xl border border-dashed border-border/50">
+              <div className="w-full h-full flex flex-col items-center justify-center text-sm text-muted-foreground italic bg-muted/20 rounded-xl border border-dashed border-maroon/30/50">
                 No running data logged yet.
                 {workouts.length === 1 && <span className="block mt-1 text-xs opacity-70">More logs will build the trend.</span>}
               </div>
@@ -556,8 +556,8 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
 
       {drilldownMuscle && muscleDrilldownData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-          <div className="bg-card w-full max-w-lg rounded-2xl border border-border shadow-xl overflow-hidden flex flex-col max-h-[85vh]">
-            <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30">
+          <div className="bg-card w-full max-w-lg rounded-2xl border border-maroon/30 shadow-xl overflow-hidden flex flex-col max-h-[85vh]">
+            <div className="flex items-center justify-between p-4 border-b border-maroon/30 bg-muted/30">
               <div className="flex items-center gap-2">
                 <Hash className="text-maroon" size={18} />
                 <h3 className="font-bold text-foreground">
@@ -570,7 +570,7 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
             </div>
             
             <div className="p-4 overflow-y-auto">
-              <div className="mb-6 p-4 rounded-xl bg-muted border border-border flex items-center justify-between">
+              <div className="mb-6 p-4 rounded-xl bg-muted border border-maroon/30 flex items-center justify-between">
                 <span className="font-medium text-foreground">Total Weekly Volume</span>
                 <span className="text-xl font-black text-maroon">
                   {Math.round(muscleDrilldownData.totalVolume).toLocaleString()} lbs

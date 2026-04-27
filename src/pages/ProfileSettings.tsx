@@ -124,12 +124,10 @@ export default function ProfileSettings() {
   });
   const [appSettings, setAppSettings] = useState(() => {
     const savedTheme = localStorage.getItem('traininglog_theme');
-    const savedUnits = localStorage.getItem('traininglog_units');
     const theme = savedTheme ? JSON.parse(savedTheme) : { primaryColor, secondaryColor };
-    const units = savedUnits ? JSON.parse(savedUnits) : { weightUnit: 'lbs', heightUnit: 'in', distanceUnit: 'miles' };
     // Strip any legacy themeMode field from previously-saved theme objects
     const { themeMode: _legacyThemeMode, ...themeClean } = theme;
-    return { ...themeClean, ...units };
+    return { ...themeClean };
   });
   const [saving, setSaving] = useState(false);
   
@@ -181,9 +179,6 @@ export default function ProfileSettings() {
           setTrainingExperience(data.trainingExperience || 'intermediate');
           setTargetOverrides(data.volumeTargetOverrides || {});
           setAppSettings({
-            weightUnit: data.weightUnit || 'lbs',
-            heightUnit: data.heightUnit || 'in',
-            distanceUnit: data.distanceUnit || 'miles',
             primaryColor: data.primaryColor || primaryColor,
             secondaryColor: data.secondaryColor || secondaryColor,
           });
@@ -227,7 +222,6 @@ export default function ProfileSettings() {
 
   const saveAppSettings = async () => {
     localStorage.setItem('traininglog_theme', JSON.stringify({ primaryColor: appSettings.primaryColor, secondaryColor: appSettings.secondaryColor }));
-    localStorage.setItem('traininglog_units', JSON.stringify({ weightUnit: appSettings.weightUnit, heightUnit: appSettings.heightUnit, distanceUnit: appSettings.distanceUnit }));
     setTheme(appSettings.primaryColor, appSettings.secondaryColor, 'light');
     
     if (user && !isGuest) {
@@ -290,7 +284,7 @@ export default function ProfileSettings() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex items-center gap-4 p-4 bg-muted rounded-xl border border-border">
+            <div className="flex items-center gap-4 p-4 bg-muted rounded-xl border border-maroon/30">
               <div className="w-12 h-12 rounded-full bg-maroon/10 flex items-center justify-center text-maroon font-bold text-lg border border-maroon/20 overflow-hidden flex-shrink-0">
                 {identity.photoURL ? (
                   <img 
@@ -345,7 +339,7 @@ export default function ProfileSettings() {
                 <Button 
                   variant="outline"
                   onClick={logout}
-                  className="w-full border-border text-muted-foreground hover:text-red-600 hover:bg-muted h-11"
+                  className="w-full border-maroon/30 text-muted-foreground hover:text-red-600 hover:bg-muted h-11"
                 >
                   <LogOut className="mr-2" size={18} />
                   Sign Out
@@ -358,7 +352,7 @@ export default function ProfileSettings() {
 
 
         {/* 2. Account Details */}
-        <Card className="card-shell no-print">
+        <Card className="accent-card no-print">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <UserCircle className="text-maroon" size={20} />
@@ -409,8 +403,77 @@ export default function ProfileSettings() {
           </CardContent>
         </Card>
 
+        {/* 3. Appearance */}
+        <Card className="accent-card no-print h-full">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="text-gold" size={20} />
+              Appearance
+            </CardTitle>
+            <p className="text-xs text-muted-foreground mt-2">Choose the accent colors that affect highlights, buttons, active states, selected cards, and dashboard details. It does not radically recolor backgrounds.</p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-xs">Primary Color</Label>
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-5 h-5 rounded-full border border-maroon/30 flex-shrink-0"
+                  style={{ backgroundColor: appSettings.primaryColor }}
+                />
+                <Select value={appSettings.primaryColor} onValueChange={(val) => {
+                  const preset = THEME_PRESETS.find(p => p.primary === val);
+                  const newSecondary = preset?.secondaryOptions[0].value || val;
+                  setAppSettings({...appSettings, primaryColor: val, secondaryColor: newSecondary});
+                }}>
+                  <SelectTrigger>
+                    <SelectValue>
+                      {THEME_PRESETS.find(p => p.primary === appSettings.primaryColor)?.name || appSettings.primaryColor}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {THEME_PRESETS.map(preset => (
+                      <SelectItem key={preset.primary} value={preset.primary}>{preset.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Secondary Color</Label>
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-5 h-5 rounded-full border border-maroon/30 flex-shrink-0"
+                  style={{ backgroundColor: appSettings.secondaryColor }}
+                />
+                <Select value={appSettings.secondaryColor} onValueChange={(val) => {
+                  setAppSettings({...appSettings, secondaryColor: val});
+                }}>
+                  <SelectTrigger>
+                    <SelectValue>
+                      {THEME_PRESETS
+                        .find(p => p.primary === appSettings.primaryColor)
+                        ?.secondaryOptions
+                        .find(o => o.value === appSettings.secondaryColor)
+                        ?.label || appSettings.secondaryColor}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {THEME_PRESETS.find(p => p.primary === appSettings.primaryColor)?.secondaryOptions.map(opt => (
+                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <Button onClick={saveAppSettings} disabled={saving} className="w-full bg-gold hover:bg-gold-light text-white">
+              <Save className="mr-2" size={16} />
+              {saving ? 'Saving...' : 'Save App Settings'}
+            </Button>
+          </CardContent>
+        </Card>
+
         {/* Training & Volume Targets */}
-        <Card className="card-shell md:col-span-2">
+        <Card className="accent-card md:col-span-2">
           <CardHeader>
             <CardTitle>Training & Volume Targets</CardTitle>
             <CardDescription>
@@ -436,14 +499,14 @@ export default function ProfileSettings() {
               </p>
             </div>
 
-            <div className="pt-3 border-t border-border">
+            <div className="pt-3 border-t border-maroon/30">
               <h4 className="text-xs uppercase font-bold tracking-wider text-muted-foreground mb-2">Weekly Volume Targets (lbs moved)</h4>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-3">
                 {Object.keys(BASE_VOLUME_TARGETS_180LB_INTERMEDIATE).map(mg => {
                   const computed = effectiveTargets[mg];
                   const isOverridden = mg in targetOverrides && targetOverrides[mg] > 0;
                   return (
-                    <div key={mg} className="flex items-center gap-2 p-2 rounded border border-border bg-card">
+                    <div key={mg} className="flex items-center gap-2 p-2 rounded border border-maroon/30 bg-card">
                       <Label className="text-xs flex-1 min-w-0">{mg}</Label>
                       <Input
                         type="number"
@@ -489,128 +552,8 @@ export default function ProfileSettings() {
           </CardContent>
         </Card>
 
-        {/* 3. App Settings */}
-        <div className="space-y-6">
-          <Card className="card-shell no-print">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="text-gold" size={20} />
-                Units
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-xs">Weight Unit</Label>
-                <Select value={appSettings.weightUnit} onValueChange={(val) => setAppSettings({...appSettings, weightUnit: val})}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="lbs">lbs</SelectItem>
-                    <SelectItem value="kg">kg</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs">Height Unit</Label>
-                <Select value={appSettings.heightUnit} onValueChange={(val) => setAppSettings({...appSettings, heightUnit: val})}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="in">in</SelectItem>
-                    <SelectItem value="cm">cm</SelectItem>
-                    <SelectItem value="ft+in">ft+in</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs">Distance Unit</Label>
-                <Select value={appSettings.distanceUnit} onValueChange={(val) => setAppSettings({...appSettings, distanceUnit: val})}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="miles">miles</SelectItem>
-                    <SelectItem value="km">km</SelectItem>
-                    <SelectItem value="meters">meters</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="card-shell no-print">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="text-gold" size={20} />
-                Appearance
-              </CardTitle>
-              <p className="text-xs text-muted-foreground mt-2">Choose the accent colors that affect highlights, buttons, active states, selected cards, and dashboard details. It does not radically recolor backgrounds.</p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-xs">Primary Color</Label>
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-5 h-5 rounded-full border border-border flex-shrink-0"
-                    style={{ backgroundColor: appSettings.primaryColor }}
-                  />
-                  <Select value={appSettings.primaryColor} onValueChange={(val) => {
-                    const preset = THEME_PRESETS.find(p => p.primary === val);
-                    const newSecondary = preset?.secondaryOptions[0].value || val;
-                    setAppSettings({...appSettings, primaryColor: val, secondaryColor: newSecondary});
-                  }}>
-                    <SelectTrigger>
-                      <SelectValue>
-                        {THEME_PRESETS.find(p => p.primary === appSettings.primaryColor)?.name || appSettings.primaryColor}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {THEME_PRESETS.map(preset => (
-                        <SelectItem key={preset.primary} value={preset.primary}>{preset.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs">Secondary Color</Label>
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-5 h-5 rounded-full border border-border flex-shrink-0"
-                    style={{ backgroundColor: appSettings.secondaryColor }}
-                  />
-                  <Select value={appSettings.secondaryColor} onValueChange={(val) => {
-                    setAppSettings({...appSettings, secondaryColor: val});
-                  }}>
-                    <SelectTrigger>
-                      <SelectValue>
-                        {THEME_PRESETS
-                          .find(p => p.primary === appSettings.primaryColor)
-                          ?.secondaryOptions
-                          .find(o => o.value === appSettings.secondaryColor)
-                          ?.label || appSettings.secondaryColor}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {THEME_PRESETS.find(p => p.primary === appSettings.primaryColor)?.secondaryOptions.map(opt => (
-                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <Button onClick={saveAppSettings} disabled={saving} className="w-full bg-gold hover:bg-gold-light text-white">
-                <Save className="mr-2" size={16} />
-                {saving ? 'Saving...' : 'Save App Settings'}
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
         {/* Export Workouts */}
-        <Card className="card-shell md:col-span-2">
+        <Card className="accent-card md:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Download className="text-muted-foreground" size={20} />
@@ -624,7 +567,7 @@ export default function ProfileSettings() {
         </Card>
 
         {/* Integrations */}
-        <Card className="card-shell md:col-span-2 no-print">
+        <Card className="accent-card md:col-span-2 no-print">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Plug className="text-muted-foreground" size={20} />
@@ -637,7 +580,7 @@ export default function ProfileSettings() {
               {INTEGRATIONS.map(integration => (
                 <li key={integration.name} className="flex items-center justify-between py-3">
                   <span className="text-sm font-medium text-foreground">{integration.name}</span>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-muted text-muted-foreground border border-border">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-muted text-muted-foreground border border-maroon/30">
                     {integration.status}
                   </span>
                 </li>
@@ -647,7 +590,7 @@ export default function ProfileSettings() {
         </Card>
 
         {/* Roadmap */}
-        <Card className="card-shell md:col-span-2 no-print">
+        <Card className="accent-card md:col-span-2 no-print">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Map className="text-muted-foreground" size={20} />
@@ -677,7 +620,7 @@ export default function ProfileSettings() {
         </Card>
 
         {/* Completed Updates / Patches */}
-        <Card className="card-shell md:col-span-2 no-print">
+        <Card className="accent-card md:col-span-2 no-print">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Info className="text-muted-foreground" size={20} />
@@ -705,7 +648,7 @@ export default function ProfileSettings() {
         </Card>
 
         {/* 4. Application Info */}
-        <Card className="card-shell md:col-span-2 no-print">
+        <Card className="accent-card md:col-span-2 no-print">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Info className="text-muted-foreground" size={20} />
@@ -714,15 +657,15 @@ export default function ProfileSettings() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-4 bg-muted rounded-lg border border-border">
+              <div className="p-4 bg-muted rounded-lg border border-maroon/30">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Version</p>
                 <p className="text-sm font-semibold text-foreground">{APP_VERSION}</p>
               </div>
-              <div className="p-4 bg-muted rounded-lg border border-border">
+              <div className="p-4 bg-muted rounded-lg border border-maroon/30">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Environment</p>
                 <p className="text-sm font-semibold text-foreground">Production (Cloud)</p>
               </div>
-              <div className="p-4 bg-muted rounded-lg border border-border">
+              <div className="p-4 bg-muted rounded-lg border border-maroon/30">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Last Updated</p>
                 <p className="text-sm font-semibold text-foreground">April 2026</p>
               </div>

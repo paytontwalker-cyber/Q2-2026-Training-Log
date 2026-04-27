@@ -37,12 +37,12 @@ const renderCardioBlockDetails = (block: any) => {
           )}
         </div>
         {splits.length > 0 && splits.some((s: any) => s.timeStr || s.distanceVal) && (
-          <div className="pt-2 border-t border-border/50">
+          <div className="pt-2 border-t border-maroon/30/50">
             <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">Splits</span>
             <div className="flex flex-wrap gap-1">
               {splits.map((s: any, i: number) => (
                 (s.timeStr || s.distanceVal) && (
-                  <span key={i} className="bg-card px-1.5 py-0.5 rounded border border-border text-[10px] text-muted-foreground">
+                  <span key={i} className="bg-card px-1.5 py-0.5 rounded border border-maroon/30 text-[10px] text-muted-foreground">
                     {s.distanceVal || ''}{s.distanceUnit ? s.distanceUnit : ''} {s.timeStr || ''}
                   </span>
                 )
@@ -51,7 +51,7 @@ const renderCardioBlockDetails = (block: any) => {
           </div>
         )}
         {block.programmedNotes && (
-          <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-border/50 whitespace-pre-wrap break-words">{block.programmedNotes}</p>
+          <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-maroon/30/50 whitespace-pre-wrap break-words">{block.programmedNotes}</p>
         )}
       </div>
     );
@@ -72,7 +72,7 @@ const renderCardioBlockDetails = (block: any) => {
           )}
         </div>
         {block.programmedNotes && (
-          <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-border/50 whitespace-pre-wrap break-words">{block.programmedNotes}</p>
+          <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-maroon/30/50 whitespace-pre-wrap break-words">{block.programmedNotes}</p>
         )}
       </div>
     );
@@ -90,7 +90,7 @@ const renderCardioBlockDetails = (block: any) => {
         )}
       </div>
       {block.programmedNotes && (
-        <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-border/50 whitespace-pre-wrap break-words">{block.programmedNotes}</p>
+        <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-maroon/30/50 whitespace-pre-wrap break-words">{block.programmedNotes}</p>
       )}
     </div>
   );
@@ -111,10 +111,10 @@ const renderHiitBlockDetails = (block: any) => {
         )}
       </div>
       {block.structureNotes && (
-        <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-border/50 whitespace-pre-wrap break-words">{block.structureNotes}</p>
+        <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-maroon/30/50 whitespace-pre-wrap break-words">{block.structureNotes}</p>
       )}
       {block.programmedNotes && block.programmedNotes !== block.structureNotes && (
-        <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-border/50 whitespace-pre-wrap break-words">{block.programmedNotes}</p>
+        <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-maroon/30/50 whitespace-pre-wrap break-words">{block.programmedNotes}</p>
       )}
     </div>
   );
@@ -443,7 +443,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
         </div>
       </header>
 
-      <div className="flex bg-card p-1 rounded-xl border border-border w-fit overflow-x-auto max-w-full shadow-sm mb-4">
+      <div className="flex bg-card p-1 rounded-xl border border-maroon/30 w-fit overflow-x-auto max-w-full shadow-sm mb-4">
         <button
           onClick={() => setView('history')}
           className={cn(
@@ -471,7 +471,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
 
       {view === 'history' && (
         <div className="space-y-4">
-          <div className="card-shell p-4 mb-4 space-y-3">
+          <div className="accent-card p-4 mb-4 space-y-3">
             <div className="flex flex-col md:flex-row gap-3">
               <div className="flex-1 space-y-1">
                 <Label className="label-micro">Search</Label>
@@ -524,7 +524,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
               if (dateDiff !== 0) return dateDiff;
               return (a.timestamp || 0) - (b.timestamp || 0); // Within same date, earliest first (matches session numbering)
             }).map(workout => (
-              <Card key={workout.id} className="card-shell hover:border-maroon/30 transition-colors group">
+              <Card key={workout.id} className="accent-card hover:border-maroon/30 transition-colors group">
                 <CardHeader className="pb-3">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
@@ -610,7 +610,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
                       <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Exercises</h4>
                       <div className="space-y-2">
                         {(workout.exercises || []).map(ex => (
-                          <div key={ex.id} className="space-y-1 border-b border-border pb-2 last:border-0">
+                          <div key={ex.id} className="space-y-1 border-b border-maroon/30 pb-2 last:border-0">
                             <div className="flex items-center justify-between text-sm">
                               <span className="font-medium text-foreground">{ex.name}</span>
                               <span className="text-muted-foreground">
@@ -649,7 +649,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
                           {workout.blocks
                             .filter((b: any) => b.kind === 'cardio' || b.kind === 'hiit')
                             .map((block: any, idx: number) => (
-                              <div key={block.id || idx} className="bg-muted/50 p-3 rounded-lg border border-border space-y-2">
+                              <div key={block.id || idx} className="bg-muted/50 p-3 rounded-lg border border-maroon/30 space-y-2">
                                 <div className="flex items-center justify-between mb-1">
                                   <Badge variant="outline" className="bg-maroon/5 text-maroon border-maroon/10 text-[10px] uppercase font-bold">
                                     {block.kind === 'hiit' 
@@ -667,7 +667,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
                       ) : (
                         /* Legacy conditioning rendering (pre-2.6 workouts that never had blocks) */
                         workout.conditioning && workout.conditioning.type ? (
-                          <div className="bg-muted/50 p-3 rounded-lg border border-border space-y-2">
+                          <div className="bg-muted/50 p-3 rounded-lg border border-maroon/30 space-y-2">
                             <div className="flex items-center justify-between mb-1">
                               <Badge variant="outline" className="bg-maroon/5 text-maroon border-maroon/10 text-[10px] uppercase font-bold">
                                 {workout.conditioning.type.toUpperCase()}
@@ -694,17 +694,17 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
                               )}
                             </div>
                             {workout.conditioning.actualSplits && workout.conditioning.actualSplits.some((s: any) => s) && (
-                              <div className="pt-2 border-t border-border/50">
+                              <div className="pt-2 border-t border-maroon/30/50">
                                 <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">Splits</span>
                                 <div className="flex flex-wrap gap-1">
                                   {workout.conditioning.actualSplits.map((split: any, i: number) => split && (
-                                    <span key={i} className="bg-card px-1.5 py-0.5 rounded border border-border text-[10px] text-muted-foreground">{split}</span>
+                                    <span key={i} className="bg-card px-1.5 py-0.5 rounded border border-maroon/30 text-[10px] text-muted-foreground">{split}</span>
                                   ))}
                                 </div>
                               </div>
                             )}
                             {workout.conditioning.notes && (
-                              <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-border/50 whitespace-pre-wrap break-words">{workout.conditioning.notes}</p>
+                              <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-maroon/30/50 whitespace-pre-wrap break-words">{workout.conditioning.notes}</p>
                             )}
                           </div>
                         ) : null
@@ -712,7 +712,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
                       
                       {/* General Notes Box — user-typed notes only */}
                       {workout.notes && workout.notes.trim() !== '' && (
-                        <div className="bg-muted/50 p-3 rounded-lg border border-border space-y-2">
+                        <div className="bg-muted/50 p-3 rounded-lg border border-maroon/30 space-y-2">
                           <div className="flex items-center justify-between mb-1">
                             <Badge variant="outline" className="bg-maroon/5 text-maroon border-maroon/10 text-[10px] uppercase font-bold">
                               NOTES
@@ -727,7 +727,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
               </Card>
             ))
           ) : (
-            <Card className="card-shell py-20 text-center">
+            <Card className="accent-card py-20 text-center">
               <CardContent>
                 <HistoryIcon size={48} className="mx-auto text-muted mb-4" />
                 <h3 className="text-xl font-semibold text-foreground">No History Yet</h3>
@@ -742,7 +742,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
         <div className="space-y-4">
           {deletedWorkouts.length > 0 ? (
             deletedWorkouts.map(workout => (
-              <Card key={workout.id} className="card-shell bg-muted/50">
+              <Card key={workout.id} className="accent-card bg-muted/50">
                 <CardHeader className="py-3">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
@@ -759,7 +759,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
                         variant="outline" 
                         size="sm" 
                         onClick={() => restoreWorkout(workout)}
-                        className="text-muted-foreground hover:text-green-600 border-border"
+                        className="text-muted-foreground hover:text-green-600 border-maroon/30"
                       >
                         <RotateCcw size={14} className="mr-1.5" /> Restore
                       </Button>
@@ -778,7 +778,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
               </Card>
             ))
           ) : (
-            <Card className="card-shell py-20 text-center">
+            <Card className="accent-card py-20 text-center">
               <CardContent>
                 <Trash2 size={48} className="mx-auto text-muted mb-4" />
                 <h3 className="text-xl font-semibold text-foreground">No recently deleted workouts.</h3>
@@ -805,7 +805,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
                 "flex items-start gap-3 p-3 border rounded-md cursor-pointer transition-colors",
                 parentSessionId === s.id
                   ? "border-maroon bg-maroon/5"
-                  : "border-border hover:border-maroon/40"
+                  : "border-maroon/30 hover:border-maroon/40"
               )}>
                 <input
                   type="radio"

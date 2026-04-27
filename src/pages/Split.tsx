@@ -170,7 +170,7 @@ const SortableExerciseBadge = React.memo(
         ref={combinedRef}
         style={style}
         className={cn(
-          "bg-card border border-border rounded-md shadow-sm group transition-all space-y-2",
+          "bg-card border border-maroon/30 rounded-md shadow-sm group transition-all space-y-2 accent-hover",
           depth === 0 ? "p-3" : "p-2 ml-4 border-l-4 border-l-maroon/30",
           isOver && isParent && "ring-2 ring-maroon/60 ring-offset-2 bg-maroon/5"
         )}
@@ -291,7 +291,7 @@ const SortableExerciseBadge = React.memo(
               "text-[10px] uppercase font-bold px-2 h-8 rounded border transition-colors",
               targetNotes || notesOpen
                 ? "bg-maroon/10 text-maroon border-maroon/30"
-                : "text-muted-foreground border-border hover:border-maroon/40",
+                : "text-muted-foreground border-maroon/30 hover:border-maroon/40",
             )}
             title={targetNotes ? "Edit snapshot notes" : "Add snapshot notes"}
           >
@@ -313,7 +313,7 @@ const SortableExerciseBadge = React.memo(
 
         {/* RECURSIVE SUPERSET DRAG AND DROP */}
         {isProgrammed && exercise.superset && exercise.superset.length > 0 && (
-           <div className="mt-3 space-y-2 border-l-2 border-dashed border-border pl-2">
+           <div className="mt-3 space-y-2 border-l-2 border-dashed border-maroon/30 pl-2">
              <SortableContext
                items={exercise.superset.map((ex) => ex.id || ex.name)}
                strategy={verticalListSortingStrategy}
@@ -1094,7 +1094,7 @@ export default function Split() {
           <Button
             variant="outline"
             onClick={() => setIsSelecting(true)}
-            className="border-border text-muted-foreground"
+            className="border-maroon/30 text-muted-foreground"
           >
             Go to Other Programs
           </Button>
@@ -1165,12 +1165,12 @@ export default function Split() {
             <Card
               key={s.id}
               className={cn(
-                "border-border shadow-md transition-all",
+                "border-maroon/30 shadow-md transition-all",
                 !hasAssignedSplit && "opacity-60",
               )}
             >
               {/* 1. TOP SECTION: Notes/Summary (Full Width) */}
-              <CardHeader className="pb-3 border-b border-border bg-card/50">
+              <CardHeader className="pb-3 border-b border-maroon/30 bg-card/50">
                 <div className="flex items-center gap-3 mb-2">
                   <CardTitle className="text-xl font-extrabold text-foreground tracking-tight shrink-0">
                     {s.day}
@@ -1355,7 +1355,7 @@ export default function Split() {
 
                 {/* *** RENDER HIIT/CARDIO BLOCKS *** */}
                 {s.blocks && s.blocks.length > 0 && (
-                  <div className="space-y-3 mt-6 pt-4 border-t border-border/40">
+                  <div className="space-y-3 mt-6 pt-4 border-t border-maroon/30/40">
                     <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-tighter w-8">
                       Conditioning
                     </Label>
@@ -1363,7 +1363,7 @@ export default function Split() {
              {s.blocks.map((block) => (
                <div
                  key={block.id}
-                 className="p-3 bg-card border border-border rounded-md shadow-sm space-y-2"
+                 className="p-3 bg-card border border-maroon/30 rounded-md shadow-sm space-y-2 accent-hover"
                >
                  <div className="flex items-center justify-between gap-2">
                    <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -1459,13 +1459,13 @@ export default function Split() {
               </CardContent>
 
               {/* 3. BOTTOM SECTION: Input Row (Full Width Across Bottom) */}
-              <CardFooter className="pt-3 border-t border-border bg-card/30">
+              <CardFooter className="pt-3 border-t border-maroon/30 bg-card/30">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
                   <Button
                     onClick={() => addExerciseToSplit(s.id)}
                     variant="ghost"
                     size="sm"
-                    className="w-full text-xs text-muted-foreground border border-dashed border-border hover:text-foreground"
+                    className="w-full text-xs text-muted-foreground border border-dashed border-maroon/30 accent-hover"
                   >
                     <Plus size={14} className="mr-1.5" /> Add Exercise
                   </Button>
@@ -1473,7 +1473,7 @@ export default function Split() {
                     onClick={() => addHiitToSplit(s.id)}
                     variant="ghost"
                     size="sm"
-                    className="w-full text-xs text-muted-foreground border border-dashed border-border hover:text-foreground"
+                    className="w-full text-xs text-muted-foreground border border-dashed border-maroon/30 accent-hover"
                   >
                     <Plus size={14} className="mr-1.5" /> Add HIIT
                   </Button>
@@ -1481,7 +1481,7 @@ export default function Split() {
                     onClick={() => addCardioToSplit(s.id)}
                     variant="ghost"
                     size="sm"
-                    className="w-full text-xs text-muted-foreground border border-dashed border-border hover:text-foreground"
+                    className="w-full text-xs text-muted-foreground border border-dashed border-maroon/30 accent-hover"
                   >
                     <Plus size={14} className="mr-1.5" /> Add Cardio
                   </Button>

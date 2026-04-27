@@ -17,12 +17,12 @@ export default function Programming() {
         </div>
       </header>
 
-      <div className="flex bg-card p-1 rounded-xl border border-border w-fit overflow-x-auto max-w-full shadow-sm mb-6">
+      <div className="flex bg-card p-1 rounded-xl border border-maroon/30 w-fit overflow-x-auto max-w-full shadow-sm mb-6">
         <button
           onClick={() => setActiveTab('exercises')}
           className={cn(
             "px-4 py-2 text-xs font-bold transition-all rounded-lg whitespace-nowrap",
-            activeTab === 'exercises' ? "bg-maroon text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            activeTab === 'exercises' ? "accent-selected text-maroon" : "text-muted-foreground accent-hover"
           )}
         >
           Exercises
@@ -31,7 +31,7 @@ export default function Programming() {
           onClick={() => setActiveTab('programs')}
           className={cn(
             "px-4 py-2 text-xs font-bold transition-all rounded-lg whitespace-nowrap",
-            activeTab === 'programs' ? "bg-maroon text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            activeTab === 'programs' ? "accent-selected text-maroon" : "text-muted-foreground accent-hover"
           )}
         >
           Programs
@@ -40,7 +40,7 @@ export default function Programming() {
           onClick={() => setActiveTab('ai')}
           className={cn(
             "px-4 py-2 text-xs font-bold transition-all rounded-lg whitespace-nowrap",
-            activeTab === 'ai' ? "bg-maroon text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            activeTab === 'ai' ? "accent-selected text-maroon" : "text-muted-foreground accent-hover"
           )}
         >
           AI Program Builder

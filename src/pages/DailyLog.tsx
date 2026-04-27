@@ -393,7 +393,7 @@ const SortableExerciseCard = ({
         </div>
 
         {ex.usePerSetWeights && ex.sets > 0 && (
-          <div className="mt-4 p-3 bg-muted rounded-lg border border-border">
+          <div className="mt-4 p-3 bg-muted rounded-lg border border-maroon/30">
             <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-2 block">Individual Set Weights (lbs)</Label>
             <div className="flex flex-wrap gap-2">
               {Array.from({ length: ex.sets }).map((_, i) => (
@@ -537,8 +537,8 @@ const SortableExerciseCard = ({
           <div 
             ref={setDropRef}
             className={cn(
-              "mt-4 p-4 bg-muted rounded-xl border border-border space-y-4 transition-all duration-200",
-              isOver && "bg-muted border-border ring-2 ring-border scale-[1.01]"
+              "mt-4 p-4 bg-muted rounded-xl border border-maroon/30 space-y-4 transition-all duration-200",
+              isOver && "bg-muted border-maroon/30 ring-2 ring-border scale-[1.01]"
             )}
           >
             <div className="flex items-center justify-between">
@@ -839,7 +839,7 @@ const SortableConditioningBlock: React.FC<SortableConditioningBlockProps> = ({
                 {block.subtype && (
                   <div className="space-y-4">
                     {block.subtype === 'Repeats' ? (
-                      <div className="space-y-4 p-4 bg-muted rounded-lg border border-border">
+                      <div className="space-y-4 p-4 bg-muted rounded-lg border border-maroon/30">
                         <div className="flex items-center justify-between">
                           <Label className="text-xs uppercase font-bold text-muted-foreground">Setup</Label>
                           <div className="flex items-center space-x-2">
@@ -911,7 +911,7 @@ const SortableConditioningBlock: React.FC<SortableConditioningBlockProps> = ({
                         
                         {(block.splitCount || 0) > 0 && (
                           <div className="space-y-3 pt-2">
-                            <Label className="text-[10px] uppercase font-bold text-muted-foreground block border-b border-border pb-1">Times</Label>
+                            <Label className="text-[10px] uppercase font-bold text-muted-foreground block border-b border-maroon/30 pb-1">Times</Label>
                             {block.splits?.map((split, i) => (
                               <div key={i} className="flex gap-3 items-center">
                                 <div className="text-xs font-bold text-muted-foreground w-16 shrink-0">Rep {i + 1}</div>
@@ -947,7 +947,7 @@ const SortableConditioningBlock: React.FC<SortableConditioningBlockProps> = ({
                           </div>
                         )}
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-border mt-4 bg-card p-3 rounded">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-maroon/30 mt-4 bg-card p-3 rounded">
                           {(() => {
                             const stats = calculateRepeatsStats(
                               block.splitCount || 0,
@@ -984,7 +984,7 @@ const SortableConditioningBlock: React.FC<SortableConditioningBlockProps> = ({
                                     {stats.totalSessionSeconds > 0 ? formatDurationReadable(stats.totalSessionSeconds) : '--'}
                                   </div>
                                 </div>
-                                <div className="col-span-2 md:col-span-4 grid grid-cols-3 gap-2 mt-2 pt-2 border-t border-border/50">
+                                <div className="col-span-2 md:col-span-4 grid grid-cols-3 gap-2 mt-2 pt-2 border-t border-maroon/30/50">
                                   <div>
                                      <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Avg Split</Label>
                                      <div className="font-mono text-xs">{stats.averageSplitSeconds > 0 ? formatDurationReadable(stats.averageSplitSeconds) : '--'}</div>
@@ -1009,7 +1009,7 @@ const SortableConditioningBlock: React.FC<SortableConditioningBlockProps> = ({
                         </div>
                       </div>
                     ) : block.subtype === 'Zone 2' ? (
-                      <div className="space-y-4 p-4 bg-muted rounded-lg border border-border">
+                      <div className="space-y-4 p-4 bg-muted rounded-lg border border-maroon/30">
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                           <div>
                             <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Distance</Label>
@@ -1033,7 +1033,7 @@ const SortableConditioningBlock: React.FC<SortableConditioningBlockProps> = ({
                             <Input type="number" value={block.zone2AverageHeartRate ?? ''} onChange={(e) => onChange({ zone2AverageHeartRate: parseInt(e.target.value) || 0 })} className="h-9" />
                           </div>
                         </div>
-                        <div className="pt-4 border-t border-border">
+                        <div className="pt-4 border-t border-maroon/30">
                           <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Avg Pace</Label>
                           <div className="h-9 flex items-center font-mono text-sm">
                             {calculateZone2Pace(block.programmedDistanceVal || 0, block.programmedDistanceUnit || 'mi', block.zone2TimeStr || '0:00')}
@@ -1164,7 +1164,7 @@ const SortableConditioningBlock: React.FC<SortableConditioningBlockProps> = ({
                 <div className="space-y-3">
                   <Label className="text-[10px] uppercase font-bold text-muted-foreground">Exercises</Label>
                   {(block.exercises || []).map((ex) => (
-                    <div key={ex.id} className="flex flex-col md:flex-row gap-3 items-start bg-muted p-3 rounded-md border border-border">
+                    <div key={ex.id} className="flex flex-col md:flex-row gap-3 items-start bg-muted p-3 rounded-md border border-maroon/30">
                       <div className="w-full md:w-[40%]">
                         <ExerciseSelector 
                           exercises={library}
@@ -1217,7 +1217,7 @@ const SortableConditioningBlock: React.FC<SortableConditioningBlockProps> = ({
                       </Button>
                     </div>
                   ))}
-                  <Button variant="outline" size="sm" onClick={() => addHiitExercise(block.id)} className="border-dashed border-border text-xs">
+                  <Button variant="outline" size="sm" onClick={() => addHiitExercise(block.id)} className="border-dashed border-maroon/30 text-xs">
                     <Plus size={14} className="mr-1" /> Add HIIT Exercise
                   </Button>
                 </div>
@@ -2240,7 +2240,7 @@ export default function DailyLog() {
           <h2 className="page-title">Daily Log</h2>
           <p className="page-subtitle">{format(date, 'EEEE, MMMM do, yyyy')}</p>
           {sessionsForCurrentDate.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 mt-2 p-2 rounded-lg bg-muted/50 border border-border">
+            <div className="flex flex-wrap items-center gap-2 mt-2 p-2 rounded-lg bg-muted/50 border border-maroon/30">
               <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
                 Sessions Today ({sessionsForCurrentDate.length})
               </span>
@@ -2255,7 +2255,7 @@ export default function DailyLog() {
                         "text-[11px] px-2 py-0.5 rounded border transition-colors",
                         isActive 
                           ? "bg-maroon text-white border-maroon font-bold" 
-                          : "bg-card text-foreground border-border hover:bg-muted hover:border-maroon/50"
+                          : "bg-card text-foreground border-maroon/30 hover:bg-muted hover:border-maroon/50"
                       )}
                     >
                       {idx + 1}. {s.workoutName || 'Untitled'}
@@ -2284,7 +2284,7 @@ export default function DailyLog() {
                 variant="outline" 
                 size="sm" 
                 onClick={() => setSaveStatus('idle')}
-                className="text-[10px] h-8 border-border text-muted-foreground hover:bg-muted"
+                className="text-[10px] h-8 border-maroon/30 text-muted-foreground hover:bg-muted"
               >
                 Reset Save
               </Button>
@@ -2306,7 +2306,7 @@ export default function DailyLog() {
               )}
             </Button>
           </div>
-          <div className="flex items-center bg-card border border-border rounded-lg p-1 shadow-sm w-full sm:w-auto justify-center">
+          <div className="flex items-center bg-card border border-maroon/30 rounded-lg p-1 shadow-sm w-full sm:w-auto justify-center">
             <Button 
               variant="ghost" 
               size="icon" 
@@ -2426,7 +2426,7 @@ export default function DailyLog() {
                         <Button 
                           variant="outline" 
                           size="sm" 
-                          className="h-8 text-xs border-border text-muted-foreground hover:text-maroon hover:border-maroon/50"
+                          className="h-8 text-xs border-maroon/30 text-muted-foreground hover:text-maroon hover:border-maroon/50"
                         >
                           Reset Workout
                         </Button>
@@ -2452,7 +2452,7 @@ export default function DailyLog() {
                         <Button 
                           variant="outline" 
                           size="sm" 
-                          className="h-8 text-xs border-border text-muted-foreground hover:text-maroon hover:border-maroon/50"
+                          className="h-8 text-xs border-maroon/30 text-muted-foreground hover:text-maroon hover:border-maroon/50"
                         >
                           Clear Exercises
                         </Button>
@@ -2477,7 +2477,7 @@ export default function DailyLog() {
                     size="sm"
                     onClick={() => setMirrorOpen(true)}
                     disabled={!smartMatchWorkout && recentWorkouts.length === 0}
-                    className="h-8 text-xs border-border text-muted-foreground hover:text-maroon hover:border-maroon/50"
+                    className="h-8 text-xs border-maroon/30 text-muted-foreground hover:text-maroon hover:border-maroon/50"
                   >
                     <HistoryIcon size={14} className="mr-1.5" /> Mirror Previous
                   </Button>
@@ -2503,7 +2503,7 @@ export default function DailyLog() {
                   if (!currentSplit) return null;
                   
                   return (
-                    <div className="p-4 bg-muted rounded-lg border border-border space-y-3">
+                    <div className="p-4 bg-muted rounded-lg border border-maroon/30 space-y-3">
                       <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                         <LayoutGrid size={12} className="text-maroon" />
                         Session Snapshot (Programmed)
@@ -2585,13 +2585,13 @@ export default function DailyLog() {
             </DndContext>
 
             <div className="grid grid-cols-3 gap-2 mt-4">
-              <Button variant="outline" onClick={addLiftBlock} className="border-dashed border-border">
+              <Button variant="outline" onClick={addLiftBlock} className="border-dashed border-maroon/30">
                 <Plus size={16} className="mr-1" /> Add Lift
               </Button>
-              <Button variant="outline" onClick={addCardioBlock} className="border-dashed border-border">
+              <Button variant="outline" onClick={addCardioBlock} className="border-dashed border-maroon/30">
                 <Plus size={16} className="mr-1" /> Add Cardio
               </Button>
-              <Button variant="outline" onClick={addHiitBlock} className="border-dashed border-border">
+              <Button variant="outline" onClick={addHiitBlock} className="border-dashed border-maroon/30">
                 <Plus size={16} className="mr-1" /> Add HIIT
               </Button>
             </div>
@@ -2656,7 +2656,7 @@ export default function DailyLog() {
                 variant="outline" 
                 size="sm" 
                 onClick={() => setSaveStatus('idle')}
-                className="text-[10px] h-8 border-border text-muted-foreground hover:bg-muted shrink-0"
+                className="text-[10px] h-8 border-maroon/30 text-muted-foreground hover:bg-muted shrink-0"
               >
                 Reset Save
               </Button>
@@ -2702,7 +2702,7 @@ export default function DailyLog() {
                   "p-3 border rounded-lg cursor-pointer transition-colors",
                   mirrorSelectedId === smartMatchWorkout.id
                     ? "border-maroon bg-maroon/5"
-                    : "border-border hover:border-maroon/40"
+                    : "border-maroon/30 hover:border-maroon/40"
                 )}
                 onClick={() => setMirrorSelectedId(smartMatchWorkout.id)}
               >
@@ -2741,7 +2741,7 @@ export default function DailyLog() {
 
             {/* Viewer */}
             {mirrorViewWorkout ? (
-              <div className="border border-border rounded-lg p-4 bg-muted/30 space-y-3">
+              <div className="border border-maroon/30 rounded-lg p-4 bg-muted/30 space-y-3">
                 <div>
                   <div className="font-bold text-base">{mirrorViewWorkout.workoutName || 'Untitled'}</div>
                   <div className="text-xs text-muted-foreground">
@@ -2761,7 +2761,7 @@ export default function DailyLog() {
                     <div className="space-y-1.5">
                       <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Exercises</Label>
                       {exList.map((ex: ExerciseEntry) => (
-                        <div key={ex.id} className="text-sm py-1 border-b border-border/40 last:border-b-0 space-y-1">
+                        <div key={ex.id} className="text-sm py-1 border-b border-maroon/30/40 last:border-b-0 space-y-1">
                           <div className="flex justify-between items-baseline">
                             <span className="font-medium">{ex.name}</span>
                             <span className="text-muted-foreground text-xs tabular-nums">
@@ -2792,7 +2792,7 @@ export default function DailyLog() {
                       {condBlocks.length > 0 ? condBlocks.map((block: any, i: number) => {
                         const subtype = block.kind === 'hiit' ? (block.hiitType || block.subtype || 'HIIT') : (block.subtype || 'Cardio');
                         return (
-                          <div key={block.id || i} className="bg-muted/50 p-3 rounded border border-border space-y-2">
+                          <div key={block.id || i} className="bg-muted/50 p-3 rounded border border-maroon/30 space-y-2">
                             <div className="flex items-center justify-between mb-1">
                               <span className="text-[10px] py-0.5 px-1.5 rounded uppercase font-bold bg-maroon/5 text-maroon border border-maroon/10">
                                 {subtype}
@@ -2816,12 +2816,12 @@ export default function DailyLog() {
                                   )}
                                 </div>
                                 {block.splits && block.splits.length > 0 && block.splits.some((s: any) => s.timeStr || s.distanceVal) && (
-                                  <div className="pt-2 border-t border-border/50">
+                                  <div className="pt-2 border-t border-maroon/30/50">
                                     <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">Splits</span>
                                     <div className="flex flex-wrap gap-1">
                                       {block.splits.map((s: any, j: number) => (
                                         (s.timeStr || s.distanceVal) && (
-                                          <span key={j} className="bg-card px-1.5 py-0.5 rounded border border-border text-[10px] text-muted-foreground">
+                                          <span key={j} className="bg-card px-1.5 py-0.5 rounded border border-maroon/30 text-[10px] text-muted-foreground">
                                             {s.distanceVal || ''}{s.distanceUnit ? s.distanceUnit : ''} {s.timeStr || ''}
                                           </span>
                                         )
@@ -2830,7 +2830,7 @@ export default function DailyLog() {
                                   </div>
                                 )}
                                 {block.programmedNotes && (
-                                  <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-border/50 whitespace-pre-wrap break-words">{block.programmedNotes}</p>
+                                  <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-maroon/30/50 whitespace-pre-wrap break-words">{block.programmedNotes}</p>
                                 )}
                               </div>
                             )}
@@ -2849,7 +2849,7 @@ export default function DailyLog() {
                                   )}
                                 </div>
                                 {block.programmedNotes && (
-                                  <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-border/50 whitespace-pre-wrap break-words">{block.programmedNotes}</p>
+                                  <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-maroon/30/50 whitespace-pre-wrap break-words">{block.programmedNotes}</p>
                                 )}
                               </div>
                             )}
@@ -2865,7 +2865,7 @@ export default function DailyLog() {
                                   )}
                                 </div>
                                 {block.programmedNotes && (
-                                  <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-border/50 whitespace-pre-wrap break-words">{block.programmedNotes}</p>
+                                  <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-maroon/30/50 whitespace-pre-wrap break-words">{block.programmedNotes}</p>
                                 )}
                               </div>
                             )}
@@ -2884,10 +2884,10 @@ export default function DailyLog() {
                                   )}
                                 </div>
                                 {block.structureNotes && (
-                                  <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-border/50 whitespace-pre-wrap break-words">{block.structureNotes}</p>
+                                  <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-maroon/30/50 whitespace-pre-wrap break-words">{block.structureNotes}</p>
                                 )}
                                 {block.programmedNotes && block.programmedNotes !== block.structureNotes && (
-                                  <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-border/50 whitespace-pre-wrap break-words">{block.programmedNotes}</p>
+                                  <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-maroon/30/50 whitespace-pre-wrap break-words">{block.programmedNotes}</p>
                                 )}
                               </div>
                             )}
@@ -2895,7 +2895,7 @@ export default function DailyLog() {
                           </div>
                         );
                       }) : (
-                        <div className="bg-muted/50 p-3 rounded border border-border space-y-2">
+                        <div className="bg-muted/50 p-3 rounded border border-maroon/30 space-y-2">
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-[10px] py-0.5 px-1.5 rounded uppercase font-bold bg-maroon/5 text-maroon border border-maroon/10">
                               {mirrorViewWorkout.conditioning?.type || 'CONDITIONING'}
@@ -2922,17 +2922,17 @@ export default function DailyLog() {
                             )}
                           </div>
                           {mirrorViewWorkout.conditioning?.actualSplits && mirrorViewWorkout.conditioning.actualSplits.some((s: any) => s) && (
-                            <div className="pt-2 border-t border-border/50">
+                            <div className="pt-2 border-t border-maroon/30/50">
                               <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">Splits</span>
                               <div className="flex flex-wrap gap-1">
                                 {mirrorViewWorkout.conditioning.actualSplits.map((split: any, i: number) => split && (
-                                  <span key={i} className="bg-card px-1.5 py-0.5 rounded border border-border text-[10px] text-muted-foreground">{split}</span>
+                                  <span key={i} className="bg-card px-1.5 py-0.5 rounded border border-maroon/30 text-[10px] text-muted-foreground">{split}</span>
                                 ))}
                               </div>
                             </div>
                           )}
                           {mirrorViewWorkout.conditioning?.notes && (
-                            <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-border/50 whitespace-pre-wrap break-words">{mirrorViewWorkout.conditioning.notes}</p>
+                            <p className="text-[11px] text-muted-foreground italic pt-1 border-t border-maroon/30/50 whitespace-pre-wrap break-words">{mirrorViewWorkout.conditioning.notes}</p>
                           )}
                         </div>
                       )}

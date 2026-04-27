@@ -221,7 +221,7 @@ export default function Exercises() {
                 </Select>
               </div>
 
-              <div className="space-y-3 pt-2 border-t border-border">
+              <div className="space-y-3 pt-2 border-t border-maroon/30">
                 <div className="flex items-center justify-between">
                   <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Muscle Breakdown (%)</Label>
                   <Button 
@@ -351,7 +351,7 @@ export default function Exercises() {
                   </Select>
                 </div>
 
-                <div className="space-y-3 pt-2 border-t border-border">
+                <div className="space-y-3 pt-2 border-t border-maroon/30">
                   <div className="flex items-center justify-between">
                     <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Muscle Breakdown (%)</Label>
                     <Button 
@@ -443,7 +443,7 @@ export default function Exercises() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {(Object.entries(groupedExercises) as [string, ExerciseLibraryEntry[]][]).map(([group, exercises]) => (
           <Card key={group} className="card-shell">
-            <CardHeader className="bg-muted/50 border-b border-border py-3">
+            <CardHeader className="bg-muted/50 border-b border-maroon/30 py-3">
               <CardTitle className="text-sm font-bold uppercase tracking-wider text-maroon flex items-center justify-between">
                 {group}
                 <span className="text-xs bg-maroon/10 text-maroon px-2 py-0.5 rounded-full font-medium">
