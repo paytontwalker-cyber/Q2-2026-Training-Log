@@ -20,7 +20,7 @@ export default function Wellness() {
           <CardDescription>We are building out tools to help you track your overall health and recovery.</CardDescription>
         </CardHeader>
         <CardContent>
-          <ul className="list-disc list-inside space-y-2 text-slate-700">
+          <ul className="list-disc list-inside space-y-2 text-muted-foreground">
             <li>Sleep</li>
             <li>Nutrition</li>
             <li>Recovery</li>

@@ -1501,7 +1501,7 @@ export default function Progress() {
                               const percent = ((value / total) * 100).toFixed(1);
                               return [`${value.toLocaleString()} lbs (${percent}%)`, name];
                             }}
-                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                            contentStyle={{ borderRadius: '8px', border: '1px solid var(--border)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', backgroundColor: 'var(--popover)', color: 'var(--popover-foreground)' }}
                           />
                         </PieChart>
                       </ResponsiveContainer>
@@ -1647,7 +1647,7 @@ export default function Progress() {
                           domain={['dataMin - 10', 'dataMax + 10']}
                         />
                         <Tooltip 
-                          contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                          contentStyle={{ borderRadius: '8px', border: '1px solid var(--border)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', backgroundColor: 'var(--popover)', color: 'var(--popover-foreground)' }}
                           cursor={{ stroke: 'var(--app-primary)', strokeWidth: 1 }}
                         />
                         <Line 
@@ -1919,7 +1919,7 @@ export default function Progress() {
                         />
                         <Tooltip 
                           formatter={(val: number) => formatPace(val)}
-                          contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                          contentStyle={{ borderRadius: '8px', border: '1px solid var(--border)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', backgroundColor: 'var(--popover)', color: 'var(--popover-foreground)' }}
                         />
                         <Area 
                           type="monotone" 
@@ -1994,7 +1994,7 @@ export default function Progress() {
                           domain={['dataMin - 5', 'dataMax + 5']}
                         />
                         <Tooltip 
-                          contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                          contentStyle={{ borderRadius: '8px', border: '1px solid var(--border)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', backgroundColor: 'var(--popover)', color: 'var(--popover-foreground)' }}
                         />
                         <Legend wrapperStyle={{ paddingTop: '20px' }} />
                         <Line 
@@ -2052,7 +2052,7 @@ export default function Progress() {
                           />
                           <Tooltip 
                             formatter={(val: number) => secondsToTime(val)}
-                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                            contentStyle={{ borderRadius: '8px', border: '1px solid var(--border)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', backgroundColor: 'var(--popover)', color: 'var(--popover-foreground)' }}
                           />
                           <Legend wrapperStyle={{ paddingTop: '20px' }} />
                           <Line 
@@ -2124,7 +2124,7 @@ export default function Progress() {
                         tick={{ fontSize: 12, fill: '#64748b' }}
                       />
                       <Tooltip 
-                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                        contentStyle={{ borderRadius: '8px', border: '1px solid var(--border)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', backgroundColor: 'var(--popover)', color: 'var(--popover-foreground)' }}
                       />
                       <Legend wrapperStyle={{ paddingTop: '20px' }} />
                       <Bar 

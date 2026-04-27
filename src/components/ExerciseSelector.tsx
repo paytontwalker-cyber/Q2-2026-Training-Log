@@ -173,7 +173,7 @@ export function ExerciseSelector({
           <span className="font-medium break-words">
             {selectedExercise.name}
           </span>
-          <span className="text-[10px] text-muted-foreground bg-slate-100 px-1.5 py-0.5 rounded shrink-0">
+          <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded shrink-0">
             {selectedExercise.muscleGroup}
           </span>
         </span>

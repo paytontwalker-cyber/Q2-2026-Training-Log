@@ -105,6 +105,8 @@ const UPDATE_ITEMS = [
   },
 ];
 
+import { getStoredAppearanceMode, applyAppearanceMode, AppearanceMode } from '../lib/theme';
+
 export default function ProfileSettings() {
   const { user, login, logout } = useFirebase();
   const { primaryColor, secondaryColor, setTheme } = useTheme();
@@ -124,10 +126,9 @@ export default function ProfileSettings() {
   });
   const [appSettings, setAppSettings] = useState(() => {
     const savedTheme = localStorage.getItem('traininglog_theme');
-    const theme = savedTheme ? JSON.parse(savedTheme) : { primaryColor, secondaryColor };
-    // Strip any legacy themeMode field from previously-saved theme objects
+    const theme = savedTheme ? JSON.parse(savedTheme) : { primaryColor, secondaryColor, appearanceMode: getStoredAppearanceMode() };
     const { themeMode: _legacyThemeMode, ...themeClean } = theme;
-    return { ...themeClean };
+    return { appearanceMode: getStoredAppearanceMode() as AppearanceMode, ...themeClean };
   });
   const [saving, setSaving] = useState(false);
   
@@ -181,6 +182,7 @@ export default function ProfileSettings() {
           setAppSettings({
             primaryColor: data.primaryColor || primaryColor,
             secondaryColor: data.secondaryColor || secondaryColor,
+            appearanceMode: data.appearanceMode || getStoredAppearanceMode(),
           });
           setTheme(data.primaryColor || primaryColor, data.secondaryColor || secondaryColor, 'light');
         }
@@ -221,8 +223,13 @@ export default function ProfileSettings() {
   };
 
   const saveAppSettings = async () => {
-    localStorage.setItem('traininglog_theme', JSON.stringify({ primaryColor: appSettings.primaryColor, secondaryColor: appSettings.secondaryColor }));
+    localStorage.setItem('traininglog_theme', JSON.stringify({ 
+      primaryColor: appSettings.primaryColor, 
+      secondaryColor: appSettings.secondaryColor,
+      appearanceMode: appSettings.appearanceMode
+    }));
     setTheme(appSettings.primaryColor, appSettings.secondaryColor, 'light');
+    applyAppearanceMode(appSettings.appearanceMode);
     
     if (user && !isGuest) {
       setSaving(true);
@@ -410,9 +417,24 @@ export default function ProfileSettings() {
               <Settings className="text-gold" size={20} />
               Appearance
             </CardTitle>
-            <p className="text-xs text-muted-foreground mt-2">Choose the accent colors that affect highlights, buttons, active states, selected cards, and dashboard details. It does not radically recolor backgrounds.</p>
+            <p className="text-xs text-muted-foreground mt-2">Adjust your appearance mode and choose the accent colors that affect highlights, buttons, and active states. Dark mode has a polished gunmetal aesthetic.</p>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-xs">Appearance Mode</Label>
+              <Select value={appSettings.appearanceMode} onValueChange={(val) => {
+                setAppSettings({...appSettings, appearanceMode: val as AppearanceMode});
+              }}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="system">System (Follow OS)</SelectItem>
+                  <SelectItem value="light">Light</SelectItem>
+                  <SelectItem value="dark">Dark</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-2">
               <Label className="text-xs">Primary Color</Label>
               <div className="flex items-center gap-2">
