@@ -521,40 +521,42 @@ export default function ProfileSettings() {
               </p>
             </div>
 
-            <div className="pt-3 border-t border-maroon/30">
-              <h4 className="text-xs uppercase font-bold tracking-wider text-muted-foreground mb-2">Weekly Volume Targets (lbs moved)</h4>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-3">
+            <div className="pt-4 mt-2 border-t border-maroon/30">
+              <h4 className="text-xs uppercase font-bold tracking-wider text-muted-foreground mb-3">Weekly Volume Targets (lbs moved)</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-3">
                 {Object.keys(BASE_VOLUME_TARGETS_180LB_INTERMEDIATE).map(mg => {
                   const computed = effectiveTargets[mg];
                   const isOverridden = mg in targetOverrides && targetOverrides[mg] > 0;
                   return (
-                    <div key={mg} className="flex items-center gap-2 p-2 rounded border border-maroon/30 bg-card">
-                      <Label className="text-xs flex-1 min-w-0">{mg}</Label>
-                      <Input
-                        type="number"
-                        value={isOverridden ? targetOverrides[mg] : computed}
-                        onChange={e => {
-                          const val = parseInt(e.target.value) || 0;
-                          setTargetOverrides(prev => ({ ...prev, [mg]: val }));
-                        }}
-                        className={cn("h-8 text-xs w-24 text-right", isOverridden && "border-maroon")}
-                      />
-                      {isOverridden && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 px-2 text-[10px]"
-                          onClick={() => {
-                            setTargetOverrides(prev => {
-                              const { [mg]: _, ...rest } = prev;
-                              return rest;
-                            });
+                    <div key={mg} className="flex flex-col sm:flex-row sm:items-center gap-2 p-3 sm:p-2 rounded-lg border border-maroon/30 bg-card">
+                      <Label className="text-xs sm:truncate font-medium w-full sm:flex-1 min-w-0">{mg}</Label>
+                      <div className="flex items-center gap-2 w-full sm:w-auto mt-1 sm:mt-0">
+                        <Input
+                          type="number"
+                          value={isOverridden ? targetOverrides[mg] : computed}
+                          onChange={e => {
+                            const val = parseInt(e.target.value) || 0;
+                            setTargetOverrides(prev => ({ ...prev, [mg]: val }));
                           }}
-                        >
-                          Reset
-                        </Button>
-                      )}
+                          className={cn("h-8 text-xs w-full sm:w-24 text-right shadow-none focus-visible:ring-1 focus-visible:ring-maroon", isOverridden ? "border-maroon ring-1 ring-maroon/30" : "")}
+                        />
+                        {isOverridden && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2 text-[10px] shrink-0 hover:bg-red-500/10 hover:text-red-500"
+                            onClick={() => {
+                              setTargetOverrides(prev => {
+                                const { [mg]: _, ...rest } = prev;
+                                return rest;
+                              });
+                            }}
+                          >
+                            Reset
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
