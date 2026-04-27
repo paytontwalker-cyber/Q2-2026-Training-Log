@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { LayoutDashboard, History, Dumbbell, LineChart, HeartPulse, Settings, X, Hash, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useDashboardData } from '@/src/lib/hooks';
 import { BodyMap, getVolumeColor, THERMAL_COLORS } from '@/src/components/BodyMap';
@@ -15,6 +16,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 import { resolveExerciseDistribution } from '@/src/lib/exerciseDistribution';
 import { calculateLoggedExerciseVolume, flattenLoggedExercises, normalizeConditioning, classifyConditioningSession, getDistanceInMeters } from '@/src/lib/workoutUtils';
+import { WorkoutDetailView, ProgramDetailView } from '@/src/components/WorkoutDetailView';
 
 const normalizeMuscleName = (name: string) => String(name || '').trim().toLowerCase();
 
@@ -28,6 +30,8 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
   // Calendar State
   const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()));
   const [selectedDate, setSelectedDate] = useState(startOfToday());
+  const [selectedWorkoutModal, setSelectedWorkoutModal] = useState<any | null>(null);
+  const [selectedPlannedModal, setSelectedPlannedModal] = useState<any | null>(null);
   const [trendsTab, setTrendsTab] = useState<'volume' | 'strength' | 'running'>('volume');
   
   useEffect(() => {
@@ -300,25 +304,45 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
             <h4 className="text-xs uppercase font-bold tracking-wider text-maroon mb-3 border-b border-maroon/30 pb-2">
               {format(selectedDate, "EEEE, MMMM d, yyyy")}
             </h4>
-            {selectedCompleted.length > 0 ? (
-              <div className="space-y-2">
-                {selectedCompleted.map((w, i) => (
-                  <div key={i} className="flex items-center justify-between accent-card p-3 rounded-md">
-                    <span className="font-semibold text-sm">{w.workoutName || 'Workout'}</span>
-                    <span className="text-[10px] font-bold text-maroon bg-maroon/10 px-2 py-1 rounded">Logged</span>
-                  </div>
-                ))}
-              </div>
-            ) : selectedDate >= startOfToday() && selectedPlanned ? (
-              <div className="flex items-center justify-between accent-card p-3 rounded-md">
-                <span className="font-semibold text-sm text-foreground">{selectedPlanned.name}</span>
-                <span className="accent-badge-soft">Planned</span>
-              </div>
-            ) : (
+            
+            {/* Condition 1: Neither logged nor planned */}
+            {selectedCompleted.length === 0 && !(selectedDate >= startOfToday() && selectedPlanned) && (
               <div className="text-center p-4 text-sm text-muted-foreground italic">
                 No activity scheduled or logged.
               </div>
             )}
+            
+            <div className="space-y-4">
+              {/* Show completed workouts first */}
+              {selectedCompleted.length > 0 && (
+                <div className="space-y-3">
+                  {selectedCompleted.map((w, i) => (
+                    <div key={i} className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between accent-card p-3 rounded-md">
+                        <span className="font-semibold text-sm">{w.workoutName || 'Workout'}</span>
+                        <span className="text-[10px] font-bold text-maroon bg-maroon/10 px-2 py-1 rounded">Logged</span>
+                      </div>
+                      <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => setSelectedWorkoutModal(w)}>
+                        View Full Log
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Show planned future workout if relevant */}
+              {selectedDate >= startOfToday() && selectedPlanned && (
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between accent-card p-3 rounded-md">
+                    <span className="font-semibold text-sm text-foreground">{selectedPlanned.name || 'Planned Workout'}</span>
+                    <span className="accent-badge-soft">Planned</span>
+                  </div>
+                  <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => setSelectedPlannedModal(selectedPlanned)}>
+                    View Planned Workout
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -607,6 +631,34 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
           </div>
         </div>
       )}
+
+      {/* Logged Workout Modal */}
+      <Dialog open={!!selectedWorkoutModal} onOpenChange={(open) => !open && setSelectedWorkoutModal(null)}>
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[10px] font-bold text-maroon bg-maroon/10 px-2 py-1 rounded">Logged</span>
+            </div>
+            <DialogTitle className="text-xl">{selectedWorkoutModal?.workoutName}</DialogTitle>
+            <DialogDescription>{selectedWorkoutModal ? format(new Date(selectedWorkoutModal.date), "EEEE, MMMM d, yyyy") : ''}</DialogDescription>
+          </DialogHeader>
+          <WorkoutDetailView workout={selectedWorkoutModal} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Planned Workout Modal */}
+      <Dialog open={!!selectedPlannedModal} onOpenChange={(open) => !open && setSelectedPlannedModal(null)}>
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="accent-badge-soft text-[10px]">Planned</span>
+            </div>
+            <DialogTitle className="text-xl">{selectedPlannedModal?.name}</DialogTitle>
+            <DialogDescription>{format(selectedDate, "EEEE, MMMM d, yyyy")}</DialogDescription>
+          </DialogHeader>
+          <ProgramDetailView selectedPlanned={selectedPlannedModal} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
