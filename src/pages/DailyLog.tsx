@@ -18,7 +18,8 @@ import {
   Check,
   LayoutGrid,
   History as HistoryIcon,
-  Clock
+  Clock,
+  Hash
 } from 'lucide-react';
 import { format, addDays, subDays } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -243,8 +244,26 @@ const SortableExerciseCard = ({
                 <div className="mt-1 text-[10px] text-muted-foreground flex items-center gap-1">
                   <Clock size={10} />
                   <span className="font-medium">Last time:</span>
-                  <span className="tabular-nums">
-                    {previousEntry.sets}×{previousEntry.reps || '-'} @ {previousEntry.weight || 0} lbs
+                  <span className="tabular-nums truncate max-w-[200px]" title={
+                    (() => {
+                      if (previousEntry.trackingMode === 'distance') return `${previousEntry.sets} sets x ${previousEntry.distance || 0}${previousEntry.distanceUnit || 'm'} @ ${previousEntry.weight || 0} lbs`;
+                      const hasWeights = previousEntry.usePerSetWeights && Array.isArray(previousEntry.perSetWeights) && previousEntry.perSetWeights.length > 0;
+                      const hasReps = previousEntry.usePerSetReps && Array.isArray(previousEntry.perSetReps) && previousEntry.perSetReps.length > 0;
+                      if (hasWeights && hasReps) return `${previousEntry.sets} sets: ${Array.from({length: previousEntry.sets||0}).map((_, i) => `${previousEntry.perSetReps![i]??'-'}x${previousEntry.perSetWeights![i]??0}`).join(', ')} lbs`;
+                      if (hasWeights) return `${previousEntry.sets}x${previousEntry.reps || '-'} (${previousEntry.perSetWeights!.join(', ')}) lbs`;
+                      if (hasReps) return `${previousEntry.sets} sets (${previousEntry.perSetReps!.join(', ')}) @ ${previousEntry.weight || 0} lbs`;
+                      return `${previousEntry.sets}x${previousEntry.reps || '-'} @ ${previousEntry.weight || 0} lbs`;
+                    })() + (previousEntry.rpe ? ` · RPE ${previousEntry.rpe}` : '')
+                  }>
+                    {(() => {
+                      if (previousEntry.trackingMode === 'distance') return `${previousEntry.sets} sets x ${previousEntry.distance || 0}${previousEntry.distanceUnit || 'm'} @ ${previousEntry.weight || 0} lbs`;
+                      const hasWeights = previousEntry.usePerSetWeights && Array.isArray(previousEntry.perSetWeights) && previousEntry.perSetWeights.length > 0;
+                      const hasReps = previousEntry.usePerSetReps && Array.isArray(previousEntry.perSetReps) && previousEntry.perSetReps.length > 0;
+                      if (hasWeights && hasReps) return `${previousEntry.sets} sets: ${Array.from({length: previousEntry.sets||0}).map((_, i) => `${previousEntry.perSetReps![i]??'-'}x${previousEntry.perSetWeights![i]??0}`).join(', ')} lbs`;
+                      if (hasWeights) return `${previousEntry.sets}x${previousEntry.reps || '-'} (${previousEntry.perSetWeights!.join(', ')}) lbs`;
+                      if (hasReps) return `${previousEntry.sets} sets (${previousEntry.perSetReps!.join(', ')}) @ ${previousEntry.weight || 0} lbs`;
+                      return `${previousEntry.sets}x${previousEntry.reps || '-'} @ ${previousEntry.weight || 0} lbs`;
+                    })()}
                     {previousEntry.rpe ? ` · RPE ${previousEntry.rpe}` : ''}
                   </span>
                 </div>
@@ -271,6 +290,15 @@ const SortableExerciseCard = ({
                       newWeights.length = newSets;
                     }
                     updates.perSetWeights = newWeights;
+                  }
+                  if (ex.usePerSetReps) {
+                    const newReps = [...(ex.perSetReps || [])];
+                    if (newReps.length < newSets) {
+                      for (let i = newReps.length; i < newSets; i++) newReps.push(ex.reps || 0);
+                    } else if (newReps.length > newSets) {
+                      newReps.length = newSets;
+                    }
+                    updates.perSetReps = newReps;
                   }
                   updateExercise(ex.id, updates);
                 }}
@@ -331,16 +359,22 @@ const SortableExerciseCard = ({
             ) : (
               <div className="min-w-0">
                 <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block truncate">Reps</Label>
-                <Input 
-                  type="number" 
-                  value={ex.reps || ''} 
-                  onChange={e => {
-                    const val = e.target.value;
-                    updateExercise(ex.id, { reps: val === '' ? 0 : parseInt(val) });
-                  }}
-                  onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
-                  className="h-9 w-full"
-                />
+                {ex.usePerSetReps ? (
+                  <div className="flex items-center h-9 text-[10px] text-muted-foreground font-medium italic">
+                    Per-set active
+                  </div>
+                ) : (
+                  <Input 
+                    type="number" 
+                    value={ex.reps || ''} 
+                    onChange={e => {
+                      const val = e.target.value;
+                      updateExercise(ex.id, { reps: val === '' ? 0 : parseInt(val) });
+                    }}
+                    onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
+                    className="h-9 w-full"
+                  />
+                )}
               </div>
             )}
             <div className="min-w-0">
@@ -392,23 +426,46 @@ const SortableExerciseCard = ({
           </div>
         </div>
 
-        {ex.usePerSetWeights && ex.sets > 0 && (
+        {(ex.usePerSetWeights || ex.usePerSetReps) && ex.sets > 0 && (
           <div className="mt-4 p-3 bg-muted rounded-lg border border-maroon/30">
-            <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-2 block">Individual Set Weights (lbs)</Label>
+            <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-2 block">
+              Individual Set Details {ex.usePerSetWeights && ex.usePerSetReps ? '(Reps & Weight)' : ex.usePerSetWeights ? '(Weight)' : '(Reps)'}
+            </Label>
             <div className="flex flex-wrap gap-2">
               {Array.from({ length: ex.sets }).map((_, i) => (
-                <div key={i} className="flex flex-col gap-1">
-                  <span className="text-[9px] text-muted-foreground font-bold text-center">S{i+1}</span>
-                  <Input 
-                    type="number"
-                    value={ex.perSetWeights?.[i] ?? ex.weight ?? ''}
-                    onChange={e => {
-                      const newWeights = [...(ex.perSetWeights || Array(ex.sets).fill(ex.weight || 0))];
-                      newWeights[i] = parseFloat(e.target.value) || 0;
-                      updateExercise(ex.id, { perSetWeights: newWeights });
-                    }}
-                    className="h-8 w-16 text-xs text-center"
-                  />
+                <div key={i} className="flex flex-col gap-1 items-center bg-background p-2 rounded border border-border">
+                  <span className="text-[9px] text-muted-foreground font-bold">Set {i+1}</span>
+                  <div className="flex items-center gap-1">
+                    {ex.usePerSetReps && (
+                      <Input
+                        type="number"
+                        placeholder="Reps"
+                        value={ex.perSetReps?.[i] === 0 && ex.reps !== 0 ? '' : ex.perSetReps?.[i] ?? ''}
+                        onChange={e => {
+                          const val = e.target.value;
+                          const newReps = [...(ex.perSetReps || Array(ex.sets).fill(ex.reps || 0))];
+                          newReps[i] = val === '' ? 0 : parseInt(val);
+                          updateExercise(ex.id, { perSetReps: newReps });
+                        }}
+                        className="h-8 w-16 text-xs text-center"
+                      />
+                    )}
+                    {ex.usePerSetReps && ex.usePerSetWeights && <span className="text-muted-foreground text-[10px] px-0.5">×</span>}
+                    {ex.usePerSetWeights && (
+                      <Input 
+                        type="number"
+                        placeholder="lbs"
+                        value={ex.perSetWeights?.[i] === 0 && ex.weight !== 0 ? '' : ex.perSetWeights?.[i] ?? ''}
+                        onChange={e => {
+                          const val = e.target.value;
+                          const newWeights = [...(ex.perSetWeights || Array(ex.sets).fill(ex.weight || 0))];
+                          newWeights[i] = val === '' ? 0 : parseFloat(val);
+                          updateExercise(ex.id, { perSetWeights: newWeights });
+                        }}
+                        className="h-8 w-16 text-xs text-center"
+                      />
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -445,6 +502,26 @@ const SortableExerciseCard = ({
               variant="ghost" 
               size="sm" 
               onClick={() => {
+                const usePerSet = !ex.usePerSetReps;
+                const updates: Partial<ExerciseEntry> = { usePerSetReps: usePerSet };
+                if (usePerSet && !ex.perSetReps) {
+                  updates.perSetReps = Array(ex.sets || 0).fill(ex.reps || 0);
+                }
+                updateExercise(ex.id, updates);
+              }}
+              className={cn(
+                "h-8 px-2 text-xs",
+                ex.usePerSetReps ? "text-maroon bg-maroon/5" : "text-muted-foreground"
+              )}
+            >
+              <Hash size={14} className="mr-1" />
+              {ex.usePerSetReps ? 'Using Per-Set Reps' : 'Use Per-Set Reps'}
+            </Button>
+
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => {
                 const usePerSet = !ex.usePerSetWeights;
                 const updates: Partial<ExerciseEntry> = { usePerSetWeights: usePerSet };
                 if (usePerSet && !ex.perSetWeights) {
@@ -458,7 +535,7 @@ const SortableExerciseCard = ({
               )}
             >
               <Scale size={14} className="mr-1" />
-              {ex.usePerSetWeights ? 'Using Per-Set' : 'Use Per-Set Weights'}
+              {ex.usePerSetWeights ? 'Using Per-Set Weight' : 'Use Per-Set Weights'}
             </Button>
 
             <Button 
@@ -1565,10 +1642,20 @@ export default function DailyLog() {
     let details = '';
     if (ex.trackingMode === 'distance') {
       details = `${ex.sets} sets x ${ex.distance || 0}${ex.distanceUnit || 'm'} @ ${ex.weight || 0} lbs`;
-    } else if (ex.usePerSetWeights && ex.perSetWeights && ex.perSetWeights.length > 0) {
-      details = `${ex.sets}x${ex.reps || '-'} (${ex.perSetWeights.join(', ')}) lbs`;
     } else {
-      details = `${ex.sets}x${ex.reps || '-'} @ ${ex.weight || 0} lbs`;
+      const hasPerSetWeights = ex.usePerSetWeights && Array.isArray(ex.perSetWeights) && ex.perSetWeights.length > 0;
+      const hasPerSetReps = ex.usePerSetReps && Array.isArray(ex.perSetReps) && ex.perSetReps.length > 0;
+      
+      if (hasPerSetWeights && hasPerSetReps) {
+        const d = Array.from({ length: ex.sets || 0 }).map((_, i) => `${ex.perSetReps![i] ?? ex.reps ?? '-'}x${ex.perSetWeights![i] ?? ex.weight ?? 0}`).join(', ');
+        details = `${ex.sets} sets: ${d} lbs`;
+      } else if (hasPerSetWeights) {
+        details = `${ex.sets}x${ex.reps || '-'} (${ex.perSetWeights!.join(', ')}) lbs`;
+      } else if (hasPerSetReps) {
+        details = `${ex.sets} sets (${ex.perSetReps!.join(', ')}) @ ${ex.weight || 0} lbs`;
+      } else {
+        details = `${ex.sets}x${ex.reps || '-'} @ ${ex.weight || 0} lbs`;
+      }
     }
     if (ex.rpe) {
       details += ` · RPE ${ex.rpe}`;

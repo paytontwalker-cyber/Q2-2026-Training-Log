@@ -17,6 +17,7 @@ import { Workout, DeletedWorkout, Block, LiftBlock } from '@/src/types';
 import { storage } from '@/src/services/storage';
 import { useFirebase } from '@/src/components/FirebaseProvider';
 import { normalizeEnergyToFivePoint, flattenLoggedExercises } from '@/src/lib/workoutUtils';
+import { formatExerciseSummary } from '@/src/components/WorkoutDetailView';
 
 const renderCardioBlockDetails = (block: any) => {
   const subtype = block.subtype || 'Cardio';
@@ -293,9 +294,15 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
           text += `   ${ex.sets} sets x ${ex.distance || ex.distanceVal}${ex.distanceUnit} @ ${ex.weight} lbs\n`;
         } else if (ex.trackingMode === 'time') {
           text += `   ${ex.sets} sets x ${ex.time || ex.timeVal} @ ${ex.weight} lbs\n`;
+        } else if (ex.usePerSetWeights && ex.usePerSetReps && ex.perSetWeights && ex.perSetReps) {
+          text += `   Sets: ${ex.sets}\n`;
+          text += `   Reps x Weights: ${ex.perSetReps.map((r, i) => `${r || ex.reps}x${ex.perSetWeights![i] || ex.weight}`).join(', ')} lbs\n`;
         } else if (ex.usePerSetWeights && ex.perSetWeights) {
           text += `   Sets: ${ex.sets} | Reps: ${ex.reps}\n`;
           text += `   Weights: ${ex.perSetWeights.join(', ')} lbs\n`;
+        } else if (ex.usePerSetReps && ex.perSetReps) {
+          text += `   Sets: ${ex.sets} | Weight: ${ex.weight} lbs\n`;
+          text += `   Reps: ${ex.perSetReps.map(r => r || ex.reps).join(', ')}\n`;
         } else {
           text += `   ${ex.sets} sets x ${ex.reps} reps @ ${ex.weight} lbs\n`;
         }
@@ -614,12 +621,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
                             <div className="flex items-center justify-between text-sm">
                               <span className="font-medium text-foreground">{ex.name}</span>
                               <span className="text-muted-foreground">
-                                {ex.trackingMode === 'distance' 
-                                  ? `${ex.sets} sets x ${ex.distance}${ex.distanceUnit} @ ${ex.weight} lbs`
-                                  : ex.usePerSetWeights && ex.perSetWeights 
-                                    ? `${ex.sets}x${ex.reps} (${ex.perSetWeights.join(', ')}) lbs` 
-                                    : `${ex.sets}x${ex.reps} @ ${ex.weight} lbs`
-                                }
+                                {formatExerciseSummary(ex)}
                               </span>
                             </div>
                             {ex.notes && (
@@ -629,10 +631,7 @@ export default function History({ setCurrentPage }: { setCurrentPage: (page: 'lo
                               <div className="flex items-center justify-between text-[11px] pl-3 border-l-2 border-maroon/20 text-maroon/70">
                                 <span className="font-medium">+ {ex.superset.name}</span>
                                 <span>
-                                  {ex.superset.trackingMode === 'distance'
-                                    ? `${ex.superset.sets} sets x ${ex.superset.distance}${ex.superset.distanceUnit} @ ${ex.superset.weight} lbs`
-                                    : `${ex.superset.sets}x${ex.superset.reps} @ ${ex.superset.weight} lbs`
-                                  }
+                                  {formatExerciseSummary(ex.superset)}
                                 </span>
                               </div>
                             )}

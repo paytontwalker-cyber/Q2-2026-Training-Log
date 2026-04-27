@@ -6,25 +6,51 @@ export const safeNumber = (value: unknown, fallback = 0) => {
 };
 
 export const calculateLoggedExerciseVolume = (ex: any) => {
+  const sets = safeNumber(ex.sets);
+  
   if (ex.trackingMode === 'distance') {
     // Distance-based volume: sets * (distance / 100) * weight
     const dist = safeNumber(ex.distance) || safeNumber(ex.distanceVal) || 0;
     const weight = safeNumber(ex.weight);
-    const sets = safeNumber(ex.sets);
     return sets * (dist / 100) * weight;
   }
   if (ex.trackingMode === 'time') {
     // Time-based volume: sets * time * weight
     const time = safeNumber(ex.time) || safeNumber(ex.timeVal) || 0;
     const weight = safeNumber(ex.weight);
-    const sets = safeNumber(ex.sets);
     return sets * time * weight;
   }
-  if (ex.usePerSetWeights && ex.perSetWeights && Array.isArray(ex.perSetWeights) && ex.perSetWeights.length > 0) {
-    // Use actual logged weights * reps
-    return ex.perSetWeights.reduce((sum: number, w: number) => sum + (safeNumber(ex.reps) * safeNumber(w)), 0);
+  
+  const hasPerSetWeights = ex.usePerSetWeights && Array.isArray(ex.perSetWeights) && ex.perSetWeights.length > 0;
+  const hasPerSetReps = ex.usePerSetReps && Array.isArray(ex.perSetReps) && ex.perSetReps.length > 0;
+  
+  if (hasPerSetWeights && hasPerSetReps) {
+    let sum = 0;
+    for (let i = 0; i < sets; i++) {
+      const w = safeNumber(ex.perSetWeights[i] ?? ex.perSetWeights[0] ?? ex.weight);
+      const r = safeNumber(ex.perSetReps[i] ?? ex.reps);
+      sum += w * r;
+    }
+    return sum;
+  } else if (hasPerSetWeights) {
+    const r = safeNumber(ex.reps);
+    let sum = 0;
+    for (let i = 0; i < sets; i++) {
+      const w = safeNumber(ex.perSetWeights[i] ?? ex.perSetWeights[0] ?? ex.weight);
+      sum += w * r;
+    }
+    return sum;
+  } else if (hasPerSetReps) {
+    const w = safeNumber(ex.weight);
+    let sum = 0;
+    for (let i = 0; i < sets; i++) {
+      const r = safeNumber(ex.perSetReps[i] ?? ex.reps);
+      sum += w * r;
+    }
+    return sum;
   }
-  return safeNumber(ex.sets) * safeNumber(ex.reps) * safeNumber(ex.weight);
+  
+  return sets * safeNumber(ex.reps) * safeNumber(ex.weight);
 };
 
 export const flattenLoggedExercises = (exercises: any[] = []): any[] => {

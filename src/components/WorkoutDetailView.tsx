@@ -1,6 +1,25 @@
 import { Badge } from '@/components/ui/badge';
 import { normalizeEnergyToFivePoint } from '@/src/lib/workoutUtils';
 
+export const formatExerciseSummary = (ex: any) => {
+  if (ex.trackingMode === 'distance') {
+    return `${ex.sets} sets x ${ex.distance || 0}${ex.distanceUnit || 'm'} @ ${ex.weight || 0} lbs`;
+  }
+  
+  const hasPerSetWeights = ex.usePerSetWeights && Array.isArray(ex.perSetWeights) && ex.perSetWeights.length > 0;
+  const hasPerSetReps = ex.usePerSetReps && Array.isArray(ex.perSetReps) && ex.perSetReps.length > 0;
+  
+  if (hasPerSetWeights && hasPerSetReps) {
+    const details = Array.from({ length: ex.sets || 0 }).map((_, i) => `${ex.perSetReps[i] ?? ex.reps ?? '-'}x${ex.perSetWeights[i] ?? ex.weight ?? 0}`).join(', ');
+    return `${ex.sets} sets: ${details} lbs`;
+  } else if (hasPerSetWeights) {
+    return `${ex.sets}x${ex.reps || '-'} (${ex.perSetWeights.join(', ')}) lbs`;
+  } else if (hasPerSetReps) {
+    return `${ex.sets} sets (${ex.perSetReps.join(', ')}) @ ${ex.weight || 0} lbs`;
+  }
+  return `${ex.sets}x${ex.reps || '-'} @ ${ex.weight || 0} lbs`;
+};
+
 export const renderCardioBlockDetails = (block: any) => {
   const subtype = block.subtype || 'Cardio';
   
@@ -127,12 +146,7 @@ export function WorkoutDetailView({ workout }: { workout: any }) {
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium text-foreground">{ex.name}</span>
                   <span className="text-muted-foreground shrink-0 text-right">
-                    {ex.trackingMode === 'distance' 
-                      ? `${ex.sets} sets x ${ex.distance}${ex.distanceUnit} @ ${ex.weight} lbs`
-                      : ex.usePerSetWeights && ex.perSetWeights 
-                        ? `${ex.sets}x${ex.reps} (${ex.perSetWeights.join(', ')}) lbs` 
-                        : `${ex.sets}x${ex.reps} @ ${ex.weight} lbs`
-                    }
+                    {formatExerciseSummary(ex)}
                   </span>
                 </div>
                 {ex.notes && (
@@ -142,10 +156,7 @@ export function WorkoutDetailView({ workout }: { workout: any }) {
                   <div className="flex items-center justify-between text-[11px] pl-3 border-l-2 border-maroon/20 text-maroon/70">
                     <span className="font-medium">+ {ex.superset.name}</span>
                     <span className="shrink-0 text-right">
-                      {ex.superset.trackingMode === 'distance'
-                        ? `${ex.superset.sets} sets x ${ex.superset.distance}${ex.superset.distanceUnit} @ ${ex.superset.weight} lbs`
-                        : `${ex.superset.sets}x${ex.superset.reps} @ ${ex.superset.weight} lbs`
-                      }
+                      {formatExerciseSummary(ex.superset)}
                     </span>
                   </div>
                 )}

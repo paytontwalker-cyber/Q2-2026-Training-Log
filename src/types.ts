@@ -59,6 +59,8 @@ export interface ExerciseEntry {
   weight?: number;
   perSetWeights?: number[];
   usePerSetWeights?: boolean;
+  perSetReps?: number[];
+  usePerSetReps?: boolean;
   rpe: number | null;
   rir: number | null;
   notes: string;
