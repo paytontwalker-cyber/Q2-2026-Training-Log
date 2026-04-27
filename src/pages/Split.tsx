@@ -73,6 +73,27 @@ import { CSS } from "@dnd-kit/utilities";
 const genId = () =>
   `ex_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 
+const backfillExercises = (
+  exs: (string | ProgrammedExercise)[],
+): ProgrammedExercise[] => {
+  return exs.map((ex) => {
+    if (typeof ex === "string") {
+      return {
+        id: genId(),
+        name: ex,
+        sets: "",
+        reps: "",
+        targetNotes: "",
+      };
+    }
+    return {
+      ...ex,
+      id: ex.id || genId(),
+      superset: ex.superset ? backfillExercises(ex.superset) : undefined,
+    };
+  });
+};
+
 const AutoGrowTextarea = React.forwardRef<
   HTMLTextAreaElement,
   React.ComponentProps<"textarea">
@@ -418,29 +439,6 @@ export default function Split() {
         setSplits([]);
         setHasAssignedSplit(false);
       } else {
-        const backfillExercises = (
-          exs: (string | ProgrammedExercise)[],
-        ): ProgrammedExercise[] => {
-          return exs.map((ex) => {
-            if (typeof ex === "string") {
-              return {
-                id: genId(),
-                name: ex,
-                sets: "",
-                reps: "",
-                targetNotes: "",
-              };
-            }
-            return {
-              ...ex,
-              id: ex.id || genId(),
-              superset: ex.superset
-                ? backfillExercises(ex.superset)
-                : undefined,
-            };
-          });
-        };
-
         const uniqueSplits = data.map((s) => ({
           ...s,
           exercises: backfillExercises(s.exercises || []),
@@ -468,29 +466,6 @@ export default function Split() {
     const unsubscribeSavedSplits = storage.subscribeToSavedSplits(
       user.uid,
       (data) => {
-        const backfillExercises = (
-          exs: (string | ProgrammedExercise)[],
-        ): ProgrammedExercise[] => {
-          return exs.map((ex) => {
-            if (typeof ex === "string") {
-              return {
-                id: genId(),
-                name: ex,
-                sets: "",
-                reps: "",
-                targetNotes: "",
-              };
-            }
-            return {
-              ...ex,
-              id: ex.id || genId(),
-              superset: ex.superset
-                ? backfillExercises(ex.superset)
-                : undefined,
-            };
-          });
-        };
-
         const updatedSavedSplits = data.map((saved) => {
           const updatedDays: Record<string, any> = {};
           Object.entries(saved.days).forEach(([day, data]) => {
@@ -766,7 +741,7 @@ export default function Split() {
         day,
         name: data.name || "",
         running: data.running || "",
-        exercises: data.exercises || [],
+        exercises: backfillExercises(data.exercises || []),
         blocks: data.blocks || [],
         summary: data.summary || "",
         uid: user.uid,
@@ -793,7 +768,7 @@ export default function Split() {
         day,
         name: data.name || "",
         running: data.running || "",
-        exercises: data.exercises || [],
+        exercises: backfillExercises(data.exercises || []),
         blocks: data.blocks || [],
         summary: data.summary || "",
         uid: user.uid,
