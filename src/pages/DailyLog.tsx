@@ -427,43 +427,62 @@ const SortableExerciseCard = ({
         </div>
 
         {(ex.usePerSetWeights || ex.usePerSetReps) && ex.sets > 0 && (
-          <div className="mt-4 p-3 bg-muted rounded-lg border border-maroon/30">
-            <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-2 block">
-              Individual Set Details {ex.usePerSetWeights && ex.usePerSetReps ? '(Reps & Weight)' : ex.usePerSetWeights ? '(Weight)' : '(Reps)'}
-            </Label>
-            <div className="flex flex-wrap gap-2">
+          <div className="mt-4 p-4 bg-muted/40 rounded-lg border border-maroon/20">
+            <div className="flex items-center justify-between mb-3 border-b border-maroon/10 pb-2">
+              <Label className="text-xs uppercase font-bold text-foreground">
+                {ex.usePerSetWeights && ex.usePerSetReps ? 'Individual Set Details' : ex.usePerSetWeights ? 'Per-Set Weights' : 'Per-Set Reps'}
+              </Label>
+              {ex.usePerSetWeights && ex.usePerSetReps && (
+                <span className="text-[10px] uppercase font-bold bg-maroon/10 text-maroon px-2 py-0.5 rounded border border-maroon/20">
+                  Reps + Weight
+                </span>
+              )}
+            </div>
+            
+            <div className="flex flex-col gap-2">
               {Array.from({ length: ex.sets }).map((_, i) => (
-                <div key={i} className="flex flex-col gap-1 items-center bg-background p-2 rounded border border-border">
-                  <span className="text-[9px] text-muted-foreground font-bold">Set {i+1}</span>
-                  <div className="flex items-center gap-1">
+                <div key={i} className="flex flex-col sm:flex-row sm:items-center bg-card p-3 rounded-md border border-border shadow-sm gap-3 sm:gap-6">
+                  <span className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider shrink-0 sm:w-12 border-b sm:border-0 border-border/50 pb-1 sm:pb-0">
+                    Set {i+1}
+                  </span>
+                  
+                  <div className="flex flex-1 flex-col sm:flex-row sm:items-center gap-3">
                     {ex.usePerSetReps && (
-                      <Input
-                        type="number"
-                        placeholder="Reps"
-                        value={ex.perSetReps?.[i] === 0 && ex.reps !== 0 ? '' : ex.perSetReps?.[i] ?? ''}
-                        onChange={e => {
-                          const val = e.target.value;
-                          const newReps = [...(ex.perSetReps || Array(ex.sets).fill(ex.reps || 0))];
-                          newReps[i] = val === '' ? 0 : parseInt(val);
-                          updateExercise(ex.id, { perSetReps: newReps });
-                        }}
-                        className="h-8 w-16 text-xs text-center"
-                      />
+                      <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
+                        <Label className="text-[10px] text-muted-foreground uppercase sm:hidden w-16">Reps</Label>
+                        <Input
+                          type="number"
+                          placeholder="Reps"
+                          value={ex.perSetReps?.[i] === 0 && ex.reps !== 0 ? '' : ex.perSetReps?.[i] ?? ''}
+                          onChange={e => {
+                            const val = e.target.value;
+                            const newReps = [...(ex.perSetReps || Array(ex.sets).fill(ex.reps || 0))];
+                            newReps[i] = val === '' ? 0 : parseInt(val);
+                            updateExercise(ex.id, { perSetReps: newReps });
+                          }}
+                          className="h-9 w-24 sm:w-20 text-center"
+                        />
+                        <span className="text-[10px] text-muted-foreground uppercase font-bold hidden sm:block w-8">Reps</span>
+                      </div>
                     )}
-                    {ex.usePerSetReps && ex.usePerSetWeights && <span className="text-muted-foreground text-[10px] px-0.5">×</span>}
+                    
                     {ex.usePerSetWeights && (
-                      <Input 
-                        type="number"
-                        placeholder="lbs"
-                        value={ex.perSetWeights?.[i] === 0 && ex.weight !== 0 ? '' : ex.perSetWeights?.[i] ?? ''}
-                        onChange={e => {
-                          const val = e.target.value;
-                          const newWeights = [...(ex.perSetWeights || Array(ex.sets).fill(ex.weight || 0))];
-                          newWeights[i] = val === '' ? 0 : parseFloat(val);
-                          updateExercise(ex.id, { perSetWeights: newWeights });
-                        }}
-                        className="h-8 w-16 text-xs text-center"
-                      />
+                      <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
+                         <Label className="text-[10px] text-muted-foreground uppercase sm:hidden w-16">Weight</Label>
+                         <Input 
+                          type="number"
+                          placeholder="Weight"
+                          value={ex.perSetWeights?.[i] === 0 && ex.weight !== 0 ? '' : ex.perSetWeights?.[i] ?? ''}
+                          onChange={e => {
+                            const val = e.target.value;
+                            const newWeights = [...(ex.perSetWeights || Array(ex.sets).fill(ex.weight || 0))];
+                            newWeights[i] = val === '' ? 0 : parseFloat(val);
+                            updateExercise(ex.id, { perSetWeights: newWeights });
+                          }}
+                          className="h-9 w-24 sm:w-24 text-center"
+                        />
+                        <span className="text-[10px] text-muted-foreground uppercase font-bold hidden sm:block w-8">lbs</span>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -535,7 +554,7 @@ const SortableExerciseCard = ({
               )}
             >
               <Scale size={14} className="mr-1" />
-              {ex.usePerSetWeights ? 'Using Per-Set Weight' : 'Use Per-Set Weights'}
+              {ex.usePerSetWeights ? 'Using Per-Set Weights' : 'Use Per-Set Weights'}
             </Button>
 
             <Button 
