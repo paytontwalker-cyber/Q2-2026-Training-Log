@@ -285,7 +285,7 @@ export default function ProfileSettings() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* 1. Account / Session */}
-        <Card className="card-hero md:col-span-2 no-print">
+        <Card className="card-hero md:col-span-2 no-print dark:bg-card dark:[background:none]">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="text-maroon" size={20} />
@@ -348,7 +348,7 @@ export default function ProfileSettings() {
                 <Button 
                   variant="outline"
                   onClick={logout}
-                  className="w-full border-maroon/30 text-muted-foreground hover:text-red-600 dark:hover:text-red-400 hover:bg-muted dark:hover:bg-muted/50 h-11 bg-card"
+                  className="w-full border-border text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-11 bg-muted"
                 >
                   <LogOut className="mr-2" size={18} />
                   Sign Out

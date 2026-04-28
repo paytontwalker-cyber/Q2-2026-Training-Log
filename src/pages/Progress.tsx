@@ -1203,19 +1203,19 @@ export default function Progress() {
             {volumeTargets && (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Card className="card-hero">
+                  <Card className="card-hero dark:bg-card dark:[background:none]">
                     <CardHeader className="pb-2"><CardTitle className="label-micro">Groups On Target</CardTitle></CardHeader>
                     <CardContent><div className="text-3xl font-black metric-display text-green-600 dark:text-green-400">{volumeTargets.filter(t => t.status === 'On Target').length}</div></CardContent>
                   </Card>
-                  <Card className="card-hero">
+                  <Card className="card-hero dark:bg-card dark:[background:none]">
                     <CardHeader className="pb-2"><CardTitle className="label-micro">In Growth Zone</CardTitle></CardHeader>
                     <CardContent><div className="text-3xl font-black metric-display text-gold dark:text-yellow-400">{volumeTargets.filter(t => t.status === 'Above Zone').length}</div></CardContent>
                   </Card>
-                  <Card className="card-hero">
+                  <Card className="card-hero dark:bg-card dark:[background:none]">
                     <CardHeader className="pb-2"><CardTitle className="label-micro">Lowest Coverage</CardTitle></CardHeader>
                     <CardContent><div className="text-3xl font-black metric-display text-red-600 dark:text-red-400">{volumeTargets.sort((a,b) => a.percentOfTarget - b.percentOfTarget)[0].muscleGroup}</div></CardContent>
                   </Card>
-                  <Card className="card-hero">
+                  <Card className="card-hero dark:bg-card dark:[background:none]">
                     <CardHeader className="pb-2"><CardTitle className="label-micro">Highest Overshoot</CardTitle></CardHeader>
                     <CardContent><div className="text-3xl font-black metric-display text-maroon dark:text-rose-400">{volumeTargets.sort((a,b) => b.percentOfTarget - a.percentOfTarget)[0].muscleGroup}</div></CardContent>
                   </Card>

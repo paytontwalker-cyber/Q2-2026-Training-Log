@@ -195,8 +195,13 @@
     @apply bg-maroon/10 text-maroon font-semibold border border-maroon/35 rounded-md px-2 py-1;
   }
   .card-hero {
-    @apply rounded-2xl border border-maroon/35 shadow-sm overflow-hidden;
+    @apply rounded-2xl border border-maroon/35 shadow-sm overflow-hidden bg-card text-card-foreground;
+  }
+  :root:not(.dark) .card-hero {
     background: linear-gradient(135deg, oklch(1 0 0) 0%, oklch(0.98 0.01 60) 100%);
+  }
+  .dark .card-hero {
+    background: linear-gradient(135deg, oklch(0.32 0.01 215) 0%, oklch(0.28 0.01 215) 100%);
   }
   .card-muted {
     @apply rounded-2xl border border-maroon/20 bg-maroon/5 p-4 shadow-sm;
