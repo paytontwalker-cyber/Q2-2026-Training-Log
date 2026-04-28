@@ -348,6 +348,45 @@ export const cleanSummary = (text: string): string => {
     .join('\n');
 };
 
+export const formatProgrammedExerciseDetails = (ex: any): string => {
+  const isProgrammed = typeof ex !== 'string';
+  const sets = isProgrammed ? ex.sets : undefined;
+  const reps = isProgrammed ? ex.reps : undefined;
+  let details = '';
+  
+  if (isProgrammed) {
+    const p = ex;
+    const hasPerSetReps = p.usePerSetReps && p.perSetReps && p.perSetReps.length > 0;
+    const hasPerSetWeights = p.usePerSetWeights && p.perSetWeights && p.perSetWeights.length > 0;
+
+    if (p.trackingMode === 'distance') {
+      return `${p.sets || 3} sets x ${p.distance || '?'}${p.distanceUnit || 'mi'}`;
+    }
+
+    if (hasPerSetReps && hasPerSetWeights) {
+      const d = Array.from({ length: Number(p.sets) || 0 }).map((_, i) => `${p.perSetReps?.[i] ?? p.reps ?? '-'}x${p.perSetWeights?.[i] ?? p.weight ?? 0}`).join(', ');
+      details = `${p.sets} sets: ${d} lbs`;
+    } else if (hasPerSetWeights) {
+      details = `${p.sets}x${p.reps || '-'} (${p.perSetWeights!.join(', ')}) lbs`;
+    } else if (hasPerSetReps) {
+      details = `${p.sets} sets (${p.perSetReps!.join(', ')}) @ ${p.weight || 0} lbs`;
+    } else if (p.weight) {
+      details = `${p.sets}x${p.reps || '-'} @ ${p.weight} lbs`;
+    } else if (sets && reps) {
+      details = `${sets}x${reps}`;
+    } else if (sets) {
+      details = `${sets} sets`;
+    } else if (reps) {
+      details = `${reps} reps`;
+    }
+  } else {
+    // If it's just a string, we don't have sets/reps but we might want to return empty
+    // Except legacy expected 3x10 if not provided, but mostly in split string form it doesn't have it.
+    // Let's just return empty string if no sets/reps.
+  }
+  return details;
+};
+
 export const generateWorkoutSnapshot = (split: Split): string => {
   let runningLine = '';
   if (split.running) {
@@ -375,15 +414,39 @@ export const generateWorkoutSnapshot = (split: Split): string => {
   }
 
   const exerciseLines = split.exercises.map(ex => {
+    const isProgrammed = typeof ex !== 'string';
     const name = typeof ex === 'string' ? ex : ex.name;
     const sets = typeof ex === 'string' ? '' : ex.sets;
     const reps = typeof ex === 'string' ? '' : ex.reps;
     const targetNotes = typeof ex === 'string' ? '' : ex.targetNotes;
     
     let details = '';
-    if (sets && reps) details = `${sets}x${reps}`;
-    else if (sets) details = `${sets} sets`;
-    else if (reps) details = `${reps} reps`;
+    if (isProgrammed) {
+      const p = ex as any; // ProgrammedExercise
+      const hasPerSetReps = p.usePerSetReps && p.perSetReps && p.perSetReps.length > 0;
+      const hasPerSetWeights = p.usePerSetWeights && p.perSetWeights && p.perSetWeights.length > 0;
+
+      if (hasPerSetReps && hasPerSetWeights) {
+        const d = Array.from({ length: Number(p.sets) || 0 }).map((_, i) => `${p.perSetReps?.[i] ?? p.reps ?? '-'}x${p.perSetWeights?.[i] ?? p.weight ?? 0}`).join(', ');
+        details = `${p.sets} sets: ${d} lbs`;
+      } else if (hasPerSetWeights) {
+        details = `${p.sets}x${p.reps || '-'} (${p.perSetWeights!.join(', ')}) lbs`;
+      } else if (hasPerSetReps) {
+        details = `${p.sets} sets (${p.perSetReps!.join(', ')}) @ ${p.weight || 0} lbs`;
+      } else if (p.weight) {
+        details = `${p.sets}x${p.reps || '-'} @ ${p.weight} lbs`;
+      } else if (sets && reps) {
+        details = `${sets}x${reps}`;
+      } else if (sets) {
+        details = `${sets} sets`;
+      } else if (reps) {
+        details = `${reps} reps`;
+      }
+    } else {
+      if (sets && reps) details = `${sets}x${reps}`;
+      else if (sets) details = `${sets} sets`;
+      else if (reps) details = `${reps} reps`;
+    }
 
     let line = `- ${name}${details ? ` - ${details}` : ''}`;
     if (targetNotes) line += ` (${targetNotes})`;

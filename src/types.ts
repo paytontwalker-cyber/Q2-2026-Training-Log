@@ -281,6 +281,11 @@ export interface ProgrammedExercise {
   name: string;
   sets?: string;
   reps?: string;
+  weight?: string;
+  usePerSetReps?: boolean;
+  perSetReps?: number[];
+  usePerSetWeights?: boolean;
+  perSetWeights?: number[];
   targetNotes?: string;
   superset?: ProgrammedExercise[];
 }

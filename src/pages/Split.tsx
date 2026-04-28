@@ -13,6 +13,8 @@ import {
   GripVertical,
   Check,
   LayoutGrid,
+  Hash,
+  Scale,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -183,7 +185,11 @@ const SortableExerciseBadge = React.memo(
       : undefined;
 
     const sets = isProgrammed ? exercise.sets || "" : "";
+    const numSets = parseInt(sets) || 0;
     const reps = isProgrammed ? exercise.reps || "" : "";
+    const weight = isProgrammed ? exercise.weight || "" : "";
+    const usePerSetReps = isProgrammed ? exercise.usePerSetReps || false : false;
+    const usePerSetWeights = isProgrammed ? exercise.usePerSetWeights || false : false;
     const targetNotes = isProgrammed ? exercise.targetNotes || "" : "";
 
     return (
@@ -191,7 +197,7 @@ const SortableExerciseBadge = React.memo(
         ref={combinedRef}
         style={style}
         className={cn(
-          "bg-card border border-maroon/30 rounded-md shadow-sm group transition-all space-y-2 accent-hover",
+          "bg-card border border-maroon/30 rounded-md shadow-sm group transition-all space-y-2 accent-hover flex flex-col",
           depth === 0 ? "p-3" : "p-2 ml-4 border-l-4 border-l-maroon/30",
           isOver && isParent && "ring-2 ring-maroon/60 ring-offset-2 bg-maroon/5"
         )}
@@ -282,37 +288,103 @@ const SortableExerciseBadge = React.memo(
 
         {/* Programmed sets/reps row — always editable when exercise is programmed */}
         <div
-          className="pl-7 flex items-center gap-2"
+          className="pl-7 flex flex-wrap items-center gap-2"
           onPointerDown={(e) => e.stopPropagation()}
         >
-          <div className="flex items-center gap-1 flex-1">
+          <div className="flex items-center gap-1 flex-1 min-w-[100px]">
             <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider w-10">
               Sets
             </Label>
             <Input
               value={sets}
-              onChange={(e) => onUpdate(id, { sets: e.target.value })}
-              className="h-8 text-xs"
+              onChange={(e) => {
+                const val = e.target.value;
+                const newSets = parseInt(val) || 0;
+                const updates: Partial<ProgrammedExercise> = { sets: val };
+                if (isProgrammed) {
+                  if (usePerSetReps) {
+                    updates.perSetReps = Array(newSets).fill(parseInt(reps) || 0);
+                  }
+                  if (usePerSetWeights) {
+                    updates.perSetWeights = Array(newSets).fill(parseFloat(weight) || 0);
+                  }
+                }
+                onUpdate(id, updates);
+              }}
+              className="h-8 text-xs min-w-[60px]"
             />
           </div>
-          <div className="flex items-center gap-1 flex-1">
+          <div className="flex items-center gap-1 flex-1 min-w-[100px]">
             <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider w-10">
               Reps
             </Label>
-            <Input
-              value={reps}
-              onChange={(e) => onUpdate(id, { reps: e.target.value })}
-              className="h-8 text-xs"
-            />
+            {usePerSetReps ? (
+              <div className="h-8 flex items-center px-2 text-xs text-muted-foreground bg-muted border border-border rounded-md min-w-[60px] cursor-not-allowed">
+                Per-set
+              </div>
+            ) : (
+              <Input
+                value={reps}
+                onChange={(e) => onUpdate(id, { reps: e.target.value })}
+                className="h-8 text-xs min-w-[60px]"
+              />
+            )}
           </div>
+          <div className="flex items-center gap-1 flex-1 min-w-[100px]">
+            <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider w-12">
+              Weight
+            </Label>
+            {usePerSetWeights ? (
+              <div className="h-8 flex items-center px-2 text-xs text-muted-foreground bg-muted border border-border rounded-md min-w-[60px] cursor-not-allowed">
+                Per-set
+              </div>
+            ) : (
+              <Input
+                value={weight}
+                onChange={(e) => onUpdate(id, { weight: e.target.value })}
+                className="h-8 text-xs w-full min-w-[60px]"
+              />
+            )}
+          </div>
+        </div>
+        
+        <div className="pl-7 flex flex-wrap items-center gap-2 mt-2" onPointerDown={(e) => e.stopPropagation()}>
+          <Button 
+            type="button"
+            variant="ghost" 
+            size="sm" 
+            onClick={() => onUpdate(id, { usePerSetReps: !usePerSetReps })}
+            className={cn(
+              "h-8 px-2 text-[10px] sm:text-xs",
+              usePerSetReps ? "text-maroon bg-maroon/5 border border-maroon/20" : "text-muted-foreground border border-transparent hover:border-maroon/30"
+            )}
+          >
+            <Hash size={14} className="mr-1" />
+            {usePerSetReps ? 'Using Per-Set Reps' : 'Use Per-Set Reps'}
+          </Button>
+
+          <Button 
+            type="button"
+            variant="ghost" 
+            size="sm" 
+            onClick={() => onUpdate(id, { usePerSetWeights: !usePerSetWeights })}
+            className={cn(
+              "h-8 px-2 text-[10px] sm:text-xs",
+              usePerSetWeights ? "text-maroon bg-maroon/5 border border-maroon/20" : "text-muted-foreground border border-transparent hover:border-maroon/30"
+            )}
+          >
+            <Scale size={14} className="mr-1" />
+            {usePerSetWeights ? 'Using Per-Set Weights' : 'Use Per-Set Weights'}
+          </Button>
+
           <button
             type="button"
             onClick={() => setNotesOpen(!notesOpen)}
             className={cn(
-              "text-[10px] uppercase font-bold px-2 h-8 rounded border transition-colors",
+              "text-[10px] uppercase font-bold px-2 h-8 rounded border transition-colors ml-auto",
               targetNotes || notesOpen
                 ? "bg-maroon/10 text-maroon border-maroon/30"
-                : "text-muted-foreground border-maroon/30 hover:border-maroon/40",
+                : "text-muted-foreground border-maroon/30 hover:border-maroon/40"
             )}
             title={targetNotes ? "Edit snapshot notes" : "Add snapshot notes"}
           >
@@ -327,8 +399,76 @@ const SortableExerciseBadge = React.memo(
               value={targetNotes}
               onChange={(e) => onUpdate(id, { targetNotes: e.target.value })}
               placeholder="Snapshot notes for this exercise (e.g. 'Main lift — high intent', '155 was sweet spot')..."
-              className="text-xs w-full"
+              className="text-xs w-full bg-card"
             />
+          </div>
+        )}
+
+        {/* Per-Set Details Section */}
+        {isProgrammed && (usePerSetReps || usePerSetWeights) && numSets > 0 && (
+          <div className="pl-7 pr-2 pb-2" onPointerDown={e => e.stopPropagation()}>
+            <div className="mt-2 p-3 bg-muted/30 rounded-lg border border-maroon/20">
+              <div className="flex items-center justify-between mb-2">
+                <Label className="text-[10px] uppercase font-bold text-foreground mx-1">
+                  {usePerSetWeights && usePerSetReps ? 'Individual Set Details' : usePerSetWeights ? 'Per-Set Weights' : 'Per-Set Reps'}
+                </Label>
+                {usePerSetWeights && usePerSetReps && (
+                  <span className="text-[9px] uppercase font-bold bg-maroon/10 text-maroon px-1.5 py-0.5 rounded border border-maroon/20">
+                    Reps + Weight
+                  </span>
+                )}
+              </div>
+              
+              <div className="flex flex-col gap-2">
+                {Array.from({ length: numSets }).map((_, i) => (
+                  <div key={i} className="flex flex-col sm:flex-row sm:items-center bg-card p-2 rounded border border-border shadow-sm gap-2 sm:gap-4">
+                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider shrink-0 sm:w-10 border-b sm:border-0 border-border/50 pb-1 sm:pb-0">
+                      Set {i+1}
+                    </span>
+                    
+                    <div className="flex flex-1 flex-col sm:flex-row sm:items-center gap-2">
+                      {usePerSetReps && (
+                        <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
+                          <Label className="text-[10px] text-muted-foreground uppercase sm:hidden w-12">Reps</Label>
+                          <Input
+                            type="number"
+                            placeholder="Reps"
+                            value={exercise.perSetReps?.[i] === 0 && parseInt(reps) !== 0 ? '' : exercise.perSetReps?.[i] ?? ''}
+                            onChange={e => {
+                              const val = e.target.value;
+                              const newReps = [...(exercise.perSetReps || Array(numSets).fill(parseInt(reps) || 0))];
+                              newReps[i] = val === '' ? 0 : parseInt(val);
+                              onUpdate(id, { perSetReps: newReps });
+                            }}
+                            className="h-8 w-16 sm:w-16 text-center text-xs"
+                          />
+                          <span className="text-[10px] text-muted-foreground uppercase font-bold hidden sm:block w-8">Reps</span>
+                        </div>
+                      )}
+                      
+                      {usePerSetWeights && (
+                        <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
+                           <Label className="text-[10px] text-muted-foreground uppercase sm:hidden w-12">Weight</Label>
+                           <Input 
+                            type="number"
+                            placeholder="Weight"
+                            value={exercise.perSetWeights?.[i] === 0 && parseFloat(weight) !== 0 ? '' : exercise.perSetWeights?.[i] ?? ''}
+                            onChange={e => {
+                              const val = e.target.value;
+                              const newWeights = [...(exercise.perSetWeights || Array(numSets).fill(parseFloat(weight) || 0))];
+                              newWeights[i] = val === '' ? 0 : parseFloat(val);
+                              onUpdate(id, { perSetWeights: newWeights });
+                            }}
+                            className="h-8 w-20 sm:w-20 text-center text-xs"
+                          />
+                          <span className="text-[10px] text-muted-foreground uppercase font-bold hidden sm:block w-8">lbs</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 

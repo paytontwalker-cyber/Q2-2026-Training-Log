@@ -1,5 +1,5 @@
 import { Badge } from '@/components/ui/badge';
-import { normalizeEnergyToFivePoint } from '@/src/lib/workoutUtils';
+import { normalizeEnergyToFivePoint, formatProgrammedExerciseDetails } from '@/src/lib/workoutUtils';
 
 export const formatExerciseSummary = (ex: any) => {
   if (ex.trackingMode === 'distance') {
@@ -265,10 +265,7 @@ export function ProgramDetailView({ selectedPlanned }: { selectedPlanned: any })
                         <div className="flex items-center justify-between text-sm">
                           <span className="font-medium text-foreground">{ex.name || 'Custom Exercise'}</span>
                           <span className="text-muted-foreground shrink-0 text-right">
-                            {ex.trackingMode === 'distance' 
-                              ? `${ex.sets || 3} sets x ${ex.distance || '?'}${ex.distanceUnit || 'mi'}`
-                              : `${ex.sets || 3}x${ex.reps || 10}`
-                            }
+                            {formatProgrammedExerciseDetails(ex)}
                           </span>
                         </div>
                         {ex.notes && <p className="text-[11px] text-muted-foreground italic">{ex.notes}</p>}
@@ -276,10 +273,7 @@ export function ProgramDetailView({ selectedPlanned }: { selectedPlanned: any })
                           <div className="flex items-center justify-between text-[11px] pl-3 border-l-2 border-maroon/20 text-maroon/70">
                             <span className="font-medium">+ {ex.superset.name || 'Custom Superset'}</span>
                             <span className="shrink-0 text-right">
-                              {ex.superset.trackingMode === 'distance' 
-                                ? `${ex.superset.sets || 3} sets x ${ex.superset.distance || '?'}${ex.superset.distanceUnit || 'mi'}`
-                                : `${ex.superset.sets || 3}x${ex.superset.reps || 10}`
-                              }
+                              {formatProgrammedExerciseDetails(ex.superset)}
                             </span>
                           </div>
                         )}
@@ -321,10 +315,7 @@ export function ProgramDetailView({ selectedPlanned }: { selectedPlanned: any })
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-medium text-foreground">{ex.name || 'Custom Exercise'}</span>
                     <span className="text-muted-foreground shrink-0 text-right">
-                      {ex.trackingMode === 'distance' 
-                        ? `${ex.sets || 3} sets x ${ex.distance || '?'}${ex.distanceUnit || 'mi'}`
-                        : `${ex.sets || 3}x${ex.reps || 10}`
-                      }
+                      {formatProgrammedExerciseDetails(ex)}
                     </span>
                   </div>
                   {ex.notes && <p className="text-[11px] text-muted-foreground italic">{ex.notes}</p>}
@@ -332,10 +323,7 @@ export function ProgramDetailView({ selectedPlanned }: { selectedPlanned: any })
                     <div className="flex items-center justify-between text-[11px] pl-3 border-l-2 border-maroon/20 text-maroon/70">
                       <span className="font-medium">+ {ex.superset.name || 'Custom Superset'}</span>
                       <span className="shrink-0 text-right">
-                        {ex.superset.trackingMode === 'distance' 
-                          ? `${ex.superset.sets || 3} sets x ${ex.superset.distance || '?'}${ex.superset.distanceUnit || 'mi'}`
-                          : `${ex.superset.sets || 3}x${ex.superset.reps || 10}`
-                        }
+                        {formatProgrammedExerciseDetails(ex.superset)}
                       </span>
                     </div>
                   )}

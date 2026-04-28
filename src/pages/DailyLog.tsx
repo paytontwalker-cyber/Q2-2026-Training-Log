@@ -1812,11 +1812,19 @@ export default function DailyLog() {
       return isNaN(n) ? 0 : n;
     };
 
+    const parseProgrammedWeight = (weightStr?: string | number): number => {
+      if (!weightStr) return 0;
+      if (typeof weightStr === 'number') return weightStr;
+      const n = parseFloat(weightStr.trim());
+      return isNaN(n) ? 0 : n;
+    };
+
     const defaultExercises: ExerciseEntry[] = sanitizedSplit.exercises.map(ex => {
       const isProgrammed = typeof ex !== 'string';
       const name = isProgrammed ? ex.name : ex;
       const programmedSets = isProgrammed ? parseProgrammedSets(ex.sets) : 0;
       const programmedReps = isProgrammed ? parseProgrammedReps(ex.reps) : 0;
+      const programmedWeight = isProgrammed ? parseProgrammedWeight(ex.weight) : 0;
       const programmedTargetNotes = isProgrammed ? (ex.targetNotes || '') : '';
       const libEx = library.find(e => e.name === name);
 
@@ -1842,7 +1850,11 @@ export default function DailyLog() {
         distance: distanceValue,
         time: timeValue,
         timeUnit: 'min',
-        weight: 0,
+        weight: programmedWeight,
+        usePerSetReps: isProgrammed ? ex.usePerSetReps || false : false,
+        perSetReps: isProgrammed && ex.perSetReps ? [...ex.perSetReps] : Array(programmedSets).fill(repsValue),
+        usePerSetWeights: isProgrammed ? ex.usePerSetWeights || false : false,
+        perSetWeights: isProgrammed && ex.perSetWeights ? [...ex.perSetWeights] : Array(programmedSets).fill(programmedWeight),
         rpe: null,
         rir: null,
         notes: programmedTargetNotes,  // carry snapshot note into the log entry
@@ -1857,6 +1869,7 @@ export default function DailyLog() {
         const childTracking = childLibEx?.trackingMode || 'reps';
         const childSets = parseProgrammedSets(supersetChild.sets);
         const childRepsNum = parseProgrammedReps(supersetChild.reps);
+        const childWeightNum = parseProgrammedWeight(supersetChild.weight);
         entry.superset = {
           id: Math.random().toString(36).substr(2, 9),
           name: supersetChild.name || '',
@@ -1868,7 +1881,11 @@ export default function DailyLog() {
           distance: childTracking === 'distance' ? childRepsNum : 0,
           time: childTracking === 'time' ? childRepsNum : 0,
           timeUnit: 'min',
-          weight: 0,
+          weight: childWeightNum,
+          usePerSetReps: supersetChild.usePerSetReps || false,
+          perSetReps: supersetChild.perSetReps ? [...supersetChild.perSetReps] : Array(childSets).fill(childTracking === 'reps' ? childRepsNum : 0),
+          usePerSetWeights: supersetChild.usePerSetWeights || false,
+          perSetWeights: supersetChild.perSetWeights ? [...supersetChild.perSetWeights] : Array(childSets).fill(childWeightNum),
           rpe: null,
           rir: null,
           notes: supersetChild.targetNotes || '',
