@@ -177,6 +177,15 @@ export function ExerciseSelector({
             {selectedExercise.muscleGroup}
           </span>
         </span>
+      ) : value ? (
+        <span className="flex items-center gap-2 flex-wrap text-muted-foreground opacity-90">
+          <span className="font-medium break-words">
+            {value}
+          </span>
+          <span className="text-[10px] bg-destructive/10 text-destructive border border-destructive/20 px-1.5 py-0.5 rounded shrink-0">
+            Unmatched
+          </span>
+        </span>
       ) : (
         <span className="text-muted-foreground">{placeholder}</span>
       )}

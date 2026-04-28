@@ -27,15 +27,18 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     root.style.setProperty('--app-primary-light', lightVariant);
     root.style.setProperty('--app-secondary', secondaryColor);
     root.style.setProperty('--app-secondary-light', secondaryLight);
-
-    root.classList.remove('dark');
   }, [primaryColor, secondaryColor, themeMode]);
 
   const setTheme = useCallback((primary: string, secondary: string, _mode: ThemeMode) => {
     setPrimaryColor(primary);
     setSecondaryColor(secondary);
     setThemeMode('light');
-    localStorage.setItem('traininglog_theme', JSON.stringify({ primaryColor: primary, secondaryColor: secondary, themeMode: 'light' }));
+    const saved = localStorage.getItem('traininglog_theme');
+    let parsed = {};
+    if (saved) {
+      try { parsed = JSON.parse(saved) || {}; } catch (e) {}
+    }
+    localStorage.setItem('traininglog_theme', JSON.stringify({ ...parsed, primaryColor: primary, secondaryColor: secondary }));
   }, []);
 
   return (

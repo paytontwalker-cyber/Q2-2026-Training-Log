@@ -22,12 +22,12 @@
           ]
         },
         {
-          "name": "Single Leg DB RDL",
+          "name": "Single Leg Deficit DB RDL's",
           "sets": "3",
           "reps": "5"
         },
         {
-          "name": "Nordic Hamstrings/Curls",
+          "name": "Nordic Curl",
           "sets": "3",
           "reps": "8"
         },
@@ -37,7 +37,7 @@
           "reps": "8"
         }
       ],
-      "summary": "Leg Day (Posterior/Hammy)\n- Deadlift: 1x3\n- Barbell RDL: 3x3\n  - Pull Ups: 3xAMRAP\n- Single Leg DB RDL: 3x5\n- Nordic Hamstrings/Curls: 3x8\n- Calf Raises 3x8"
+      "summary": "Leg Day (Posterior/Hammy)\n- Deadlift: 1x3\n- RDL: 3x3\n  - Pull Ups: 3xAMRAP\n- Single Leg Deficit DB RDL's: 3x5\n- Nordic Curl: 3x8\n- Calf Raises 3x8"
     },
     "Tuesday": {
       "name": "Push Day",
@@ -275,12 +275,12 @@
               ]
             },
             {
-              "name": "Single Leg DB RDL",
+              "name": "Single Leg Deficit DB RDL's",
               "sets": "3",
               "reps": "5"
             },
             {
-              "name": "Nordic Hamstrings/Curls",
+              "name": "Nordic Curl",
               "sets": "3",
               "reps": "8"
             },
@@ -290,7 +290,7 @@
               "reps": "8"
             }
           ],
-          "summary": "Leg Day (Posterior/Hammy)\n- Deadlift: 1x3\n- Barbell RDL: 3x3\n  - Pull Ups: 3xAMRAP\n- Single Leg DB RDL: 3x5\n- Nordic Hamstrings/Curls: 3x8\n- Calf Raises 3x8"
+          "summary": "Leg Day (Posterior/Hammy)\n- Deadlift: 1x3\n- RDL: 3x3\n  - Pull Ups: 3xAMRAP\n- Single Leg Deficit DB RDL's: 3x5\n- Nordic Curl: 3x8\n- Calf Raises 3x8"
         },
         "Tuesday": {
           "name": "Push Day",

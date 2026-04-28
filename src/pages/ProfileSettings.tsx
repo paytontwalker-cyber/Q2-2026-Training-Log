@@ -179,12 +179,14 @@ export default function ProfileSettings() {
           });
           setTrainingExperience(data.trainingExperience || 'intermediate');
           setTargetOverrides(data.volumeTargetOverrides || {});
+          const appMode = data.appearanceMode || getStoredAppearanceMode();
           setAppSettings({
             primaryColor: data.primaryColor || primaryColor,
             secondaryColor: data.secondaryColor || secondaryColor,
-            appearanceMode: data.appearanceMode || getStoredAppearanceMode(),
+            appearanceMode: appMode,
           });
           setTheme(data.primaryColor || primaryColor, data.secondaryColor || secondaryColor, 'light');
+          applyAppearanceMode(appMode);
         }
       };
       fetchProfile();

@@ -3666,6 +3666,26 @@
         "percent": 10
       }
     ]
+  },
+  {
+    "id": "ext1",
+    "name": "Single Leg Deficit DB RDL's",
+    "muscleGroup": "Hamstrings",
+    "trackingMode": "reps",
+    "muscleDistribution": [
+      { "group": "Hamstrings", "percent": 45 },
+      { "group": "Glutes", "percent": 45 },
+      { "group": "Lower Back", "percent": 10 }
+    ]
+  },
+  {
+    "id": "ext2",
+    "name": "Calf Raises",
+    "muscleGroup": "Calves",
+    "trackingMode": "reps",
+    "muscleDistribution": [
+      { "group": "Calves", "percent": 100 }
+    ]
   }
 ]
  

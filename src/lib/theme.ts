@@ -12,7 +12,7 @@ export function getStoredAppearanceMode(): AppearanceMode {
       // ignore
     }
   }
-  return 'system';
+  return 'light';
 }
 
 export function resolveAppearanceMode(mode: AppearanceMode): 'light' | 'dark' {
