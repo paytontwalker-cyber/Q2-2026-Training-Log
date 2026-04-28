@@ -1454,24 +1454,28 @@
         "percent": 25
       },
       {
-        "group": "Glutes",
-        "percent": 20
-      },
-      {
         "group": "Lower Back",
         "percent": 20
       },
       {
-        "group": "Upper Back",
-        "percent": 10
+        "group": "Glutes",
+        "percent": 20
       },
       {
         "group": "Traps",
         "percent": 15
       },
       {
-        "group": "Forearms",
+        "group": "Upper Back",
         "percent": 10
+      },
+      {
+        "group": "Forearms",
+        "percent": 5
+      },
+      {
+        "group": "Quads",
+        "percent": 5
       }
     ]
   },
@@ -1991,14 +1995,14 @@
     "muscleDistribution": [
       {
         "group": "Hamstrings",
-        "percent": 35
-      },
-      {
-        "group": "Glutes",
-        "percent": 25
+        "percent": 40
       },
       {
         "group": "Lower Back",
+        "percent": 25
+      },
+      {
+        "group": "Glutes",
         "percent": 15
       },
       {
@@ -2007,7 +2011,7 @@
       },
       {
         "group": "Forearms",
-        "percent": 10
+        "percent": 5
       }
     ]
   },
@@ -2019,14 +2023,14 @@
     "muscleDistribution": [
       {
         "group": "Hamstrings",
-        "percent": 35
-      },
-      {
-        "group": "Glutes",
-        "percent": 25
+        "percent": 40
       },
       {
         "group": "Lower Back",
+        "percent": 25
+      },
+      {
+        "group": "Glutes",
         "percent": 15
       },
       {
@@ -2035,7 +2039,7 @@
       },
       {
         "group": "Forearms",
-        "percent": 10
+        "percent": 5
       }
     ]
   },
@@ -3087,19 +3091,19 @@
       },
       {
         "group": "Glutes",
-        "percent": 25
+        "percent": 20
       },
       {
         "group": "Core",
-        "percent": 10
+        "percent": 15
       },
       {
         "group": "Lower Back",
-        "percent": 10
+        "percent": 15
       },
       {
         "group": "Traps",
-        "percent": 15
+        "percent": 10
       },
       {
         "group": "Forearms",
@@ -3706,15 +3710,15 @@
         "percent": 35
       },
       {
+        "group": "Lower Back",
+        "percent": 20
+      },
+      {
         "group": "Glutes",
-        "percent": 25
+        "percent": 15
       },
       {
         "group": "Core",
-        "percent": 10
-      },
-      {
-        "group": "Lower Back",
         "percent": 10
       },
       {

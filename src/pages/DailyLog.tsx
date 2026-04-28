@@ -1606,12 +1606,7 @@ export default function DailyLog() {
   useEffect(() => {
     if (!user) return;
     const unsubscribe = storage.subscribeToLibrary(user.uid, (data) => {
-      if (data.length === 0) {
-        // Seed if empty
-        storage.seedLibrary(user.uid);
-      } else {
-        setLibrary(data);
-      }
+      setLibrary(data);
     });
     return () => unsubscribe();
   }, [user]);
