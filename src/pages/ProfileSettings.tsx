@@ -315,21 +315,21 @@ export default function ProfileSettings() {
                 </p>
               </div>
               {isGuest ? (
-                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-1 rounded border border-amber-100">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-200 bg-amber-50 dark:bg-amber-500/10 px-2 py-1 rounded border border-amber-100 dark:border-amber-400/30">
                   Guest
                 </span>
               ) : (
-                <span className="text-[10px] font-bold uppercase tracking-wider text-green-600 bg-green-50 px-2 py-1 rounded border border-green-100 flex items-center gap-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-green-600 dark:text-green-300 bg-green-50 dark:bg-green-500/10 px-2 py-1 rounded border border-green-100 dark:border-green-400/30 flex items-center gap-1">
                   <ShieldCheck size={10} /> Verified
                 </span>
               )}
             </div>
 
             {isGuest && (
-              <Alert className="bg-amber-50 border-amber-200">
-                <AlertTriangle className="h-4 w-4 text-amber-600" />
-                <AlertTitle className="text-amber-800 font-bold">Data Warning</AlertTitle>
-                <AlertDescription className="text-amber-700 text-sm">
+              <Alert className="bg-amber-50 border-amber-200 dark:bg-amber-500/10 dark:border-amber-400/30">
+                <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-200" />
+                <AlertTitle className="text-amber-800 dark:text-amber-200 font-bold">Data Warning</AlertTitle>
+                <AlertDescription className="text-amber-700 dark:text-amber-200/80 text-sm">
                   You are currently in Guest Mode. Your data is stored locally in your browser session and will be lost if you clear your cache or switch browsers. Sign in to sync your data to the cloud.
                 </AlertDescription>
               </Alert>
@@ -348,7 +348,7 @@ export default function ProfileSettings() {
                 <Button 
                   variant="outline"
                   onClick={logout}
-                  className="w-full border-maroon/30 text-muted-foreground hover:text-red-600 hover:bg-muted h-11"
+                  className="w-full border-maroon/30 text-muted-foreground hover:text-red-600 dark:hover:text-red-400 hover:bg-muted dark:hover:bg-muted/50 h-11 bg-card"
                 >
                   <LogOut className="mr-2" size={18} />
                   Sign Out
