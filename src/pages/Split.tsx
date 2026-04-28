@@ -356,7 +356,7 @@ const SortableExerciseBadge = React.memo(
             onClick={() => onUpdate(id, { usePerSetReps: !usePerSetReps })}
             className={cn(
               "h-8 px-2 text-[10px] sm:text-xs",
-              usePerSetReps ? "text-maroon bg-maroon/5 border border-maroon/20" : "text-muted-foreground border border-transparent hover:border-maroon/30"
+              usePerSetReps ? "text-blue-600 bg-blue-50 border border-blue-200 dark:text-blue-400 dark:bg-blue-500/10 dark:border-blue-500/20" : "text-muted-foreground border border-transparent hover:border-maroon/30"
             )}
           >
             <Hash size={14} className="mr-1" />
@@ -370,7 +370,7 @@ const SortableExerciseBadge = React.memo(
             onClick={() => onUpdate(id, { usePerSetWeights: !usePerSetWeights })}
             className={cn(
               "h-8 px-2 text-[10px] sm:text-xs",
-              usePerSetWeights ? "text-maroon bg-maroon/5 border border-maroon/20" : "text-muted-foreground border border-transparent hover:border-maroon/30"
+              usePerSetWeights ? "text-blue-600 bg-blue-50 border border-blue-200 dark:text-blue-400 dark:bg-blue-500/10 dark:border-blue-500/20" : "text-muted-foreground border border-transparent hover:border-maroon/30"
             )}
           >
             <Scale size={14} className="mr-1" />
@@ -409,11 +409,11 @@ const SortableExerciseBadge = React.memo(
           <div className="pl-7 pr-2 pb-2" onPointerDown={e => e.stopPropagation()}>
             <div className="mt-2 p-3 bg-muted/30 rounded-lg border border-maroon/20">
               <div className="flex items-center justify-between mb-2">
-                <Label className="text-[10px] uppercase font-bold text-foreground mx-1">
+                <span className="text-[9px] uppercase font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 dark:text-blue-400 dark:bg-blue-500/10 dark:border-blue-500/20">
                   {usePerSetWeights && usePerSetReps ? 'Individual Set Details' : usePerSetWeights ? 'Per-Set Weights' : 'Per-Set Reps'}
-                </Label>
+                </span>
                 {usePerSetWeights && usePerSetReps && (
-                  <span className="text-[9px] uppercase font-bold bg-maroon/10 text-maroon px-1.5 py-0.5 rounded border border-maroon/20">
+                  <span className="text-[9px] uppercase font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 dark:text-blue-400 dark:bg-blue-500/10 dark:border-blue-500/20">
                     Reps + Weight
                   </span>
                 )}

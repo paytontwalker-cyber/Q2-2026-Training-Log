@@ -360,8 +360,8 @@ const SortableExerciseCard = ({
               <div className="min-w-0">
                 <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block truncate">Reps</Label>
                 {ex.usePerSetReps ? (
-                  <div className="flex items-center h-9 text-[10px] text-muted-foreground font-medium italic">
-                    Per-set active
+                  <div className="h-9 flex items-center px-2 text-xs text-muted-foreground bg-muted border border-border rounded-md cursor-not-allowed">
+                    Per-set
                   </div>
                 ) : (
                   <Input 
@@ -380,8 +380,8 @@ const SortableExerciseCard = ({
             <div className="min-w-0">
               <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block truncate">Weight (lbs)</Label>
               {ex.usePerSetWeights ? (
-                <div className="flex items-center h-9 text-[10px] text-muted-foreground font-medium italic">
-                  Per-set active
+                <div className="h-9 flex items-center px-2 text-xs text-muted-foreground bg-muted border border-border rounded-md cursor-not-allowed">
+                  Per-set
                 </div>
               ) : (
                 <Input 
@@ -427,13 +427,13 @@ const SortableExerciseCard = ({
         </div>
 
         {(ex.usePerSetWeights || ex.usePerSetReps) && ex.sets > 0 && (
-          <div className="mt-4 p-4 bg-muted/40 rounded-lg border border-maroon/20">
-            <div className="flex items-center justify-between mb-3 border-b border-maroon/10 pb-2">
-              <Label className="text-xs uppercase font-bold text-foreground">
+          <div className="mt-2 p-3 bg-muted/30 rounded-lg border border-maroon/20">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[9px] uppercase font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 dark:text-blue-400 dark:bg-blue-500/10 dark:border-blue-500/20">
                 {ex.usePerSetWeights && ex.usePerSetReps ? 'Individual Set Details' : ex.usePerSetWeights ? 'Per-Set Weights' : 'Per-Set Reps'}
-              </Label>
+              </span>
               {ex.usePerSetWeights && ex.usePerSetReps && (
-                <span className="text-[10px] uppercase font-bold bg-maroon/10 text-maroon px-2 py-0.5 rounded border border-maroon/20">
+                <span className="text-[9px] uppercase font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 dark:text-blue-400 dark:bg-blue-500/10 dark:border-blue-500/20">
                   Reps + Weight
                 </span>
               )}
@@ -441,15 +441,15 @@ const SortableExerciseCard = ({
             
             <div className="flex flex-col gap-2">
               {Array.from({ length: ex.sets }).map((_, i) => (
-                <div key={i} className="flex flex-col sm:flex-row sm:items-center bg-card p-3 rounded-md border border-border shadow-sm gap-3 sm:gap-6">
-                  <span className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider shrink-0 sm:w-12 border-b sm:border-0 border-border/50 pb-1 sm:pb-0">
+                <div key={i} className="flex flex-col sm:flex-row sm:items-center bg-card p-2 rounded border border-border shadow-sm gap-2 sm:gap-4">
+                  <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider shrink-0 sm:w-10 border-b sm:border-0 border-border/50 pb-1 sm:pb-0">
                     Set {i+1}
                   </span>
                   
-                  <div className="flex flex-1 flex-col sm:flex-row sm:items-center gap-3">
+                  <div className="flex flex-1 flex-col sm:flex-row sm:items-center gap-2">
                     {ex.usePerSetReps && (
                       <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
-                        <Label className="text-[10px] text-muted-foreground uppercase sm:hidden w-16">Reps</Label>
+                        <Label className="text-[10px] text-muted-foreground uppercase sm:hidden w-12">Reps</Label>
                         <Input
                           type="number"
                           placeholder="Reps"
@@ -460,7 +460,7 @@ const SortableExerciseCard = ({
                             newReps[i] = val === '' ? 0 : parseInt(val);
                             updateExercise(ex.id, { perSetReps: newReps });
                           }}
-                          className="h-9 w-24 sm:w-20 text-center"
+                          className="h-8 w-16 sm:w-16 text-center text-xs"
                         />
                         <span className="text-[10px] text-muted-foreground uppercase font-bold hidden sm:block w-8">Reps</span>
                       </div>
@@ -468,7 +468,7 @@ const SortableExerciseCard = ({
                     
                     {ex.usePerSetWeights && (
                       <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
-                         <Label className="text-[10px] text-muted-foreground uppercase sm:hidden w-16">Weight</Label>
+                         <Label className="text-[10px] text-muted-foreground uppercase sm:hidden w-12">Weight</Label>
                          <Input 
                           type="number"
                           placeholder="Weight"
@@ -479,7 +479,7 @@ const SortableExerciseCard = ({
                             newWeights[i] = val === '' ? 0 : parseFloat(val);
                             updateExercise(ex.id, { perSetWeights: newWeights });
                           }}
-                          className="h-9 w-24 sm:w-24 text-center"
+                          className="h-8 w-20 sm:w-20 text-center text-xs"
                         />
                         <span className="text-[10px] text-muted-foreground uppercase font-bold hidden sm:block w-8">lbs</span>
                       </div>
@@ -529,8 +529,8 @@ const SortableExerciseCard = ({
                 updateExercise(ex.id, updates);
               }}
               className={cn(
-                "h-8 px-2 text-xs",
-                ex.usePerSetReps ? "text-maroon bg-maroon/5" : "text-muted-foreground"
+                "h-8 px-2 text-[10px] sm:text-xs",
+                ex.usePerSetReps ? "text-blue-600 bg-blue-50 border border-blue-200 dark:text-blue-400 dark:bg-blue-500/10 dark:border-blue-500/20" : "text-muted-foreground border border-transparent hover:border-maroon/30"
               )}
             >
               <Hash size={14} className="mr-1" />
@@ -549,8 +549,8 @@ const SortableExerciseCard = ({
                 updateExercise(ex.id, updates);
               }}
               className={cn(
-                "h-8 px-2 text-xs",
-                ex.usePerSetWeights ? "text-maroon bg-maroon/5" : "text-muted-foreground"
+                "h-8 px-2 text-[10px] sm:text-xs",
+                ex.usePerSetWeights ? "text-blue-600 bg-blue-50 border border-blue-200 dark:text-blue-400 dark:bg-blue-500/10 dark:border-blue-500/20" : "text-muted-foreground border border-transparent hover:border-maroon/30"
               )}
             >
               <Scale size={14} className="mr-1" />

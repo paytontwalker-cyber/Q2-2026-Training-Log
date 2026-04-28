@@ -1450,19 +1450,23 @@
     "trackingMode": "reps",
     "muscleDistribution": [
       {
-        "group": "Lower Back",
-        "percent": 25
-      },
-      {
         "group": "Hamstrings",
         "percent": 25
       },
       {
         "group": "Glutes",
-        "percent": 25
+        "percent": 20
+      },
+      {
+        "group": "Lower Back",
+        "percent": 20
       },
       {
         "group": "Upper Back",
+        "percent": 10
+      },
+      {
+        "group": "Traps",
         "percent": 15
       },
       {
@@ -1987,7 +1991,7 @@
     "muscleDistribution": [
       {
         "group": "Hamstrings",
-        "percent": 45
+        "percent": 35
       },
       {
         "group": "Glutes",
@@ -1995,7 +1999,11 @@
       },
       {
         "group": "Lower Back",
-        "percent": 20
+        "percent": 15
+      },
+      {
+        "group": "Traps",
+        "percent": 15
       },
       {
         "group": "Forearms",
@@ -2011,15 +2019,19 @@
     "muscleDistribution": [
       {
         "group": "Hamstrings",
-        "percent": 45
-      },
-      {
-        "group": "Lower Back",
-        "percent": 25
+        "percent": 35
       },
       {
         "group": "Glutes",
-        "percent": 20
+        "percent": 25
+      },
+      {
+        "group": "Lower Back",
+        "percent": 15
+      },
+      {
+        "group": "Traps",
+        "percent": 15
       },
       {
         "group": "Forearms",
@@ -2227,11 +2239,11 @@
     "muscleDistribution": [
       {
         "group": "Hip Flexors",
-        "percent": 50
+        "percent": 40
       },
       {
         "group": "Core",
-        "percent": 35
+        "percent": 30
       },
       {
         "group": "Forearms",
@@ -2240,6 +2252,10 @@
       {
         "group": "Lats",
         "percent": 5
+      },
+      {
+        "group": "Traps",
+        "percent": 15
       }
     ]
   },
@@ -3067,19 +3083,23 @@
     "muscleDistribution": [
       {
         "group": "Hamstrings",
-        "percent": 45
+        "percent": 35
       },
       {
         "group": "Glutes",
-        "percent": 30
+        "percent": 25
+      },
+      {
+        "group": "Core",
+        "percent": 10
       },
       {
         "group": "Lower Back",
         "percent": 10
       },
       {
-        "group": "Core",
-        "percent": 10
+        "group": "Traps",
+        "percent": 15
       },
       {
         "group": "Forearms",
@@ -3411,11 +3431,11 @@
     "muscleDistribution": [
       {
         "group": "Functional",
-        "percent": 25
+        "percent": 15
       },
       {
         "group": "Glutes",
-        "percent": 20
+        "percent": 15
       },
       {
         "group": "Shoulders",
@@ -3432,6 +3452,10 @@
       {
         "group": "Forearms",
         "percent": 10
+      },
+      {
+        "group": "Traps",
+        "percent": 15
       }
     ]
   },
@@ -3443,11 +3467,11 @@
     "muscleDistribution": [
       {
         "group": "Functional",
-        "percent": 25
+        "percent": 15
       },
       {
         "group": "Glutes",
-        "percent": 20
+        "percent": 15
       },
       {
         "group": "Upper Back",
@@ -3464,6 +3488,10 @@
       {
         "group": "Forearms",
         "percent": 10
+      },
+      {
+        "group": "Traps",
+        "percent": 15
       }
     ]
   },
@@ -3673,9 +3701,30 @@
     "muscleGroup": "Hamstrings",
     "trackingMode": "reps",
     "muscleDistribution": [
-      { "group": "Hamstrings", "percent": 45 },
-      { "group": "Glutes", "percent": 45 },
-      { "group": "Lower Back", "percent": 10 }
+      {
+        "group": "Hamstrings",
+        "percent": 35
+      },
+      {
+        "group": "Glutes",
+        "percent": 25
+      },
+      {
+        "group": "Core",
+        "percent": 10
+      },
+      {
+        "group": "Lower Back",
+        "percent": 10
+      },
+      {
+        "group": "Traps",
+        "percent": 15
+      },
+      {
+        "group": "Forearms",
+        "percent": 5
+      }
     ]
   },
   {
@@ -3684,8 +3733,10 @@
     "muscleGroup": "Calves",
     "trackingMode": "reps",
     "muscleDistribution": [
-      { "group": "Calves", "percent": 100 }
+      {
+        "group": "Calves",
+        "percent": 100
+      }
     ]
   }
 ]
- 
