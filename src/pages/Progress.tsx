@@ -96,8 +96,6 @@ export default function Progress() {
       if (snap.exists()) {
         setUserProfile(snap.data());
       }
-    }, (error: any) => {
-      console.warn("Firestore error getting user profile inside Progress:", error);
     });
     return () => unsubscribe();
   }, [user]);

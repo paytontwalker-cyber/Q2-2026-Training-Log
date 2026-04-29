@@ -42,27 +42,16 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
 
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
-        try {
-          // Ensure user document exists in Firestore
-          const userRef = doc(db, 'users', currentUser.uid);
-          const userSnap = await getDoc(userRef);
-          
-          if (!userSnap.exists()) {
-            await setDoc(userRef, {
-              uid: currentUser.uid,
-              email: currentUser.email,
-              displayName: currentUser.displayName,
-            });
-          }
-        } catch (error: any) {
-          if (error && String(error).includes('resource-exhausted')) {
-            if (!(window as any)._firestoreUnavailableAuthLogged) {
-              console.warn("Firestore resource-exhausted during auth check. Proceeding with limited functionality.");
-              (window as any)._firestoreUnavailableAuthLogged = true;
-            }
-          } else {
-            console.error("Error fetching user profile:", error);
-          }
+        // Ensure user document exists in Firestore
+        const userRef = doc(db, 'users', currentUser.uid);
+        const userSnap = await getDoc(userRef);
+        
+        if (!userSnap.exists()) {
+          await setDoc(userRef, {
+            uid: currentUser.uid,
+            email: currentUser.email,
+            displayName: currentUser.displayName,
+          });
         }
       }
       setUser(currentUser);
@@ -74,13 +63,54 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // NOTE: Temporarily disabled (emergency patch v4.5.1) to prevent read/write storms 
-    // when Firestore is resource-exhausted.
+    if (!user || ('isGuest' in user && user.isGuest)) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const userRef = doc(db, 'users', user.uid);
+        const profileSnap = await getDoc(userRef);
+        if (!profileSnap.exists()) return;
+        
+        const profile = profileSnap.data() as UserProfile;
+        if (cancelled) return;
+        if (profile && profile.renameMigrationV1) return; // already migrated
+        
+        const n = await runRenameMigrationV1(user.uid);
+        if (cancelled) return;
+        console.info(`[renameMigrationV1] rewrote ${n} record(s) for ${user.uid}`);
+        
+        // Set the flag LAST so a mid-flight failure leaves the migration rerunnable next load.
+        await updateDoc(userRef, { renameMigrationV1: true });
+      } catch (err) {
+        console.error('[renameMigrationV1] run failed:', err);
+      }
+    })();
+    return () => { cancelled = true; };
   }, [user, isAuthReady]);
 
   useEffect(() => {
-    // NOTE: Temporarily disabled (emergency patch v4.5.1) to prevent read/write storms
-    // when Firestore is resource-exhausted.
+    if (!user || ('isGuest' in user && user.isGuest)) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const userRef = doc(db, 'users', user.uid);
+        const profileSnap = await getDoc(userRef);
+        if (!profileSnap.exists()) return;
+
+        const profile = profileSnap.data() as UserProfile;
+        if (cancelled) return;
+        if (profile && profile.libraryNamespaceMigrationV1) return;
+        
+        const n = await runLibraryNamespaceMigrationV1(user.uid);
+        if (cancelled) return;
+        console.info(`[libraryNamespaceMigrationV1] moved ${n} exercise doc(s) for ${user.uid}`);
+        
+        await updateDoc(userRef, { libraryNamespaceMigrationV1: true });
+      } catch (err) {
+        console.error('[libraryNamespaceMigrationV1] run failed:', err);
+      }
+    })();
+    return () => { cancelled = true; };
   }, [user]);
 
   const loginAsGuest = () => {

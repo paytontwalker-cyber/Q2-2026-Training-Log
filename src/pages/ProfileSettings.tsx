@@ -154,43 +154,39 @@ export default function ProfileSettings() {
   useEffect(() => {
     if (user && !isGuest) {
       const fetchProfile = async () => {
-        try {
-          const userRef = doc(db, 'users', user.uid);
-          const userSnap = await getDoc(userRef);
-          if (userSnap.exists()) {
-            const data = userSnap.data();
-            setProfile({
-              height: data.height || '',
-              weight: data.weight || '',
-              goalWeight: data.goalWeight || '',
-              birthday: data.birthday || '',
-              age: data.age || '',
-              sex: data.sex || '',
-            });
-            setIdentity({
-              displayName: data.displayName || user.displayName || '',
-              bio: data.bio || '',
-              photoURL: data.photoURL || '',
-            });
-            setUsername(data.username || '');
-            setUsernameLower(data.usernameLower);
-            setPrivacySettings({
-              profileVisible: data.privacy?.profileVisible !== false,
-              emailSearchable: data.privacy?.emailSearchable !== false,
-            });
-            setTrainingExperience(data.trainingExperience || 'intermediate');
-            setTargetOverrides(data.volumeTargetOverrides || {});
-            const appMode = data.appearanceMode || getStoredAppearanceMode();
-            setAppSettings({
-              primaryColor: data.primaryColor || primaryColor,
-              secondaryColor: data.secondaryColor || secondaryColor,
-              appearanceMode: appMode,
-            });
-            setTheme(data.primaryColor || primaryColor, data.secondaryColor || secondaryColor, 'light');
-            applyAppearanceMode(appMode);
-          }
-        } catch (error: any) {
-          console.warn("Firestore error fetching user profile in ProfileSettings:", error);
+        const userRef = doc(db, 'users', user.uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          const data = userSnap.data();
+          setProfile({
+            height: data.height || '',
+            weight: data.weight || '',
+            goalWeight: data.goalWeight || '',
+            birthday: data.birthday || '',
+            age: data.age || '',
+            sex: data.sex || '',
+          });
+          setIdentity({
+            displayName: data.displayName || user.displayName || '',
+            bio: data.bio || '',
+            photoURL: data.photoURL || '',
+          });
+          setUsername(data.username || '');
+          setUsernameLower(data.usernameLower);
+          setPrivacySettings({
+            profileVisible: data.privacy?.profileVisible !== false,
+            emailSearchable: data.privacy?.emailSearchable !== false,
+          });
+          setTrainingExperience(data.trainingExperience || 'intermediate');
+          setTargetOverrides(data.volumeTargetOverrides || {});
+          const appMode = data.appearanceMode || getStoredAppearanceMode();
+          setAppSettings({
+            primaryColor: data.primaryColor || primaryColor,
+            secondaryColor: data.secondaryColor || secondaryColor,
+            appearanceMode: appMode,
+          });
+          setTheme(data.primaryColor || primaryColor, data.secondaryColor || secondaryColor, 'light');
+          applyAppearanceMode(appMode);
         }
       };
       fetchProfile();
@@ -582,14 +578,14 @@ export default function ProfileSettings() {
           </CardContent>
         </Card>
 
-        {/* Data Management */}
+        {/* Export Workouts */}
         <Card className="accent-card md:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Download className="text-muted-foreground" size={20} />
-              Data Management
+              Export Workouts
             </CardTitle>
-            <CardDescription>Backup, restore, and export your training data.</CardDescription>
+            <CardDescription>Download your workout history as CSV or JSON.</CardDescription>
           </CardHeader>
           <CardContent>
             <Export embedded />

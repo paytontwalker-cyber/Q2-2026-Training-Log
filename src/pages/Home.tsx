@@ -40,8 +40,6 @@ export default function Home({ setCurrentPage }: { setCurrentPage: (page: any) =
       if (snap.exists()) {
         setUserProfile(snap.data());
       }
-    }, (error: any) => {
-        console.warn("Firestore error getting user profile inside Home:", error);
     });
     return () => unsubscribe();
   }, [user]);

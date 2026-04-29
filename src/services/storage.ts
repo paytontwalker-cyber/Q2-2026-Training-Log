@@ -166,11 +166,7 @@ export const storage = {
         .map(doc => ({ id: doc.id, ...doc.data() }));
       
       callback(sanitizeWorkoutList(rawData));
-    }, (error: any) => {
-      if (error && String(error).includes('resource-exhausted')) {
-        callback([]);
-        return;
-      }
+    }, (error) => {
       handleFirestoreError(error, OperationType.LIST, 'workouts');
     });
   },
@@ -415,58 +411,65 @@ export const storage = {
 
     const q = query(collection(db, 'exercises'), where('uid', '==', uid));
     
-    return onSnapshot(q, (snapshot) => {
+    return onSnapshot(q, async (snapshot) => {
       if (snapshot.empty) {
-        // Return defaults immediately but do not auto-seed into Firestore on every boot
-        callback([...INITIAL_EXERCISES]);
+        // Auto-seed for new users
+        await storage.seedLibrary(uid);
       } else {
-        const libraryDocs = snapshot.docs.map(doc => doc.data() as ExerciseLibraryEntry);
+        const library = snapshot.docs.map(doc => doc.data() as ExerciseLibraryEntry);
         
-        let localLibrary = [...libraryDocs];
         // 1. Check for missing default exercises
-        const existingNames = new Set(localLibrary.map(ex => ex.name.toLowerCase()));
+        const existingNames = new Set(library.map(ex => ex.name.toLowerCase()));
         const missingDefaults = INITIAL_EXERCISES.filter(
           def => !existingNames.has(def.name.toLowerCase())
         );
 
-        if (missingDefaults.length > 0) {
-          // Merge missing defaults locally for display
-          localLibrary = [...localLibrary, ...missingDefaults];
-        }
-
-        // 2. Local-only backfill of built-in exercise distributions/fields
-        localLibrary = localLibrary.map(ex => {
+        // 2. Check for existing exercises needing backfill or sync
+        const exercisesToSync = library.filter(ex => {
           const def = INITIAL_EXERCISES.find(d => 
             d.id === ex.id || d.name.toLowerCase() === ex.name.toLowerCase()
           );
-          if (def) {
-            const distributionNeedsSync = !distributionsEqual(ex.muscleDistribution || [], def.muscleDistribution || []);
-            const needsMuscleGroup = !ex.muscleGroup;
-            const needsTrackingMode = !ex.trackingMode;
+          if (!def) return false;
+          
+          return (
+            !distributionsEqual(ex.muscleDistribution || [], def.muscleDistribution || []) ||
+            !ex.muscleGroup ||
+            !ex.trackingMode
+          );
+        });
 
-            if (distributionNeedsSync || needsMuscleGroup || needsTrackingMode) {
-              return { 
+        if (missingDefaults.length > 0 || exercisesToSync.length > 0) {
+          // Add missing defaults
+          for (const ex of missingDefaults) {
+            const docRef = doc(db, 'exercises', libDocId(uid, ex.id));
+            await setDoc(docRef, deepRemoveUndefined({ ...ex, uid }));
+          }
+          // Sync existing built-in exercises
+          for (const ex of exercisesToSync) {
+            const def = INITIAL_EXERCISES.find(d => 
+              d.id === ex.id || d.name.toLowerCase() === ex.name.toLowerCase()
+            );
+            if (def) {
+              const docRef = doc(db, 'exercises', libDocId(uid, ex.id));
+              
+              const needsMuscleGroup = !ex.muscleGroup;
+              const needsTrackingMode = !ex.trackingMode;
+
+              await setDoc(docRef, deepRemoveUndefined({ 
                 ...ex, 
                 muscleDistribution: def.muscleDistribution,
                 ...(needsMuscleGroup ? { muscleGroup: def.muscleGroup } : {}),
-                ...(needsTrackingMode ? { trackingMode: def.trackingMode } : {})
-              };
+                ...(needsTrackingMode ? { trackingMode: def.trackingMode } : {}),
+                uid 
+              }), { merge: true });
             }
           }
-          return ex;
-        });
-
-        callback(localLibrary);
-      }
-    }, (error: any) => {
-      if (error && String(error).includes('resource-exhausted')) {
-        if (!(window as any)._firestoreUnavailableLogged) {
-          console.warn("Firestore is temporarily unavailable (resource-exhausted). Falling back to local data.");
-          (window as any)._firestoreUnavailableLogged = true;
+          // The snapshot will trigger again after these writes
+        } else {
+          callback(library);
         }
-        callback([...INITIAL_EXERCISES]);
-        return;
       }
+    }, (error) => {
       handleFirestoreError(error, OperationType.LIST, 'exercises');
     });
   },
@@ -581,11 +584,7 @@ export const storage = {
       const daysOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
       const splits = Object.values(dayMap).sort((a, b) => daysOrder.indexOf(a.day) - daysOrder.indexOf(b.day));
       callback(splits);
-    }, (error: any) => {
-      if (error && String(error).includes('resource-exhausted')) {
-        callback([]);
-        return;
-      }
+    }, (error) => {
       handleFirestoreError(error, OperationType.LIST, 'splits');
     });
   },
@@ -672,11 +671,7 @@ export const storage = {
     return onSnapshot(q, (snapshot) => {
       const savedSplits = snapshot.docs.map(doc => doc.data() as SavedSplit);
       callback(savedSplits);
-    }, (error: any) => {
-      if (error && String(error).includes('resource-exhausted')) {
-        callback([]);
-        return;
-      }
+    }, (error) => {
       handleFirestoreError(error, OperationType.LIST, 'saved_splits');
     });
   },
@@ -751,11 +746,7 @@ export const storage = {
       } else {
         callback(null);
       }
-    }, (error: any) => {
-      if (error && String(error).includes('resource-exhausted')) {
-        callback(null);
-        return;
-      }
+    }, (error) => {
       handleFirestoreError(error, OperationType.GET, `drafts/${uid}`);
     });
   },
