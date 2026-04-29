@@ -7,7 +7,7 @@ import { ExerciseLibraryEntry, MuscleGroup } from './types';
 import INITIAL_EXERCISES_DATA from './data/exercises.json';
 import TEMPLATES_DATA from './data/templates.json';
 
-export const APP_VERSION = '4.5.3';
+export const APP_VERSION = '4.5.5';
 
 export const INITIAL_EXERCISES: ExerciseLibraryEntry[] = INITIAL_EXERCISES_DATA as ExerciseLibraryEntry[];
 export const DEFAULT_SPLIT = TEMPLATES_DATA.defaultSplit;
